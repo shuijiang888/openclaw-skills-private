@@ -2,7 +2,7 @@
  * 报价语义解析 — 系统提示词（版本化，便于回滚与审计对齐）。
  * 修改策略或措辞时请 bump PATCH 版本并在变更记录中说明。
  */
-export const QUOTE_PARSE_PROMPT_VERSION = "quote-parse-v1.2.0";
+export const QUOTE_PARSE_PROMPT_VERSION = "quote-parse-v1.3.0";
 
 export function buildQuoteParseSystemPrompt(): string {
   return `你是制造企业报价辅助助手。用户用中文描述商机与客户诉求；系统用六个系数连乘得到建议价：客户、行业、区域、产品、交期、批量。
