@@ -213,7 +213,7 @@ export function NewProjectForm() {
         type="button"
         disabled={loading}
         onClick={() => void submit()}
-        className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition hover:from-amber-600 hover:to-amber-700 hover:shadow-xl disabled:opacity-50"
       >
         {loading ? "提交中…" : "创建并进入报价工作台"}
       </button>

@@ -879,7 +879,7 @@ export function Workbench({ projectId }: { projectId: string }) {
                 type="button"
                 disabled={locked || busy || !!q.pendingRole}
                 onClick={() => void submitApproval()}
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-500 hover:to-blue-400 hover:shadow-lg disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/20 transition hover:from-amber-600 hover:to-amber-700 hover:shadow-lg disabled:opacity-50"
               >
                 提交审批
               </button>
@@ -901,15 +901,15 @@ export function Workbench({ projectId }: { projectId: string }) {
                     refreshBenchmarks: true,
                   })
                 }
-                className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-white px-6 py-2.5 text-sm font-semibold text-amber-700 shadow-sm transition hover:from-amber-100 hover:to-amber-50 disabled:opacity-50 dark:border-amber-700 dark:from-zinc-800 dark:to-zinc-900 dark:text-amber-400"
+                className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-amber-700"
               >
-                调整报价
+                重新测算
               </button>
               <button
                 type="button"
                 disabled={locked || busy || !q.pendingRole || !canActApprove}
                 onClick={() => void approve()}
-                className="rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-500 hover:to-emerald-400 hover:shadow-lg disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg disabled:opacity-50"
               >
                 审批通过
               </button>

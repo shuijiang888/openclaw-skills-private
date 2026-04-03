@@ -26,7 +26,7 @@
 }
 
 body {
-  background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 42%, #e2e8f0 100%);
+  background: linear-gradient(165deg, #fafbfc 0%, #f4f6f8 42%, #edf0f4 100%);
   background-attachment: fixed;
   color: var(--foreground);
   font-family:
@@ -41,6 +41,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -114,15 +117,48 @@ tbody tr {
 }
 
 /* 输入框焦点优化 */
-input[type="number"]:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
 /* 按钮按下效果 */
 button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+/* 统一按钮风格基础 */
+.btn-primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px -2px rgba(217, 119, 6, 0.3);
+  transition: all 0.2s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b45309, #92400e);
+  box-shadow: 0 4px 12px -2px rgba(217, 119, 6, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #d97706;
+  color: #92400e;
 }
 
 /* 进度条动画 */
