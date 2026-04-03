@@ -62,9 +62,9 @@ export function canAccessConsole(role: DemoRole): boolean {
   return BACKOFFICE.includes(role);
 }
 
-/** 报价智能助手：总监及以上可用（经理档聚焦填价与提交） */
-export function canUseQuoteAssistant(role: DemoRole): boolean {
-  return NO_JUNIOR_SALES.includes(role);
+/** 报价智能助手：所有角色均可使用（qwen3.5 本地大模型为全角色实时赋能） */
+export function canUseQuoteAssistant(_role: DemoRole): boolean {
+  return true;
 }
 
 /** 总经理 + 管理员可读客户主数据；批量导入仅管理员 */

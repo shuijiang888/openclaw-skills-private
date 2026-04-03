@@ -927,7 +927,7 @@ export function Workbench({ projectId }: { projectId: string }) {
         </div>
 
         <aside className="mt-8 space-y-4 xl:sticky xl:top-24 xl:mt-0">
-          {!assistantAllowed ? <SalesManagerBenchCard /> : null}
+          {demoRole === "SALES_MANAGER" ? <SalesManagerBenchCard /> : null}
           <QuoteAssistantPanel
             demoRole={demoRole}
             disabled={locked || !assistantAllowed}
