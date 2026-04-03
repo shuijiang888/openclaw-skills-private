@@ -67,9 +67,9 @@ export function buildBossBriefingFromProjects(
   const topCustomerConcentrationPct = concentrationTopCustomerPct(rows);
 
   const bullets = [
-    `建议价口径毛利率低于 15% 的报价共 ${vm.lowMarginQuoteCount} 单，构成当前主要利润风险池（演示阈值与经营看板一致）。`,
+    `建议价口径毛利率低于 15% 的报价共 ${vm.lowMarginQuoteCount} 单，构成当前主要利润风险池（试点阈值与经营看板一致）。`,
     `约 ${autoPct}% 的项目测算走自动通道，${collabChannelCount} 单需人机协同复核，可作为流程标准化与例外管理的讨论抓手。`,
-    `待审批 ${vm.pendingApprovalCount} 单、已核准 ${vm.approvedCount} 单；平均胜率约 ${avgWinRate}%（演示合成，来源为工作台 WinScore）。`,
+    `待审批 ${vm.pendingApprovalCount} 单、已核准 ${vm.approvedCount} 单；平均胜率约 ${avgWinRate}%（规则合成，来源为工作台 WinScore）。`,
     `TOP1 客户项目占比约 ${topCustomerConcentrationPct}%${
       strategicCustomerProjectCount > 0
         ? `；其中战略客户相关项目 ${strategicCustomerProjectCount} 个`
@@ -79,20 +79,20 @@ export function buildBossBriefingFromProjects(
 
   const nLow = Math.min(3, vm.lowMarginQuoteCount);
   const decisions = [
-    `是否在周例会前清空待审批队列（当前 ${vm.pendingApprovalCount} 单），并明确 SLA 责任人（演示叙事）。`,
+    `是否在周例会前清空待审批队列（当前 ${vm.pendingApprovalCount} 单），并明确 SLA 责任人（试点叙事）。`,
     topCustomerConcentrationPct >= 35
-      ? `TOP 客户项目占比 ${topCustomerConcentrationPct}% 偏高，是否对新增折扣增设「总经理」加签（演示）。`
-      : `是否将自动通道覆盖率从 ${autoPct}% 作为下季度运营目标，并配套培训与模板（演示）。`,
+      ? `TOP 客户项目占比 ${topCustomerConcentrationPct}% 偏高，是否对新增折扣增设「总经理」加签（试点讨论项）。`
+      : `是否将自动通道覆盖率从 ${autoPct}% 作为下季度运营目标，并配套培训与模板（试点讨论项）。`,
     nLow > 0
-      ? `是否将低毛利清单中 ${nLow} 项纳入工艺/采购降本专题，两周内回报进展（演示）。`
-      : `是否启动一轮标杆客户回访，验证胜率与价格弹性假设（演示）。`,
+      ? `是否将低毛利清单中 ${nLow} 项纳入工艺/采购降本专题，两周内回报进展（试点讨论项）。`
+      : `是否启动一轮标杆客户回访，验证胜率与价格弹性假设（试点讨论项）。`,
   ];
 
   return {
     version: 1,
     generatedAt: new Date().toISOString(),
     disclaimer:
-      "本简报为演示环境组合指标与叙事模板，数字来自当前 SQLite 种子数据与测算逻辑，非生产报表。",
+      "本简报为产品试点版组合指标与叙事模板，数字来自当前库内数据与测算逻辑，非生产法定报表。",
     metrics: {
       lowMarginQuoteCount: vm.lowMarginQuoteCount,
       autoChannelEligibleCount: vm.autoChannelEligibleCount,
@@ -106,7 +106,7 @@ export function buildBossBriefingFromProjects(
       strategicCustomerProjectCount,
     },
     narrative: {
-      headline: "老板简报 · 组合视图（演示）",
+      headline: "老板简报 · 组合视图（试点）",
       bullets,
       decisions,
     },

@@ -48,7 +48,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       {
         id: "d3",
         title: "组织与账号",
-        detail: "演示期为 Header 角色；生产期 SSO 与组织架构。",
+        detail: "试点期可用 Header 切换角色；生产期建议 SSO 与组织架构。",
       },
     ],
   },
@@ -68,7 +68,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       {
         id: "m3",
         title: "运行环境",
-        detail: "生产建议 PostgreSQL 等；SQLite 仅适合演示。",
+        detail: "生产建议 PostgreSQL 等；SQLite 适合单机试点与轻量部署。",
       },
     ],
   },

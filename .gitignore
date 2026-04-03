@@ -46,6 +46,9 @@ next-env.d.ts
 # local SQLite
 /prisma/dev.db
 /prisma/dev.db-journal
+# 误路径下的本地库（勿提交）
+/prisma/prisma/
 # 自用真实验证数据（勿提交）
 /prisma/real.db
 /prisma/real.db-journal
+/prisma/backups/

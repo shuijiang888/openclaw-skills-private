@@ -6,10 +6,18 @@ import {
   tryGetCompassQuadrantThresholdRow,
   upsertCompassQuadrantThresholdSafe,
 } from "@/lib/load-compass-quadrant-threshold";
+import { ADMIN_API_FORBIDDEN } from "@/lib/api-messages";
+import { canAccessConsoleRules } from "@/lib/demo-role-modules";
+import { demoRoleFromRequest } from "@/lib/http";
 
 const SINGLETON_ID = "default";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const role = demoRoleFromRequest(req);
+  if (!canAccessConsoleRules(role)) {
+    return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
+  }
+
   const r = await tryGetCompassQuadrantThresholdRow();
   return NextResponse.json({
     id: r.id,
@@ -21,6 +29,11 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  const role = demoRoleFromRequest(req);
+  if (!canAccessConsoleRules(role)) {
+    return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();

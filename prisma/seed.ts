@@ -62,7 +62,7 @@ async function createScenario(
 
   let timelineJson = appendTimeline(undefined, {
     kind: "seed",
-    title: "演示数据初始化",
+    title: "试点示例数据初始化",
     detail: args.note ?? args.name,
   });
   timelineJson = appendTimeline(timelineJson, {
@@ -73,13 +73,13 @@ async function createScenario(
   if (args.status === "PENDING_APPROVAL") {
     timelineJson = appendTimeline(timelineJson, {
       kind: "submit",
-      title: "已提交审批（演示）",
+      title: "已提交审批（试点示例）",
     });
   }
   if (args.status === "APPROVED") {
     timelineJson = appendTimeline(timelineJson, {
       kind: "approve",
-      title: "审批通过（演示）",
+      title: "审批通过（试点示例）",
       detail: `成交价 ${args.approvedPrice ?? args.counterPrice ?? suggestedPrice}`,
     });
   }
@@ -180,12 +180,15 @@ async function seedBulk(
       counterPrice: counter,
       approvedPrice,
       forcePendingRole: force,
-      note: `规模演示批次 ${i}`,
+      note: `规模试点示例批次 ${i}`,
     });
   }
 }
 
 async function main() {
+  console.warn(
+    "[profit-web] db:seed 将清空客户/项目/报价/罗盘项等。真实库请勿执行；仅补配置请用: npm run db:seed:reference",
+  );
   await prisma.agentAuditLog.deleteMany();
   await prisma.compassAlertRule.deleteMany();
   await prisma.compassQuadrantThreshold.deleteMany();
@@ -381,7 +384,7 @@ async function main() {
     coeffs: base,
     counterPrice: null,
     approvedPrice: null,
-    note: "已成交演示",
+    note: "已成交试点示例",
   });
   const bms = await prisma.project.findFirst({
     where: { name: "储能 BMS 控制板" },
@@ -420,7 +423,7 @@ async function main() {
     coeffs: { ...base, material: 2800, labor: 500, overhead: 800, period: 300 },
     counterPrice: null,
     forcePendingRole: "SALES_VP",
-    note: "演示 VP 档待办",
+    note: "试点 VP 档待办",
   });
 
   await seedBulk(

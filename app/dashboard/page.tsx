@@ -45,8 +45,8 @@ export default async function DashboardPage({
     <PageContainer className="space-y-8">
       {demo === "forbidden-console" ? (
         <div className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-100">
-          已拦下对「管理后台」的访问：当前演示身份为业务线角色时，顶部导航不会显示后台入口。
-          若需体验控制台，请将右上角切换为「总经理」或「管理员」。
+          已拦下对「管理后台」的访问：当前为业务线角色时，顶部导航不显示后台入口。
+          演示模式请将右上角「试点角色」切换为「总经理」或「管理员」；登录模式请使用具备后台权限的账号。
         </div>
       ) : null}
       <RoleHomePanel />
@@ -67,7 +67,7 @@ export default async function DashboardPage({
       <section className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/95 via-white to-slate-50/90 p-5 shadow-sm dark:border-amber-900/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-950">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-            价值指标 · 演示统计
+            价值指标 · 试点看板
           </h2>
           <Link
             href="/about"
@@ -77,7 +77,7 @@ export default async function DashboardPage({
           </Link>
         </div>
         <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-          低毛利阈值 15%；自动通道口径与「智能分流」一致，可直接用于管理层演示叙事。
+          低毛利阈值 15%；自动通道口径与「智能分流」一致，可直接用于管理层汇报与试点复盘。
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(
@@ -101,7 +101,7 @@ export default async function DashboardPage({
               {
                 label: "已核准",
                 value: vm.approvedCount,
-                hint: "成交闭环演示",
+                hint: "成交闭环（试点口径）",
               },
             ] as const
           ).map((c) =>
@@ -189,8 +189,10 @@ export default async function DashboardPage({
               暂无数据，请先{" "}
               <Link href="/projects/new" className="font-semibold text-amber-700 dark:text-amber-400">
                 新建报价
-              </Link>{" "}
-              或执行 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">npm run db:seed</code>
+              </Link>
+              ；仅本地空库可执行{" "}
+              <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">npm run db:seed</code>
+              ，已有业务数据请以 CSV 导入或手工维护为主（勿对真库全量 seed）。
             </li>
           ) : (
             recent.map((p) => (
@@ -224,7 +226,7 @@ export default async function DashboardPage({
         <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">
           docs/VALUE_STRATEGY_DEPLOYMENT_ROADMAP.md
         </code>
-        ；演示脚本 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">docs/DEMO_GUIDE.md</code>
+        ；角色与流程说明 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">docs/DEMO_GUIDE.md</code>
         。
       </p>
     </PageContainer>

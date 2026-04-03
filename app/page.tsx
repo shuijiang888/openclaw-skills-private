@@ -124,7 +124,7 @@ export default async function LandingPage() {
             实时经营脉搏
           </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            以下为演示环境样例数据，用于呈现「规模感」与指标叙事；生产环境可对接真实商机管道。
+            以下为产品试点版当前库内数据，用于呈现经营脉搏与指标叙事；可逐步替换为真实商机管道。
           </p>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -213,7 +213,7 @@ export default async function LandingPage() {
           按角色开箱即用
         </h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          演示时在导航栏切换身份，即可体验分层审批权限与队列体验。
+          演示模式下可在导航栏切换「试点角色」，体验分层审批与队列；登录模式下角色由账号决定。
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -297,7 +297,7 @@ export default async function LandingPage() {
             系统将承诺拆解为成本、系数、审批与成交留痕，让利润不再停留在口头与表格碎片中。
           </p>
           <footer className="mt-4 text-xs font-medium text-amber-800/80 dark:text-amber-400/80">
-            — 产品定位陈述 · 演示版
+            — 产品定位陈述 · 试点版
           </footer>
         </blockquote>
       </section>
@@ -307,7 +307,7 @@ export default async function LandingPage() {
           准备向管理层汇报或启动试点验证？
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">
-          建议先走一遍「战略全文」与「落地准备」自检，再用种子数据演示完整审批闭环。
+          建议先走一遍「战略全文」与「落地准备」自检，再在试点库中跑通完整审批闭环。
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link

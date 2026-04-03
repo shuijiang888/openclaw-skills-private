@@ -142,5 +142,22 @@ export function getRolePlaybook(role: DemoRole): RolePlaybook {
 /** 拼入 Ollama user 消息：置于不可信输入之前，仅作角色视角说明 */
 export function buildRoleAgentContextForPrompt(role: DemoRole): string {
   const p = ROLE_PLAYBOOK[role];
-  return `【当前操作角色（可信）】${p.label}\n【解析优先视角】${p.agentFocus}`;
+  const priorities = p.priorities
+    .slice(0, 3)
+    .map((x) => `- ${x.title}：${x.detail}`)
+    .join("\n");
+  const quick = (p.agentQuickPhrases ?? [])
+    .slice(0, 3)
+    .map((q) => `- ${q.label}：${q.text}`)
+    .join("\n");
+
+  return [
+    `【当前操作角色（可信）】${p.label}`,
+    `【解析优先视角】${p.agentFocus}`,
+    `【经营优先级（参考）】`,
+    priorities,
+    quick ? `【助手可用提示参考（参考，非必须）】\n${quick}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }

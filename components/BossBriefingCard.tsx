@@ -41,7 +41,7 @@ function BriefingInner({ data }: { data: BossBriefingDTO }) {
       </ul>
       <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/50 px-3 py-3 dark:border-amber-900/40 dark:bg-amber-950/25">
         <p className="text-[11px] font-semibold text-amber-950 dark:text-amber-200">
-          建议本周拍板（演示模板）
+          建议本周拍板（试点叙事模板）
         </p>
         <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-[11px] text-amber-950/90 dark:text-amber-100/85">
           {data.narrative.decisions.map((d) => (

@@ -54,7 +54,7 @@ export function AgentAuditTable() {
   if (role !== "ADMIN") {
     return (
       <p className="text-sm text-amber-800 dark:text-amber-200">
-        请将右上角演示身份切换为「管理员」后查看审计日志。
+        请将右上角「试点角色」切换为「管理员」，或使用管理员账号登录后查看审计日志。
       </p>
     );
   }

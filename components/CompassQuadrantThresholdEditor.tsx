@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
+import { demoHeaders } from "@/components/RoleSwitcher";
 
 type ThresholdState = {
   marginHighPct: number;
@@ -19,7 +20,9 @@ export function CompassQuadrantThresholdEditor({
   const [busy, setBusy] = useState(false);
 
   const reload = useCallback(async () => {
-    const r = await fetch("/api/console/compass-quadrant-threshold");
+    const r = await fetch("/api/console/compass-quadrant-threshold", {
+      headers: { ...demoHeaders() },
+    });
     if (!r.ok) return;
     const j = (await r.json()) as ThresholdState;
     setMarginHighPct(j.marginHighPct);
@@ -32,7 +35,10 @@ export function CompassQuadrantThresholdEditor({
     try {
       const res = await fetch("/api/console/compass-quadrant-threshold", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...demoHeaders(),
+        },
         body: JSON.stringify({ marginHighPct, growthHighPct }),
       });
       if (!res.ok) {
@@ -95,7 +101,7 @@ export function CompassQuadrantThresholdEditor({
         {busy ? "保存中…" : "保存阈值"}
       </button>
       <p className="text-[11px] leading-relaxed text-zinc-500">
-        前台四象限与表格中的象限标签由「毛利率 + 增长」按上述阈值计算；与种子数据里的{" "}
+        前台四象限与表格中的象限标签由「毛利率 + 增长」按上述阈值计算；与罗盘条目上存量的{" "}
         <code className="rounded bg-zinc-100 px-0.5 dark:bg-zinc-800">quadrant</code>{" "}
         字段无关，修改阈值后立即生效。
       </p>

@@ -22,7 +22,7 @@ export function SiteFooter() {
             智能盈利管理系统
           </p>
           <p className="mt-1 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            面向制造与科技型企业的报价、审批与盈利结构管理演示环境。生产落地需结合贵司主数据、
+            面向制造与科技型企业的报价、审批与盈利结构管理（产品试点版）。生产落地需结合贵司主数据、
             核算口径与组织授权进行配置。
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -60,7 +60,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-slate-100 py-3 text-center text-[11px] text-slate-400 dark:border-slate-800 dark:text-slate-500">
-        v{APP_VERSION} · © 演示用途 · 数据均为样例 · 不构成报价或审计依据
+        v{APP_VERSION} · 产品试点版 · 数据以库内为准 · 不构成法定报价或审计依据
       </div>
     </footer>
   );

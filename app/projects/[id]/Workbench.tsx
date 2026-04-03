@@ -691,7 +691,7 @@ export function Workbench({ projectId }: { projectId: string }) {
             <strong>{demoRoleLabelForUi(q.pendingRole)}</strong>
             {canActApprove
               ? " · 当前身份可点「审批通过」"
-              : " · 请在右上角切换为不低于该档的演示身份后再审批"}
+              : " · 请在右上角将「试点角色」切换为不低于该档后再审批（登录模式请换具备权限的账号）"}
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-3">

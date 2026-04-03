@@ -27,6 +27,12 @@ import {
 import { demoRoleFromRequest } from "@/lib/http";
 import { getOllamaConfig, parseQuoteWithOllama } from "@/lib/ollama-quote-assistant";
 import { QUOTE_PARSE_PROMPT_VERSION } from "@/lib/prompts/quote-parse-system";
+import { prisma } from "@/lib/prisma";
+import { loadCompassQuadrantThresholdsSafe } from "@/lib/load-compass-quadrant-threshold";
+import {
+  buildCompassRulesContextForPrompt,
+  type CompassAlertRuleForPrompt,
+} from "@/lib/compass-rule-prompt";
 
 /** 本地 35B 推理可能超过 60s，放宽上限（部署到 Vercel 等时亦生效） */
 export const maxDuration = 300;
@@ -136,7 +142,30 @@ export async function POST(req: Request) {
 
   if (cfg) {
     try {
-      const llm = await parseQuoteWithOllama(text, baseline, actorRole);
+      let compassRuleContext: string | undefined;
+      try {
+        const [thresholds, rules] = await Promise.all([
+          loadCompassQuadrantThresholdsSafe(),
+          prisma.compassAlertRule.findMany({
+            orderBy: { sortOrder: "asc" },
+            take: 12,
+          }),
+        ]);
+
+        compassRuleContext = buildCompassRulesContextForPrompt(
+          thresholds,
+          rules as CompassAlertRuleForPrompt[],
+        );
+      } catch {
+        /* 忽略罗盘规则注入失败，仍按原有 LLM 行为解析 */
+      }
+
+      const llm = await parseQuoteWithOllama(
+        text,
+        baseline,
+        actorRole,
+        compassRuleContext,
+      );
       outputTruncated = llm.outputTruncated;
       schemaRejected = llm.schemaRejected;
       response = {

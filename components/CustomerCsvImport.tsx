@@ -52,7 +52,7 @@ export function CustomerCsvImport() {
     return (
       <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 py-3 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
         <strong className="font-semibold">总经理只读：</strong>
-        客户主数据可浏览与导出；批量 CSV 导入需切换为「管理员」演示身份。
+        客户主数据可浏览与导出；批量 CSV 导入须管理员（演示模式选「管理员」，登录模式用管理员账号）。
       </div>
     );
   }
@@ -63,7 +63,7 @@ export function CustomerCsvImport() {
         批量导入客户（CSV）
       </h3>
       <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-        请先将右上角「演示身份」设为<strong>管理员</strong>。表头须含{" "}
+        请先将右上角「试点角色」设为<strong>管理员</strong>（或登录管理员账号）。表头须含{" "}
         <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">name</code>
         ，可选 <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">tier</code>、
         <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">arDays</code>。

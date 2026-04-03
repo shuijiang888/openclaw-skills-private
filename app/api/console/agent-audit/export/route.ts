@@ -1,5 +1,6 @@
 import type { AgentAuditLog } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { ADMIN_API_FORBIDDEN } from "@/lib/api-messages";
 import { demoRoleFromRequest } from "@/lib/http";
 import { csvLine, withUtf8Bom } from "@/lib/csv-format";
 import { prisma } from "@/lib/prisma";
@@ -17,13 +18,10 @@ const HEADER = [
   "metaJson",
 ] as const;
 
-/** 管理员导出智能体审计（须 x-demo-role: ADMIN），最多 5000 条，新在前 */
+/** 管理员导出智能体审计；演示模式须 x-demo-role: ADMIN，登录模式须管理员账号。最多 5000 条，新在前 */
 export async function GET(req: Request) {
   if (demoRoleFromRequest(req) !== "ADMIN") {
-    return NextResponse.json(
-      { error: "需要管理员演示身份（x-demo-role: ADMIN）" },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
   }
 
   let rows: AgentAuditLog[] = [];

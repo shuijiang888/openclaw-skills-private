@@ -1,5 +1,6 @@
 import { CompassAlertRulesEditor } from "@/components/CompassAlertRulesEditor";
 import { CompassQuadrantThresholdEditor } from "@/components/CompassQuadrantThresholdEditor";
+import { CompassAlertRulesCsvImport } from "@/components/CompassAlertRulesCsvImport";
 import {
   APPROVAL_DISCOUNT_BANDS,
   COEFFICIENT_DEFAULTS,
@@ -21,7 +22,7 @@ export default async function ConsoleRulesPage() {
   return (
     <div className="space-y-8">
       <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium text-zinc-500">默认报价系数（演示）</h2>
+        <h2 className="text-sm font-medium text-zinc-500">默认报价系数（系统默认）</h2>
         <p className="mt-1 text-xs text-zinc-500">
           新建项目时 API 使用的默认值；前台可在单票上覆盖。
         </p>
@@ -84,13 +85,14 @@ export default async function ConsoleRulesPage() {
           <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">
             CompassAlertRule
           </code>
-          。可在下方直接增删改，演示环境亦可配合{" "}
+          。可在下方直接增删改；仅本地空库可用全量{" "}
           <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">
             db:seed
           </code>{" "}
-          重置。
+          重置示例，真库请以手工与导入为主。
         </p>
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
+          <CompassAlertRulesCsvImport />
           <CompassAlertRulesEditor initial={compassAlertRules} />
         </div>
       </section>

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
+import { demoHeaders } from "@/components/RoleSwitcher";
 
 type Rule = {
   id: string;
@@ -16,7 +17,9 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const r = await fetch("/api/console/compass-alert-rules");
+    const r = await fetch("/api/console/compass-alert-rules", {
+      headers: { ...demoHeaders() },
+    });
     if (r.ok) setRules((await r.json()) as Rule[]);
   }, []);
 
@@ -26,7 +29,10 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
     try {
       const res = await fetch(`/api/console/compass-alert-rules/${row.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...demoHeaders(),
+        },
         body: JSON.stringify({
           conditionLabel: row.conditionLabel,
           actionLabel: row.actionLabel,
@@ -53,7 +59,10 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
     try {
       const res = await fetch("/api/console/compass-alert-rules", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...demoHeaders(),
+        },
         body: JSON.stringify({
           conditionLabel: "新触发条件（请修改）",
           actionLabel: "建议动作（请修改）",
@@ -80,6 +89,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
     try {
       const res = await fetch(`/api/console/compass-alert-rules/${id}`, {
         method: "DELETE",
+        headers: { ...demoHeaders() },
       });
       if (!res.ok) throw new Error("删除失败");
       setMsg("已删除");

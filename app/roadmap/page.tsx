@@ -46,7 +46,7 @@ export default function RoadmapPage() {
           <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">
             docs/VALUE_STRATEGY_DEPLOYMENT_ROADMAP.md
           </code>{" "}
-          第三章。当前站点为一期可交互演示。
+          第三章。当前站点为一期可交互产品试点版。
         </p>
       </div>
 

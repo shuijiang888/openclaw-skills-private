@@ -33,7 +33,7 @@ export function canApprove(
 }
 
 /**
- * 将请求头中的演示角色解析为枚举。
+ * 将请求头中的角色解析为枚举（演示模式：x-demo-role；登录模式：x-profit-session-role）。
  * 未知或伪造值回落到「销售总监」，与前台 RoleSwitcher 默认一致，避免误放行为 ADMIN。
  */
 export function parseDemoRole(

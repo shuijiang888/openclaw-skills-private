@@ -80,7 +80,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
         <div>
           <h1 className="text-2xl font-semibold">项目列表</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            点击项目进入智能报价工作台。筛选随右上角「演示身份」与待审角色联动。
+            点击项目进入智能报价工作台。筛选随右上角「试点角色」（演示模式）或会话角色（登录模式）与待审角色联动。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

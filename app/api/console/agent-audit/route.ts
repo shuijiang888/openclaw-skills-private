@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ADMIN_API_FORBIDDEN } from "@/lib/api-messages";
 import { prisma } from "@/lib/prisma";
 import { demoRoleFromRequest } from "@/lib/http";
 
@@ -7,10 +8,7 @@ export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   if (demoRoleFromRequest(req) !== "ADMIN") {
-    return NextResponse.json(
-      { error: "需要管理员演示身份（x-demo-role: ADMIN）" },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
   }
 
   try {

@@ -143,7 +143,8 @@ export default async function CompassPage() {
               <code>npx prisma db push</code>）
             </li>
             <li>
-              <code>npm run db:seed</code>
+              仅本地空库可 <code>npm run db:seed</code>；已有业务数据请{" "}
+              <code>npm run db:seed:reference</code> 补齐罗盘配置，勿全量 seed
             </li>
             <li>重启 <code>npm run dev</code> 后刷新本页</li>
           </ol>
@@ -153,7 +154,7 @@ export default async function CompassPage() {
       <div>
         <h1 className="text-2xl font-semibold">盈利罗盘</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          项目象限与对策规则（演示数据可_seed）。
+          项目象限与对策规则（数据来自当前库；规则可在后台维护或 CSV 导入）。
         </p>
       </div>
 
@@ -168,7 +169,7 @@ export default async function CompassPage() {
             <code className="rounded bg-teal-100/80 px-1 dark:bg-teal-900/50">
               lib/compass-quadrant.ts
             </code>{" "}
-            计算，与种子字段{" "}
+            计算，与条目上存量的{" "}
             <code className="rounded bg-teal-100/80 px-1 dark:bg-teal-900/50">
               quadrant
             </code>{" "}
@@ -204,7 +205,7 @@ export default async function CompassPage() {
             >
               管理后台 · 系数与规则
             </Link>{" "}
-            编辑（需管理员演示身份）。
+            编辑（须管理员：演示模式 x-demo-role: ADMIN，或登录模式管理员账号）。
           </p>
         </section>
       ) : null}
@@ -281,7 +282,7 @@ export default async function CompassPage() {
         <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-sm font-medium text-zinc-500">对策矩阵</h2>
           <p className="mt-1 text-xs text-zinc-500">
-            规则存库、种子初始化；管理后台「系数与规则」可对照清单。
+            规则存库，可通过参考 seed、手工编辑或 CSV 批量导入初始化；「系数与规则」页可对照维护。
           </p>
           <ul className="mt-3 space-y-2 text-xs">
             {alertRules.map((r) => (

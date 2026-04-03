@@ -17,7 +17,7 @@ export default async function ConsolePipelinePage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          按状态总览商机；待审批行可点击进前台工作台完成「提交/通过」演示。
+          按状态总览商机；待审批行可点击进前台工作台完成提交与审批。
         </p>
         <CsvExportLink href="/api/export/projects">导出项目 CSV</CsvExportLink>
       </div>

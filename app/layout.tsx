@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · 智能盈利管理",
   },
   description:
-    "企业级报价、分层审批与盈利罗盘：让定价可度量、毛利可追踪、决策可留痕。适用于制造与科技型企业的演示与立项评估。联合呈现：纷享销客。",
+    "企业级报价、分层审批与盈利罗盘：让定价可度量、毛利可追踪、决策可留痕。适用于制造与科技型企业的产品试点与立项评估。联合呈现：纷享销客。",
 };
 
 export default function RootLayout({
