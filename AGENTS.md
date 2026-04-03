@@ -1,17 +1,17 @@
 # AGENTS.md
 
-## Cursor Cloud specific instructions
+## Cursor Cloud 专用说明
 
-This repository (`openclaw-skills-private`) is a skeleton project for "ShareCRM skills" under the OpenClaw platform. As of the initial commit, the repository contains only a `README.md` — there is no application code, no dependency files, no build system, no tests, and no services to run.
+本仓库（`openclaw-skills-private`）是 OpenClaw 平台下 "ShareCRM skills" 的骨架项目。截至初始提交，仓库仅包含一个 `README.md`，没有任何应用代码、依赖文件、构建系统、测试或可运行的服务。
 
-### Current state
+### 当前状态
 
-- **Language/framework:** Not yet determined (no source code exists).
-- **Package manager:** None configured.
-- **Lint/test/build:** No commands available — no tooling has been set up.
-- **Services:** None.
+- **语言/框架：** 尚未确定（无源代码）。
+- **包管理器：** 未配置。
+- **Lint/测试/构建：** 无可用命令——未建立任何工具链。
+- **服务：** 无。
 
-### Notes for future agents
+### 给未来 Agent 的提示
 
-- Once application code is added, update this file with the relevant dev setup, lint, test, build, and run instructions.
-- Check `README.md` for any updated project description or setup guidance.
+- 一旦添加了应用代码，请更新本文件，补充开发环境搭建、lint、测试、构建和运行的相关说明。
+- 请查看 `README.md` 了解最新的项目描述或搭建指引。
