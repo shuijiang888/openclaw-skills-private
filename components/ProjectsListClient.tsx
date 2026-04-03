@@ -113,16 +113,16 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-100 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50">
+          <thead className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-slate-50 dark:border-zinc-800 dark:from-zinc-950/50 dark:to-slate-950/50">
             <tr>
-              <th className="px-4 py-3 font-medium">项目</th>
-              <th className="px-4 py-3 font-medium">客户</th>
-              <th className="px-4 py-3 font-medium">状态</th>
-              <th className="px-4 py-3 font-medium">待审角色</th>
-              <th className="px-4 py-3 font-medium text-right">建议价</th>
-              <th className="px-4 py-3 font-medium text-right">毛利率</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">项目</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">客户</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">状态</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">待审角色</th>
+              <th className="px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500">建议价</th>
+              <th className="px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500">毛利率</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -166,7 +166,18 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                       {p.customerName}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        p.status === "APPROVED" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" :
+                        p.status === "PENDING_APPROVAL" ? "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300" :
+                        p.status === "PRICED" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" :
+                        "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          p.status === "APPROVED" ? "bg-emerald-500" :
+                          p.status === "PENDING_APPROVAL" ? "bg-amber-500 animate-pulse" :
+                          p.status === "PRICED" ? "bg-blue-500" :
+                          "bg-zinc-400"
+                        }`} />
                         {projectStatusLabel(p.status)}
                       </span>
                     </td>
@@ -180,7 +191,11 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                         ? `¥${p.suggestedPrice.toLocaleString("zh-CN")}`
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className={`px-4 py-3 text-right tabular-nums font-medium ${
+                      p.grossMarginAtSuggest != null
+                        ? p.grossMarginAtSuggest >= 25 ? "text-emerald-600" : p.grossMarginAtSuggest >= 15 ? "text-amber-600" : "text-red-600"
+                        : "text-zinc-400"
+                    }`}>
                       {p.grossMarginAtSuggest != null
                         ? `${p.grossMarginAtSuggest}%`
                         : "—"}

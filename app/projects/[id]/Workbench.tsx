@@ -378,9 +378,9 @@ export function Workbench({ projectId }: { projectId: string }) {
 
           {/* 顶部：项目信息卡 + 成本基准 */}
           <div className="grid gap-4 lg:grid-cols-3">
-            <section className="rounded-xl border-2 border-orange-200 bg-white p-4 shadow-sm dark:border-orange-800 dark:bg-zinc-900 lg:col-span-1">
+            <section className="card-hover rounded-xl border border-orange-200/60 bg-gradient-to-br from-white to-orange-50/30 p-4 shadow-sm dark:border-orange-800/40 dark:from-zinc-900 dark:to-orange-950/10 lg:col-span-1">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-orange-100 text-xs font-bold text-orange-600 dark:bg-orange-900">①</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-orange-400 to-orange-600 text-xs font-bold text-white shadow-sm">①</span>
                 项目摘要
               </h2>
               <dl className="mt-3 space-y-2 text-sm">
@@ -427,9 +427,9 @@ export function Workbench({ projectId }: { projectId: string }) {
               </dl>
             </section>
 
-            <section className="rounded-xl border-2 border-orange-200 bg-white p-4 shadow-sm dark:border-orange-800 dark:bg-zinc-900 lg:col-span-2">
+            <section className="card-hover rounded-xl border border-orange-200/60 bg-gradient-to-br from-white to-orange-50/30 p-4 shadow-sm dark:border-orange-800/40 dark:from-zinc-900 dark:to-orange-950/10 lg:col-span-2">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-orange-100 text-xs font-bold text-orange-600 dark:bg-orange-900">②</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-orange-400 to-orange-600 text-xs font-bold text-white shadow-sm">②</span>
                 成本基准
               </h2>
               <div className="mt-3 grid gap-3 sm:grid-cols-4">
@@ -477,10 +477,10 @@ export function Workbench({ projectId }: { projectId: string }) {
           </div>
 
           {/* 智能系数叠加引擎——对应图2中间区域 */}
-          <section className="rounded-xl border-2 border-amber-200 bg-white p-4 shadow-sm dark:border-amber-800 dark:bg-zinc-900">
+          <section className="card-hover rounded-xl border border-amber-200/60 bg-gradient-to-br from-white via-amber-50/20 to-white p-4 shadow-sm dark:border-amber-800/40 dark:from-zinc-900 dark:to-amber-950/10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900">③</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-amber-600 text-xs font-bold text-white shadow-sm">③</span>
                 智能系数叠加引擎
               </h2>
               <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
@@ -544,9 +544,9 @@ export function Workbench({ projectId }: { projectId: string }) {
               <span className="font-medium">建议报价公式</span> = {costFormula}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-4">
-              <div className="rounded-lg bg-red-600 px-5 py-3 text-white shadow-lg">
-                <div className="text-xs opacity-90">建议报价</div>
-                <div className="text-2xl font-bold tabular-nums">
+              <div className="price-highlight rounded-xl bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 text-white shadow-lg">
+                <div className="text-xs font-medium opacity-90">建议报价</div>
+                <div className="text-3xl font-bold tabular-nums tracking-tight">
                   ¥{q.suggestedPrice.toLocaleString("zh-CN")}
                 </div>
               </div>
@@ -563,9 +563,9 @@ export function Workbench({ projectId }: { projectId: string }) {
 
           {/* 参考对比 + 胜率——对应图2右侧 */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <section className="rounded-xl border-2 border-purple-200 bg-white p-4 shadow-sm dark:border-purple-800 dark:bg-zinc-900">
+            <section className="card-hover rounded-xl border border-purple-200/60 bg-gradient-to-br from-white to-purple-50/30 p-4 shadow-sm dark:border-purple-800/40 dark:from-zinc-900 dark:to-purple-950/10">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-purple-700 dark:text-purple-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-purple-100 text-xs font-bold text-purple-600 dark:bg-purple-900">④</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-purple-400 to-purple-600 text-xs font-bold text-white shadow-sm">④</span>
                 参考对比分析
               </h2>
               <div className="mt-3 overflow-x-auto">
@@ -599,9 +599,9 @@ export function Workbench({ projectId }: { projectId: string }) {
               </div>
             </section>
 
-            <section className="rounded-xl border-2 border-sky-200 bg-white p-4 shadow-sm dark:border-sky-800 dark:bg-zinc-900">
+            <section className="card-hover rounded-xl border border-sky-200/60 bg-gradient-to-br from-white to-sky-50/30 p-4 shadow-sm dark:border-sky-800/40 dark:from-zinc-900 dark:to-sky-950/10">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-sky-700 dark:text-sky-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-sky-100 text-xs font-bold text-sky-600 dark:bg-sky-900">⑤</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-sky-600 text-xs font-bold text-white shadow-sm">⑤</span>
                 胜率预测模型
               </h2>
               <div className="mt-3 space-y-2.5">
@@ -611,7 +611,7 @@ export function Workbench({ projectId }: { projectId: string }) {
                     <div className="flex-1">
                       <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                         <div
-                          className={`h-full rounded-full ${s.value >= 80 ? "bg-emerald-500" : s.value >= 60 ? "bg-amber-500" : "bg-red-500"}`}
+                          className={`progress-bar h-full rounded-full ${s.value >= 80 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : s.value >= 60 ? "bg-gradient-to-r from-amber-400 to-amber-500" : "bg-gradient-to-r from-red-400 to-red-500"}`}
                           style={{ width: `${s.value}%` }}
                         />
                       </div>
@@ -650,7 +650,7 @@ export function Workbench({ projectId }: { projectId: string }) {
                 </div>
                 <div className="mt-2 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <div
-                    className={`h-full rounded-full transition-all ${q.computed.winRate >= 70 ? "bg-emerald-500" : q.computed.winRate >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                    className={`progress-bar h-full rounded-full ${q.computed.winRate >= 70 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : q.computed.winRate >= 50 ? "bg-gradient-to-r from-amber-400 to-amber-500" : "bg-gradient-to-r from-red-400 to-red-500"}`}
                     style={{ width: `${q.computed.winRate}%` }}
                   />
                 </div>
@@ -661,9 +661,9 @@ export function Workbench({ projectId }: { projectId: string }) {
           {/* ==================== 图3：分层审批 + 客户还价 ==================== */}
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <section className="rounded-xl border-2 border-rose-200 bg-white p-4 shadow-sm dark:border-rose-800 dark:bg-zinc-900">
+            <section className="card-hover rounded-xl border border-rose-200/60 bg-gradient-to-br from-white to-rose-50/30 p-4 shadow-sm dark:border-rose-800/40 dark:from-zinc-900 dark:to-rose-950/10">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-rose-100 text-xs font-bold text-rose-600 dark:bg-rose-900">⑥</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-600 text-xs font-bold text-white shadow-sm">⑥</span>
                 客户还价与折扣计算
               </h2>
               <label className="mt-3 block text-sm">
@@ -712,9 +712,9 @@ export function Workbench({ projectId }: { projectId: string }) {
             </section>
 
             {/* 分层审批规则——对应图3下方表格 */}
-            <section className="rounded-xl border-2 border-amber-200 bg-white p-4 shadow-sm dark:border-amber-800 dark:bg-zinc-900">
+            <section className="card-hover rounded-xl border border-amber-200/60 bg-gradient-to-br from-white to-amber-50/30 p-4 shadow-sm dark:border-amber-800/40 dark:from-zinc-900 dark:to-amber-950/10">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900">⑦</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-amber-600 text-xs font-bold text-white shadow-sm">⑦</span>
                 授权审批规则
               </h2>
               <div className="mt-3 overflow-x-auto">
@@ -751,9 +751,9 @@ export function Workbench({ projectId }: { projectId: string }) {
           </div>
 
           {/* ==================== 图4：智能分流 ==================== */}
-          <section className="rounded-xl border-2 border-teal-200 bg-white p-4 shadow-sm dark:border-teal-800 dark:bg-zinc-900">
+          <section className="card-hover rounded-xl border border-teal-200/60 bg-gradient-to-br from-white via-teal-50/20 to-white p-4 shadow-sm dark:border-teal-800/40 dark:from-zinc-900 dark:to-teal-950/10">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-teal-700 dark:text-teal-400">
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-100 text-xs font-bold text-teal-600 dark:bg-teal-900">⑧</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-400 to-teal-600 text-xs font-bold text-white shadow-sm">⑧</span>
               智能决策分流
             </h2>
             <div className="mt-3 grid gap-4 lg:grid-cols-2">
@@ -805,9 +805,9 @@ export function Workbench({ projectId }: { projectId: string }) {
           </section>
 
           {/* ==================== 智能报价单——对应图2下半部分 ==================== */}
-          <section className="rounded-xl border-2 border-indigo-200 bg-white p-4 shadow-sm dark:border-indigo-800 dark:bg-zinc-900">
+          <section className="gradient-border card-hover rounded-xl bg-gradient-to-br from-white via-indigo-50/20 to-white p-4 shadow-sm dark:from-zinc-900 dark:to-indigo-950/10">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-400">
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900">⑨</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-indigo-400 to-indigo-600 text-xs font-bold text-white shadow-sm">⑨</span>
               智能报价单
             </h2>
             <div className="mt-3 grid gap-4 lg:grid-cols-3">
@@ -879,9 +879,9 @@ export function Workbench({ projectId }: { projectId: string }) {
                 type="button"
                 disabled={locked || busy || !!q.pendingRole}
                 onClick={() => void submitApproval()}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-500 hover:to-blue-400 hover:shadow-lg disabled:opacity-50"
               >
-                ☑ 提交审批
+                提交审批
               </button>
               <button
                 type="button"
@@ -901,17 +901,17 @@ export function Workbench({ projectId }: { projectId: string }) {
                     refreshBenchmarks: true,
                   })
                 }
-                className="rounded-lg border-2 border-amber-400 bg-white px-5 py-2.5 text-sm font-semibold text-amber-700 shadow hover:bg-amber-50 disabled:opacity-50 dark:bg-zinc-900 dark:text-amber-400"
+                className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-white px-6 py-2.5 text-sm font-semibold text-amber-700 shadow-sm transition hover:from-amber-100 hover:to-amber-50 disabled:opacity-50 dark:border-amber-700 dark:from-zinc-800 dark:to-zinc-900 dark:text-amber-400"
               >
-                ☑ 调整报价
+                调整报价
               </button>
               <button
                 type="button"
                 disabled={locked || busy || !q.pendingRole || !canActApprove}
                 onClick={() => void approve()}
-                className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-500/20 transition hover:from-emerald-500 hover:to-emerald-400 hover:shadow-lg disabled:opacity-50"
               >
-                ✓ 审批通过
+                审批通过
               </button>
             </div>
             {q.pendingRole ? (
