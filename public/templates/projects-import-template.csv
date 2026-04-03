@@ -1,0 +1,2 @@
+customerName,projectName,material,labor,overhead,period,productName,quantity,leadDays,isStandard,isSmallOrder,status,counterPrice,approvedPrice,pendingRole,coeffCustomer,coeffIndustry,coeffRegion,coeffProduct,coeffLead,coeffQty,wsPrice,wsRelation,wsDelivery,wsTech,wsPayment
+捷联工控,CSV批量导入试点单,12000,8000,5000,3000,控制板模组,1,20,1,1,DRAFT,118000,,,1.15,1.1,0.95,1.2,1.08,0.92,85,90,88,92,75
