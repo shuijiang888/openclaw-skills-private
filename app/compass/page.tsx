@@ -242,20 +242,23 @@ export default async function CompassPage() {
             centerLabel="项目总数"
           />
 
-          {/* 象限策略摘要 */}
+          {/* 象限策略摘要——点击跳转到项目列表 */}
           <div className="mt-4 space-y-2">
             {(["STAR", "CASH_COW", "QUESTION", "DOG"] as const).map(qk => {
               const meta = Q_META[qk];
               const count = byQuadrant[qk]?.length ?? 0;
               if (!count) return null;
               return (
-                <div key={qk} className={`rounded-lg border px-3 py-2 ${meta.bgClass}`}>
+                <Link key={qk} href="/projects" className={`card-hover block rounded-lg border px-3 py-2 transition hover:shadow ${meta.bgClass}`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-bold ${meta.color}`}>{meta.title}</span>
-                    <span className={`text-xs font-bold tabular-nums ${meta.color}`}>{count}</span>
+                    <span className="flex items-center gap-1">
+                      <span className={`text-xs font-bold tabular-nums ${meta.color}`}>{count}</span>
+                      <span className="text-[10px] text-amber-600">→</span>
+                    </span>
                   </div>
                   <div className="mt-0.5 text-[10px] text-slate-500">{meta.action}</div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -263,16 +266,19 @@ export default async function CompassPage() {
 
         {/* ==================== 右侧：评估指标 + 对策矩阵 ==================== */}
         <div className="space-y-4">
-          {/* 项目评估指标——对应图5左侧指标 */}
+          {/* 项目评估指标 */}
           <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">项目评估指标</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-zinc-900 dark:text-white">项目评估指标</h2>
+              <Link href="/projects" className="text-[10px] font-medium text-amber-700 hover:underline dark:text-amber-400">查看项目 →</Link>
+            </div>
             <div className="mt-3 space-y-3">
               {EVAL_INDICATORS.map((ind) => (
                 <div key={ind.label}>
                   <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{ind.label}</div>
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     {ind.ranges.map((r) => (
-                      <span key={r.text} className={`text-[10px] ${r.color}`}>{r.text}</span>
+                      <span key={r.text} className={`rounded-full border border-current/20 px-2 py-0.5 text-[10px] font-medium ${r.color}`}>{r.text}</span>
                     ))}
                   </div>
                 </div>
@@ -280,16 +286,22 @@ export default async function CompassPage() {
             </div>
           </section>
 
-          {/* 盈利管理对策——对应图5右侧 */}
+          {/* 盈利管理对策——点击跳转到规则管理 */}
           <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">盈利管理对策</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-zinc-900 dark:text-white">盈利管理对策</h2>
+              <Link href="/console/rules" className="text-[10px] font-medium text-amber-700 hover:underline dark:text-amber-400">管理规则 →</Link>
+            </div>
             <div className="mt-3 space-y-2">
               {COUNTERMEASURES.map((c) => (
-                <div key={c.trigger} className={`rounded-lg border px-3 py-2 ${c.color}`}>
-                  <div className="text-xs font-semibold">{c.trigger}</div>
+                <Link key={c.trigger} href="/console/rules" className={`card-hover block rounded-lg border px-3 py-2 transition hover:shadow ${c.color}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold">{c.trigger}</span>
+                    <span className="text-[10px] text-amber-600">配置 →</span>
+                  </div>
                   <div className="text-[10px] text-zinc-600 dark:text-zinc-400">触发：{c.condition}</div>
                   <div className="text-[10px] text-zinc-700 dark:text-zinc-300">对策：{c.action}</div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -307,10 +319,13 @@ export default async function CompassPage() {
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {alertRules.map((r) => (
-              <div key={r.id} className="rounded-lg border border-zinc-100 px-3 py-2 dark:border-zinc-800">
-                <div className="text-xs font-medium text-zinc-800 dark:text-zinc-200">{r.conditionLabel ?? "—"}</div>
+              <Link key={r.id} href="/console/rules" className="card-hover block rounded-lg border border-zinc-100 px-3 py-2 transition hover:border-amber-300 hover:shadow dark:border-zinc-800 dark:hover:border-amber-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200">{r.conditionLabel ?? "—"}</span>
+                  <span className="text-[10px] text-amber-600">编辑 →</span>
+                </div>
                 <div className="mt-0.5 text-[10px] text-zinc-600 dark:text-zinc-400">{r.actionLabel ?? "—"}</div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -340,8 +355,12 @@ export default async function CompassPage() {
                 const meta = Q_META[i.effectiveQuadrant] ?? Q_META.DOG;
                 const priorityClass = PRIORITY_BADGE[i.priority] ?? PRIORITY_BADGE["中"];
                 return (
-                  <tr key={i.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                    <td className="px-4 py-3 font-medium text-zinc-900 dark:text-white">#{i.sortOrder} {i.name}</td>
+                  <tr key={i.id} className="cursor-pointer transition hover:bg-amber-50/50 dark:hover:bg-amber-950/10">
+                    <td className="px-4 py-3">
+                      <Link href="/projects" className="font-semibold text-slate-900 hover:text-amber-700 dark:text-white dark:hover:text-amber-400">
+                        #{i.sortOrder} {i.name}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{i.customerName}</td>
                     <td className={`px-4 py-3 text-right tabular-nums font-medium ${i.grossMargin >= 30 ? "text-emerald-600" : i.grossMargin >= 20 ? "text-blue-600" : "text-red-600"}`}>
                       {formatMargin(i.grossMargin)}

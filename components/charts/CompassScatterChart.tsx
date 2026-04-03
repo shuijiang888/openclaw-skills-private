@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type DataPoint = {
@@ -26,6 +27,7 @@ const QUADRANT_COLORS: Record<string, { fill: string; bg: string; label: string 
 };
 
 export function CompassScatterChart({ items, marginThreshold, growthThreshold }: Props) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -121,6 +123,7 @@ export function CompassScatterChart({ items, marginThreshold, growthThreshold }:
             <g key={item.id}
               onMouseEnter={() => setHoveredId(item.id)}
               onMouseLeave={() => setHoveredId(null)}
+              onClick={() => router.push("/projects")}
               style={{ cursor: "pointer" }}
             >
               <circle
@@ -186,6 +189,9 @@ export function CompassScatterChart({ items, marginThreshold, growthThreshold }:
             <span className="font-medium" style={{ color: (QUADRANT_COLORS[hovered.quadrant] ?? QUADRANT_COLORS.DOG).fill }}>
               {(QUADRANT_COLORS[hovered.quadrant] ?? QUADRANT_COLORS.DOG).label}
             </span>
+          </div>
+          <div className="mt-2 border-t border-slate-100 pt-1.5 text-center text-[10px] text-amber-600 dark:border-slate-800">
+            点击查看项目列表 →
           </div>
         </div>
       )}
