@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  tier      String    @default("NORMAL")
+  arDays    Int       @default(30)
+  createdAt DateTime  @default(now())
+  projects  Project[]
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  name         String
+  productName  String   @default("")
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  quantity     Int      @default(1)
+  leadDays     Int      @default(15)
+  isStandard   Boolean  @default(true)
+  isSmallOrder Boolean  @default(true)
+  status       String   @default("DRAFT")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  quote        Quote?
+}
+
+model Quote {
+  id             String   @id @default(cuid())
+  projectId      String   @unique
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  material       Float
+  labor          Float
+  overhead       Float
+  period         Float
+  coeffCustomer  Float    @default(1.15)
+  coeffIndustry  Float    @default(1.1)
+  coeffRegion    Float    @default(0.95)
+  coeffProduct   Float    @default(1.2)
+  coeffLead      Float    @default(1.08)
+  coeffQty       Float    @default(0.92)
+  suggestedPrice Float
+  counterPrice   Float?
+  approvedPrice  Float?
+  pendingRole    String?
+  wsPrice        Float    @default(85)
+  wsRelation     Float    @default(90)
+  wsDelivery     Float    @default(88)
+  wsTech         Float    @default(92)
+  wsPayment      Float    @default(75)
+  aiSuggestion   String   @default("")
+  benchmarksJson String   @default("[]")
+  timelineJson   String   @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CompassItem {
+  id           String @id @default(cuid())
+  name         String
+  customerName String
+  grossMargin  Float
+  growth       Float
+  quadrant     String
+  strategy     String
+  priority     String
+  sortOrder    Int    @default(0)
+}
+
+/// 罗盘四象限划分阈值（单例 id=default）：高毛利 / 高增长的百分数阈值
+model CompassQuadrantThreshold {
+  id             String   @id
+  marginHighPct  Float
+  growthHighPct  Float
+  updatedAt      DateTime @updatedAt
+}
+
+/// 罗盘「对策矩阵」阈值规则（种子初始化，一期后台只读展示；生产可接配置页）
+model CompassAlertRule {
+  id              String @id @default(cuid())
+  conditionLabel  String
+  actionLabel     String
+  sortOrder       Int    @default(0)
+}
+
+/// A2：助手/审批等关键操作的轻量审计（演示；生产可迁日志管道）
+model AgentAuditLog {
+  id         String   @id @default(cuid())
+  requestId  String
+  route      String
+  action     String
+  actorRole  String   @default("")
+  metaJson   String   @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
