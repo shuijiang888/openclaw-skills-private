@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { PageContainer } from "@/components/PageContainer";
+import { CompassScatterChart } from "@/components/charts/CompassScatterChart";
+import { DonutChart } from "@/components/charts/DonutChart";
 import {
   COMPASS_QUADRANT_DEFAULTS,
   computeCompassQuadrant,
@@ -193,123 +195,70 @@ export default async function CompassPage() {
         </p>
       </div>
 
-      {/* ==================== 图5：四象限可视化 ==================== */}
+      {/* ==================== 四象限散点图可视化 ==================== */}
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-zinc-900 dark:text-white">项目四象限分布</h2>
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500">
-              <span>↑ 增长率</span>
-              <span>→ 低增长</span>
+        <section className="card-hover rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">项目四象限分布 · 散点图</h2>
+            <div className="flex items-center gap-3 text-[10px] text-slate-400">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />明星</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500" />现金牛</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" />问题</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />瘦狗</span>
             </div>
           </div>
 
-          {/* 轴标注 */}
-          <div className="relative">
-            <div className="absolute -left-1 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-medium text-zinc-400">高毛利率</div>
-            <div className="absolute -left-1 bottom-0 -rotate-90 origin-bottom-left translate-x-2 text-[10px] font-medium text-zinc-400">低毛利率</div>
+          <CompassScatterChart
+            items={items.map(i => ({
+              id: i.id,
+              name: i.name,
+              customerName: i.customerName,
+              grossMargin: i.grossMargin,
+              growth: i.growth,
+              quadrant: i.effectiveQuadrant,
+              sortOrder: i.sortOrder,
+            }))}
+            marginThreshold={quadrantThresholds.marginHighPct}
+            growthThreshold={quadrantThresholds.growthHighPct}
+          />
 
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 dark:border-zinc-800 dark:bg-zinc-950/50">
-              {/* 明星（左上）*/}
-              <div className={`rounded-lg border p-4 ${Q_META.STAR.bgClass}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className={`text-sm font-bold ${Q_META.STAR.color}`}>{Q_META.STAR.title}</div>
-                    <div className="text-[10px] text-zinc-500">{Q_META.STAR.subtitle}</div>
-                  </div>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-sm font-bold text-white">
-                    {byQuadrant.STAR?.length ?? 0}
-                  </span>
-                </div>
-                <div className="mt-2 whitespace-pre-line text-[10px] text-emerald-700 dark:text-emerald-400">{Q_META.STAR.strategy}</div>
-                <div className="mt-2 space-y-0.5">
-                  {byQuadrant.STAR?.slice(0, 5).map((i) => (
-                    <div key={i.id} className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-700 dark:text-zinc-300">#{i.sortOrder} {i.name}</span>
-                      <span className="tabular-nums text-emerald-600">{formatMargin(i.grossMargin)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 现金牛（右上）*/}
-              <div className={`rounded-lg border p-4 ${Q_META.CASH_COW.bgClass}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className={`text-sm font-bold ${Q_META.CASH_COW.color}`}>{Q_META.CASH_COW.title}</div>
-                    <div className="text-[10px] text-zinc-500">{Q_META.CASH_COW.subtitle}</div>
-                  </div>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-sm font-bold text-white">
-                    {byQuadrant.CASH_COW?.length ?? 0}
-                  </span>
-                </div>
-                <div className="mt-2 whitespace-pre-line text-[10px] text-sky-700 dark:text-sky-400">{Q_META.CASH_COW.strategy}</div>
-                <div className="mt-2 space-y-0.5">
-                  {byQuadrant.CASH_COW?.slice(0, 5).map((i) => (
-                    <div key={i.id} className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-700 dark:text-zinc-300">#{i.sortOrder} {i.name}</span>
-                      <span className="tabular-nums text-sky-600">{formatMargin(i.grossMargin)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 盈利平衡点标注 */}
-              <div className="col-span-2 flex items-center justify-center py-1">
-                <div className="rounded-full border border-zinc-300 bg-white px-3 py-0.5 text-[10px] font-medium text-zinc-500 shadow-sm dark:border-zinc-600 dark:bg-zinc-800">
-                  盈利平衡 · 毛利率 {quadrantThresholds.marginHighPct}% / 增长 {quadrantThresholds.growthHighPct}%
-                </div>
-              </div>
-
-              {/* 问题项目（左下）*/}
-              <div className={`rounded-lg border p-4 ${Q_META.QUESTION.bgClass}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className={`text-sm font-bold ${Q_META.QUESTION.color}`}>{Q_META.QUESTION.title}</div>
-                    <div className="text-[10px] text-zinc-500">{Q_META.QUESTION.subtitle}</div>
-                  </div>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white">
-                    {byQuadrant.QUESTION?.length ?? 0}
-                  </span>
-                </div>
-                <div className="mt-2 whitespace-pre-line text-[10px] text-amber-700 dark:text-amber-400">{Q_META.QUESTION.strategy}</div>
-                <div className="mt-2 space-y-0.5">
-                  {byQuadrant.QUESTION?.slice(0, 5).map((i) => (
-                    <div key={i.id} className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-700 dark:text-zinc-300">#{i.sortOrder} {i.name}</span>
-                      <span className="tabular-nums text-amber-600">{formatMargin(i.grossMargin)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 瘦狗（右下）*/}
-              <div className={`rounded-lg border p-4 ${Q_META.DOG.bgClass}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className={`text-sm font-bold ${Q_META.DOG.color}`}>{Q_META.DOG.title}</div>
-                    <div className="text-[10px] text-zinc-500">{Q_META.DOG.subtitle}</div>
-                  </div>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-sm font-bold text-white">
-                    {byQuadrant.DOG?.length ?? 0}
-                  </span>
-                </div>
-                <div className="mt-2 whitespace-pre-line text-[10px] text-red-700 dark:text-red-400">{Q_META.DOG.strategy}</div>
-                <div className="mt-2 space-y-0.5">
-                  {byQuadrant.DOG?.slice(0, 5).map((i) => (
-                    <div key={i.id} className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-700 dark:text-zinc-300">#{i.sortOrder} {i.name}</span>
-                      <span className="tabular-nums text-red-600">{formatMargin(i.grossMargin)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-3 text-xs text-zinc-500">
-            划分阈值（可在<Link href="/console/rules" className="font-medium underline">管理后台</Link>修改）：毛利率 ≥ {quadrantThresholds.marginHighPct}% 为「高毛利」，增长 ≥ {quadrantThresholds.growthHighPct}% 为「高增长」。
+          <p className="mt-3 text-xs text-slate-500">
+            虚线为阈值：毛利率 ≥ {quadrantThresholds.marginHighPct}%（高毛利），增长 ≥ {quadrantThresholds.growthHighPct}%（高增长）。悬停气泡查看详情。
+            <Link href="/console/rules" className="ml-1 font-medium text-amber-700 hover:underline dark:text-amber-400">修改阈值 →</Link>
           </p>
+        </section>
+
+        {/* 象限分布环形图 */}
+        <section className="card-hover rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">象限分布</h2>
+          <DonutChart
+            segments={[
+              { label: "明星", value: byQuadrant.STAR?.length ?? 0, color: "#10b981" },
+              { label: "现金牛", value: byQuadrant.CASH_COW?.length ?? 0, color: "#0ea5e9" },
+              { label: "问题", value: byQuadrant.QUESTION?.length ?? 0, color: "#f59e0b" },
+              { label: "瘦狗", value: byQuadrant.DOG?.length ?? 0, color: "#ef4444" },
+            ]}
+            centerValue={String(items.length)}
+            centerLabel="项目总数"
+          />
+
+          {/* 象限策略摘要 */}
+          <div className="mt-4 space-y-2">
+            {(["STAR", "CASH_COW", "QUESTION", "DOG"] as const).map(qk => {
+              const meta = Q_META[qk];
+              const count = byQuadrant[qk]?.length ?? 0;
+              if (!count) return null;
+              return (
+                <div key={qk} className={`rounded-lg border px-3 py-2 ${meta.bgClass}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold ${meta.color}`}>{meta.title}</span>
+                    <span className={`text-xs font-bold tabular-nums ${meta.color}`}>{count}</span>
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-slate-500">{meta.action}</div>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         {/* ==================== 右侧：评估指标 + 对策矩阵 ==================== */}

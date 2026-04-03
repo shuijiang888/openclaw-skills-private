@@ -22,6 +22,8 @@ import type { CoeffPatch } from "@/lib/quote-natural-language";
 import { parseTimeline } from "@/lib/timeline";
 import { describeCoefficients } from "@/lib/coefficient-descriptions";
 import { APPROVAL_DISCOUNT_BANDS } from "@/lib/business-config";
+import { RadarChart } from "@/components/charts/RadarChart";
+import { GaugeChart } from "@/components/charts/GaugeChart";
 
 type EnrichedQuote = {
   id: string;
@@ -540,8 +542,19 @@ export function Workbench({ projectId }: { projectId: string }) {
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-zinc-600 dark:bg-amber-950/30 dark:text-zinc-400">
-              <span className="font-medium">建议报价公式</span> = {costFormula}
+            <div className="mt-4 flex flex-wrap items-start gap-6">
+              <div className="shrink-0">
+                <RadarChart
+                  data={coeffDescs.map(d => ({ label: d.label.replace("系数", ""), value: d.value * 100, max: 185 }))}
+                  size={180}
+                  color="#d97706"
+                />
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-zinc-600 dark:bg-amber-950/30 dark:text-zinc-400">
+                  <span className="font-medium">建议报价公式</span> = {costFormula}
+                </div>
+              </div>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-4">
               <div className="price-highlight rounded-xl bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 text-white shadow-lg">
@@ -604,55 +617,48 @@ export function Workbench({ projectId }: { projectId: string }) {
                 <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-sky-600 text-xs font-bold text-white shadow-sm">⑤</span>
                 胜率预测模型
               </h2>
-              <div className="mt-3 space-y-2.5">
-                {winScores.map((s) => (
-                  <div key={s.key} className="flex items-center gap-2 text-xs">
-                    <span className="w-16 font-medium text-zinc-700 dark:text-zinc-300">{s.label}</span>
-                    <div className="flex-1">
-                      <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                        <div
-                          className={`progress-bar h-full rounded-full ${s.value >= 80 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : s.value >= 60 ? "bg-gradient-to-r from-amber-400 to-amber-500" : "bg-gradient-to-r from-red-400 to-red-500"}`}
-                          style={{ width: `${s.value}%` }}
-                        />
-                      </div>
-                    </div>
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      disabled={locked}
-                      value={s.value}
-                      className="w-12 rounded border border-zinc-200 bg-white px-1 py-0.5 text-right text-xs tabular-nums disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
-                      onChange={(e) =>
-                        setData({
-                          ...data,
-                          quote: { ...q, [s.key]: Number(e.target.value) },
-                        })
-                      }
-                      onBlur={() =>
-                        void patchQuote({
-                          wsPrice: q.wsPrice,
-                          wsRelation: q.wsRelation,
-                          wsDelivery: q.wsDelivery,
-                          wsTech: q.wsTech,
-                          wsPayment: q.wsPayment,
-                        })
-                      }
-                    />
-                    <span className="w-16 text-right text-[10px] text-zinc-500">{s.desc}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 rounded-lg bg-sky-50 px-3 py-3 dark:bg-sky-950/30">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">综合胜率</span>
-                  <span className="text-2xl font-bold text-sky-600 dark:text-sky-400 tabular-nums">{q.computed.winRate}%</span>
+              <div className="mt-3 flex items-start gap-4">
+                <div className="shrink-0">
+                  <GaugeChart value={q.computed.winRate} label="综合胜率" size={140} />
                 </div>
-                <div className="mt-2 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                  <div
-                    className={`progress-bar h-full rounded-full ${q.computed.winRate >= 70 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : q.computed.winRate >= 50 ? "bg-gradient-to-r from-amber-400 to-amber-500" : "bg-gradient-to-r from-red-400 to-red-500"}`}
-                    style={{ width: `${q.computed.winRate}%` }}
-                  />
+                <div className="flex-1 space-y-2">
+                  {winScores.map((s) => (
+                    <div key={s.key} className="flex items-center gap-2 text-xs">
+                      <span className="w-14 font-medium text-zinc-700 dark:text-zinc-300">{s.label}</span>
+                      <div className="flex-1">
+                        <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                          <div
+                            className={`progress-bar h-full rounded-full ${s.value >= 80 ? "bg-gradient-to-r from-emerald-400 to-emerald-500" : s.value >= 60 ? "bg-gradient-to-r from-amber-400 to-amber-500" : "bg-gradient-to-r from-red-400 to-red-500"}`}
+                            style={{ width: `${s.value}%` }}
+                          />
+                        </div>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        disabled={locked}
+                        value={s.value}
+                        className="w-11 rounded border border-zinc-200 bg-white px-1 py-0.5 text-right text-xs tabular-nums disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                        onChange={(e) =>
+                          setData({
+                            ...data,
+                            quote: { ...q, [s.key]: Number(e.target.value) },
+                          })
+                        }
+                        onBlur={() =>
+                          void patchQuote({
+                            wsPrice: q.wsPrice,
+                            wsRelation: q.wsRelation,
+                            wsDelivery: q.wsDelivery,
+                            wsTech: q.wsTech,
+                            wsPayment: q.wsPayment,
+                          })
+                        }
+                      />
+                      <span className="w-14 text-right text-[10px] text-zinc-500">{s.desc}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
