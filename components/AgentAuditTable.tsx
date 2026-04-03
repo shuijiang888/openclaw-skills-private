@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
+import { PROFIT_DATA_CHANGED } from "@/lib/profit-data-events";
 import { parseDemoRole } from "@/lib/approval";
 
 type Row = {
@@ -19,7 +20,7 @@ export function AgentAuditTable() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadRows = useCallback(() => {
     if (role !== "ADMIN") {
       setRows([]);
       return;
@@ -38,6 +39,17 @@ export function AgentAuditTable() {
         setRows([]);
       });
   }, [role]);
+
+  useEffect(() => {
+    loadRows();
+  }, [loadRows]);
+
+  useEffect(() => {
+    if (role !== "ADMIN") return;
+    const onSync = () => loadRows();
+    window.addEventListener(PROFIT_DATA_CHANGED, onSync);
+    return () => window.removeEventListener(PROFIT_DATA_CHANGED, onSync);
+  }, [role, loadRows]);
 
   if (role !== "ADMIN") {
     return (

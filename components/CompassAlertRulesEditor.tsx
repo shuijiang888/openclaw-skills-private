@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 
 type Rule = {
   id: string;
@@ -37,6 +38,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
         throw new Error(j.error ?? "保存失败");
       }
       setMsg("已保存");
+      dispatchProfitDataChanged();
       await refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "保存失败");
@@ -62,6 +64,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
         throw new Error(j.error ?? "添加失败");
       }
       setMsg("已添加新行，请编辑后保存");
+      dispatchProfitDataChanged();
       await refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "添加失败");
@@ -80,6 +83,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
       });
       if (!res.ok) throw new Error("删除失败");
       setMsg("已删除");
+      dispatchProfitDataChanged();
       await refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "删除失败");

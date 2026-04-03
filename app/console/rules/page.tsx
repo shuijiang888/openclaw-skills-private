@@ -8,6 +8,8 @@ import {
 import { loadCompassQuadrantThresholdsSafe } from "@/lib/load-compass-quadrant-threshold";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function ConsoleRulesPage() {
   const [compassAlertRules, quadrantThresholdInitial] = await Promise.all([
     prisma.compassAlertRule.findMany({

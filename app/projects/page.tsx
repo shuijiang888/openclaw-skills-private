@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { enrichProject } from "@/lib/serialize";
 import { projectStatusLabel } from "@/lib/display-labels";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage() {
   const raw = await prisma.project.findMany({
     orderBy: { updatedAt: "desc" },

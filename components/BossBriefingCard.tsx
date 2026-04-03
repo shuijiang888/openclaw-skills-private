@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { BossBriefingDTO } from "@/lib/boss-briefing";
+import { PROFIT_DATA_CHANGED } from "@/lib/profit-data-events";
 
 function BriefingInner({ data }: { data: BossBriefingDTO }) {
   const m = data.metrics;
@@ -80,8 +81,9 @@ export function BossBriefingCard({ data: serverData }: { data?: BossBriefingDTO 
   const [clientData, setClientData] = useState<BossBriefingDTO | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchBriefing = useCallback(() => {
     if (serverData) return;
+    setErr(null);
     void fetch("/api/dashboard/boss-briefing")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -90,6 +92,17 @@ export function BossBriefingCard({ data: serverData }: { data?: BossBriefingDTO 
       .then(setClientData)
       .catch(() => setErr("简报加载失败"));
   }, [serverData]);
+
+  useEffect(() => {
+    fetchBriefing();
+  }, [fetchBriefing]);
+
+  useEffect(() => {
+    if (serverData) return;
+    const onSync = () => fetchBriefing();
+    window.addEventListener(PROFIT_DATA_CHANGED, onSync);
+    return () => window.removeEventListener(PROFIT_DATA_CHANGED, onSync);
+  }, [serverData, fetchBriefing]);
 
   const data = serverData ?? clientData;
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 
 type ThresholdState = {
   marginHighPct: number;
@@ -39,6 +40,7 @@ export function CompassQuadrantThresholdEditor({
         throw new Error(j.error ?? "保存失败");
       }
       setMsg("已保存；盈利罗盘四象限与表格将按新阈值即时重算。");
+      dispatchProfitDataChanged();
       await reload();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "保存失败");

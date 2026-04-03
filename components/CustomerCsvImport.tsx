@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { demoHeaders } from "@/components/RoleSwitcher";
+import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 
 export function CustomerCsvImport() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export function CustomerCsvImport() {
       setMsg(
         `完成：新建 ${j.created} 条，同名跳过 ${j.skipped} 条（共解析 ${j.totalInput} 行）。`,
       );
+      dispatchProfitDataChanged();
       router.refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "导入失败");

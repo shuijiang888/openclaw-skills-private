@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { VALUE_PROPOSITIONS } from "@/lib/business-config";
 
+export const dynamic = "force-dynamic";
+
 const ARENA_PROTOTYPE =
   "https://019d4e3d-06a8-7e3f-be0c-16fe2b7d6cdf.arena.site/";
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { customerTierLabel } from "@/lib/display-labels";
+import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 
 type Customer = { id: string; name: string; tier: string };
 
@@ -45,6 +46,7 @@ export function NewProjectForm() {
     });
     if (!res.ok) throw new Error("创建客户失败");
     const c = (await res.json()) as Customer;
+    dispatchProfitDataChanged();
     return c.id;
   }
 
@@ -75,6 +77,8 @@ export function NewProjectForm() {
         throw new Error((j as { error?: string }).error ?? "创建失败");
       }
       const p = (await res.json()) as { id: string };
+      dispatchProfitDataChanged();
+      router.refresh();
       router.push(`/projects/${p.id}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "错误");

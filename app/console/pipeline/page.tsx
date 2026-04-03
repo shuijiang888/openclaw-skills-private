@@ -4,6 +4,8 @@ import { ProjectsCsvImport } from "@/components/ProjectsCsvImport";
 import { prisma } from "@/lib/prisma";
 import { enrichProject } from "@/lib/serialize";
 
+export const dynamic = "force-dynamic";
+
 export default async function ConsolePipelinePage() {
   const raw = await prisma.project.findMany({
     orderBy: { updatedAt: "desc" },

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { QuoteAssistantPanel } from "@/components/QuoteAssistantPanel";
@@ -133,6 +134,7 @@ export function Workbench({ projectId }: { projectId: string }) {
       setData(await res.json());
       const rid = res.headers.get("x-request-id");
       if (rid) setLastPatchRequestId(rid);
+      dispatchProfitDataChanged({ debounceMs: 500 });
     } catch {
       setErr("保存失败");
     } finally {
@@ -152,6 +154,7 @@ export function Workbench({ projectId }: { projectId: string }) {
       if (!res.ok) throw new Error("提交失败");
       setData(await res.json());
       showRequestAuditTip("已提交审批。", res);
+      dispatchProfitDataChanged();
     } catch {
       setErr("提交审批失败");
     } finally {
@@ -178,6 +181,7 @@ export function Workbench({ projectId }: { projectId: string }) {
       }
       setData(j);
       showRequestAuditTip("审批已通过。", res);
+      dispatchProfitDataChanged();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "审批失败");
     } finally {

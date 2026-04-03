@@ -3,6 +3,8 @@ import { CsvExportLink } from "@/components/CsvExportLink";
 import { CustomerCsvImport } from "@/components/CustomerCsvImport";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function ConsoleCustomersPage() {
   const rows = await prisma.customer.findMany({
     orderBy: { createdAt: "desc" },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { DataSyncListener } from "@/components/DataSyncListener";
 import { Nav } from "@/components/Nav";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col text-slate-900 dark:text-slate-50">
+        <DataSyncListener />
         <Nav />
         <main className="w-full flex-1 px-4 py-8 sm:py-10">{children}</main>
         <SiteFooter />
