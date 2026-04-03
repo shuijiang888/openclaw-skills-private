@@ -7,7 +7,6 @@ import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { QuoteAssistantPanel } from "@/components/QuoteAssistantPanel";
 import { SalesManagerBenchCard } from "@/components/SalesManagerBenchCard";
-import { QuoteRuleExplainCard } from "@/components/QuoteRuleExplainCard";
 import { buildQuoteSummaryText } from "@/lib/build-quote-summary";
 import {
   customerTierLabel,
@@ -21,6 +20,8 @@ import {
 } from "@/lib/demo-role-modules";
 import type { CoeffPatch } from "@/lib/quote-natural-language";
 import { parseTimeline } from "@/lib/timeline";
+import { describeCoefficients } from "@/lib/coefficient-descriptions";
+import { APPROVAL_DISCOUNT_BANDS } from "@/lib/business-config";
 
 type EnrichedQuote = {
   id: string;
@@ -70,6 +71,20 @@ type ProjectDTO = {
   customer: { name: string; tier: string };
   quote: EnrichedQuote | null;
 };
+
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    DRAFT: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+    PRICED: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+    PENDING_APPROVAL: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+    APPROVED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  };
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? colors.DRAFT}`}>
+      {projectStatusLabel(status)}
+    </span>
+  );
+}
 
 export function Workbench({ projectId }: { projectId: string }) {
   const demoRole = parseDemoRole(useDemoRole());
@@ -223,6 +238,17 @@ export function Workbench({ projectId }: { projectId: string }) {
     pendingParsed !== null && canApprove(demoRole, pendingParsed);
   const assistantAllowed = canUseQuoteAssistant(demoRole);
 
+  const coeffDescs = describeCoefficients({
+    ...q,
+    customerTier: data.customer.tier,
+    productName: data.productName,
+    leadDays: data.leadDays,
+    quantity: data.quantity,
+    isStandard: data.isStandard,
+  });
+
+  const costFormula = `¥${q.computed.totalCost.toLocaleString("zh-CN")} × ${coeffDescs.map(d => d.value).join(" × ")}`;
+
   function applyCoeffPatch(patch: CoeffPatch) {
     if (!data?.quote) return;
     const next = { ...data.quote, ...patch };
@@ -297,6 +323,14 @@ export function Workbench({ projectId }: { projectId: string }) {
     }
   }
 
+  const winScores = [
+    { label: "价格竞争力", value: q.wsPrice, key: "wsPrice" as const, desc: q.wsPrice >= 80 ? "高于市场" : "略低" },
+    { label: "客户关系", value: q.wsRelation, key: "wsRelation" as const, desc: q.wsRelation >= 80 ? "合作稳定" : "需加强" },
+    { label: "交付能力", value: q.wsDelivery, key: "wsDelivery" as const, desc: q.wsDelivery >= 80 ? "产能充足" : "需评估" },
+    { label: "技术匹配", value: q.wsTech, key: "wsTech" as const, desc: q.wsTech >= 80 ? "工艺匹配" : "需确认" },
+    { label: "付款条件", value: q.wsPayment, key: "wsPayment" as const, desc: q.wsPayment >= 70 ? "条款合理" : `账期${data.customer.tier === "STRATEGIC" ? "60" : "30"}天` },
+  ];
+
   return (
     <div className="space-y-6">
       <BossBriefingCard />
@@ -340,129 +374,524 @@ export function Workbench({ projectId }: { projectId: string }) {
 
       <div className="xl:grid xl:grid-cols-[1fr_minmax(300px,380px)] xl:items-start xl:gap-8">
         <div className="min-w-0 space-y-6">
-          <div className="grid gap-4 lg:grid-cols-3">
-        <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-1">
-          <h2 className="text-sm font-medium text-zinc-500">项目摘要</h2>
-          <dl className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-zinc-500">客户</dt>
-              <dd className="text-right font-medium">{data.customer.name}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-zinc-500">客户评级</dt>
-              <dd className="text-right">
-                {customerTierLabel(data.customer.tier)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-zinc-500">项目状态</dt>
-              <dd className="text-right">
-                {projectStatusLabel(data.status)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-zinc-500">数量 / 交期</dt>
-              <dd className="text-right tabular-nums">
-                {data.quantity} · {data.leadDays} 天
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-zinc-500">标品 / 小额</dt>
-              <dd className="text-right">
-                {data.isStandard ? "是" : "否"} /{" "}
-                {data.isSmallOrder ? "是" : "否"}
-              </dd>
-            </div>
-            {q.approvedPrice != null ? (
-              <div className="flex justify-between gap-4 border-t border-zinc-100 pt-2 dark:border-zinc-800">
-                <dt className="text-zinc-500">核准成交价</dt>
-                <dd className="text-right font-semibold text-emerald-700 dark:text-emerald-400">
-                  ¥{q.approvedPrice.toLocaleString("zh-CN")}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        </section>
+          {/* ==================== 图2：成本基准 + 系数引擎 + 参考对比 + 胜率 ==================== */}
 
-        <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-2">
-          <h2 className="text-sm font-medium text-zinc-500">成本基准</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-4">
-            {(
-              [
-                ["材料", q.material, "material"],
-                ["人工", q.labor, "labor"],
-                ["制费", q.overhead, "overhead"],
-                ["期间", q.period, "period"],
-              ] as const
-            ).map(([label, val, key]) => (
-              <label key={key} className="block text-xs">
-                <span className="text-zinc-500">{label}</span>
+          {/* 顶部：项目信息卡 + 成本基准 */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <section className="rounded-xl border-2 border-orange-200 bg-white p-4 shadow-sm dark:border-orange-800 dark:bg-zinc-900 lg:col-span-1">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-orange-100 text-xs font-bold text-orange-600 dark:bg-orange-900">①</span>
+                项目摘要
+              </h2>
+              <dl className="mt-3 space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500">客户</dt>
+                  <dd className="text-right font-medium">{data.customer.name}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500">评级</dt>
+                  <dd className="text-right">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${data.customer.tier === "STRATEGIC" ? "bg-amber-100 text-amber-800" : data.customer.tier === "KEY" ? "bg-blue-100 text-blue-800" : "bg-zinc-100 text-zinc-700"}`}>
+                      {customerTierLabel(data.customer.tier)}
+                    </span>
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500">项目状态</dt>
+                  <dd className="text-right"><StatusBadge status={data.status} /></dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500">产品/规格</dt>
+                  <dd className="text-right text-xs">{data.productName || "—"}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500">数量 / 交期</dt>
+                  <dd className="text-right tabular-nums">
+                    {data.quantity.toLocaleString()} · {data.leadDays} 天
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-zinc-500">标品 / 小额</dt>
+                  <dd className="text-right">
+                    {data.isStandard ? "✓" : "✗"} / {data.isSmallOrder ? "✓" : "✗"}
+                  </dd>
+                </div>
+                {q.approvedPrice != null ? (
+                  <div className="flex justify-between gap-4 border-t border-zinc-100 pt-2 dark:border-zinc-800">
+                    <dt className="text-zinc-500">核准成交价</dt>
+                    <dd className="text-right font-semibold text-emerald-700 dark:text-emerald-400">
+                      ¥{q.approvedPrice.toLocaleString("zh-CN")}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            </section>
+
+            <section className="rounded-xl border-2 border-orange-200 bg-white p-4 shadow-sm dark:border-orange-800 dark:bg-zinc-900 lg:col-span-2">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-orange-100 text-xs font-bold text-orange-600 dark:bg-orange-900">②</span>
+                成本基准
+              </h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                {(
+                  [
+                    ["直接材料", q.material, "material", "铜箔+树脂+覆铜板"],
+                    ["直接人工", q.labor, "labor", "钻孔/电镀/检测工时"],
+                    ["制造费用", q.overhead, "overhead", "设备折旧/厂租/能耗"],
+                    ["期间费用", q.period, "period", "管理+销售+研发"],
+                  ] as const
+                ).map(([label, val, key, desc]) => (
+                  <label key={key} className="block text-xs">
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">{label}</span>
+                    <input
+                      type="number"
+                      disabled={locked}
+                      className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm tabular-nums disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                      value={val}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          quote: { ...q, [key]: Number(e.target.value) },
+                        })
+                      }
+                      onBlur={() =>
+                        void patchQuote({
+                          material: q.material,
+                          labor: q.labor,
+                          overhead: q.overhead,
+                          period: q.period,
+                        })
+                      }
+                    />
+                    <span className="mt-0.5 block text-[10px] text-zinc-400">{desc}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="mt-3 flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2 dark:bg-orange-950/30">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">初始成本</span>
+                <span className="text-lg font-bold tabular-nums text-orange-700 dark:text-orange-400">
+                  ¥{q.computed.totalCost.toLocaleString("zh-CN")}
+                </span>
+              </div>
+            </section>
+          </div>
+
+          {/* 智能系数叠加引擎——对应图2中间区域 */}
+          <section className="rounded-xl border-2 border-amber-200 bg-white p-4 shadow-sm dark:border-amber-800 dark:bg-zinc-900">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900">③</span>
+                智能系数叠加引擎
+              </h2>
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                连乘系数 {q.computed.coefficientProduct}
+              </span>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[500px] text-sm">
+                <thead>
+                  <tr className="border-b border-amber-100 text-xs text-zinc-500 dark:border-amber-900">
+                    <th className="pb-2 pr-3 text-left font-medium">系数</th>
+                    <th className="pb-2 pr-3 text-right font-medium">数值</th>
+                    <th className="pb-2 pr-3 text-left font-medium">标签</th>
+                    <th className="pb-2 pr-3 text-right font-medium">影响</th>
+                    <th className="pb-2 text-left font-medium">说明</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-amber-50 dark:divide-amber-900/50">
+                  {coeffDescs.map((d) => (
+                    <tr key={d.key}>
+                      <td className="py-2 pr-3 font-medium text-zinc-800 dark:text-zinc-200">{d.label}</td>
+                      <td className="py-2 pr-3 text-right">
+                        <input
+                          type="number"
+                          step="0.01"
+                          disabled={locked}
+                          className="w-16 rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-right text-sm tabular-nums disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                          value={q[d.key as keyof typeof q] as number}
+                          onChange={(e) =>
+                            setData({
+                              ...data,
+                              quote: { ...q, [d.key]: Number(e.target.value) },
+                            })
+                          }
+                          onBlur={() =>
+                            void patchQuote({
+                              coeffCustomer: q.coeffCustomer,
+                              coeffIndustry: q.coeffIndustry,
+                              coeffRegion: q.coeffRegion,
+                              coeffProduct: q.coeffProduct,
+                              coeffLead: q.coeffLead,
+                              coeffQty: q.coeffQty,
+                              refreshBenchmarks: true,
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">{d.tag}</span>
+                      </td>
+                      <td className={`py-2 pr-3 text-right text-xs font-medium tabular-nums ${d.impactPct.startsWith("+") ? "text-red-600" : d.impactPct === "+0%" ? "text-zinc-500" : "text-emerald-600"}`}>
+                        {d.impactPct}
+                      </td>
+                      <td className="py-2 text-xs text-zinc-500">{d.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-zinc-600 dark:bg-amber-950/30 dark:text-zinc-400">
+              <span className="font-medium">建议报价公式</span> = {costFormula}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <div className="rounded-lg bg-red-600 px-5 py-3 text-white shadow-lg">
+                <div className="text-xs opacity-90">建议报价</div>
+                <div className="text-2xl font-bold tabular-nums">
+                  ¥{q.suggestedPrice.toLocaleString("zh-CN")}
+                </div>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="text-zinc-600 dark:text-zinc-400">
+                  建议毛利率{" "}
+                  <span className="font-bold text-zinc-900 dark:text-zinc-50">
+                    {q.computed.grossMarginAtSuggest}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 参考对比 + 胜率——对应图2右侧 */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-xl border-2 border-purple-200 bg-white p-4 shadow-sm dark:border-purple-800 dark:bg-zinc-900">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-purple-700 dark:text-purple-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-purple-100 text-xs font-bold text-purple-600 dark:bg-purple-900">④</span>
+                参考对比分析
+              </h2>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-purple-100 text-zinc-500 dark:border-purple-900">
+                      <th className="py-2 pr-2 font-medium">参考类型</th>
+                      <th className="py-2 pr-2 text-right font-medium">价格</th>
+                      <th className="py-2 text-right font-medium">差异</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-purple-50 dark:divide-purple-900/50">
+                    {q.benchmarks.map((b) => (
+                      <tr key={b.name}>
+                        <td className="py-2 pr-2 text-zinc-700 dark:text-zinc-300">{b.name}</td>
+                        <td className="py-2 pr-2 text-right tabular-nums font-medium">
+                          ¥{b.price.toLocaleString("zh-CN")}
+                        </td>
+                        <td
+                          className={`py-2 text-right tabular-nums font-medium ${
+                            b.diffPct <= 0 ? "text-emerald-600" : "text-red-500"
+                          }`}
+                        >
+                          {b.diffPct > 0 ? "+" : ""}
+                          {b.diffPct}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="rounded-xl border-2 border-sky-200 bg-white p-4 shadow-sm dark:border-sky-800 dark:bg-zinc-900">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-sky-700 dark:text-sky-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-sky-100 text-xs font-bold text-sky-600 dark:bg-sky-900">⑤</span>
+                胜率预测模型
+              </h2>
+              <div className="mt-3 space-y-2.5">
+                {winScores.map((s) => (
+                  <div key={s.key} className="flex items-center gap-2 text-xs">
+                    <span className="w-16 font-medium text-zinc-700 dark:text-zinc-300">{s.label}</span>
+                    <div className="flex-1">
+                      <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                        <div
+                          className={`h-full rounded-full ${s.value >= 80 ? "bg-emerald-500" : s.value >= 60 ? "bg-amber-500" : "bg-red-500"}`}
+                          style={{ width: `${s.value}%` }}
+                        />
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      disabled={locked}
+                      value={s.value}
+                      className="w-12 rounded border border-zinc-200 bg-white px-1 py-0.5 text-right text-xs tabular-nums disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          quote: { ...q, [s.key]: Number(e.target.value) },
+                        })
+                      }
+                      onBlur={() =>
+                        void patchQuote({
+                          wsPrice: q.wsPrice,
+                          wsRelation: q.wsRelation,
+                          wsDelivery: q.wsDelivery,
+                          wsTech: q.wsTech,
+                          wsPayment: q.wsPayment,
+                        })
+                      }
+                    />
+                    <span className="w-16 text-right text-[10px] text-zinc-500">{s.desc}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 rounded-lg bg-sky-50 px-3 py-3 dark:bg-sky-950/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">综合胜率</span>
+                  <span className="text-2xl font-bold text-sky-600 dark:text-sky-400 tabular-nums">{q.computed.winRate}%</span>
+                </div>
+                <div className="mt-2 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div
+                    className={`h-full rounded-full transition-all ${q.computed.winRate >= 70 ? "bg-emerald-500" : q.computed.winRate >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                    style={{ width: `${q.computed.winRate}%` }}
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* ==================== 图3：分层审批 + 客户还价 ==================== */}
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-xl border-2 border-rose-200 bg-white p-4 shadow-sm dark:border-rose-800 dark:bg-zinc-900">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-rose-100 text-xs font-bold text-rose-600 dark:bg-rose-900">⑥</span>
+                客户还价与折扣计算
+              </h2>
+              <label className="mt-3 block text-sm">
+                <span className="text-zinc-500">还价金额（空=未还价）</span>
                 <input
                   type="number"
                   disabled={locked}
-                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
-                  value={val}
-                  onChange={(e) =>
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 tabular-nums dark:border-zinc-600 dark:bg-zinc-950"
+                  value={q.counterPrice ?? ""}
+                  placeholder={`参考建议价 ¥${q.suggestedPrice.toLocaleString("zh-CN")}`}
+                  onChange={(e) => {
+                    const v = e.target.value;
                     setData({
                       ...data,
-                      quote: { ...q, [key]: Number(e.target.value) },
-                    })
-                  }
+                      quote: {
+                        ...q,
+                        counterPrice: v === "" ? null : Number(v),
+                      },
+                    });
+                  }}
                   onBlur={() =>
-                    void patchQuote({
-                      material: q.material,
-                      labor: q.labor,
-                      overhead: q.overhead,
-                      period: q.period,
-                    })
+                    void patchQuote({ counterPrice: q.counterPrice })
                   }
                 />
               </label>
-            ))}
-          </div>
-          <p className="mt-3 text-sm">
-            成本合计{" "}
-            <span className="font-semibold tabular-nums">
-              ¥{q.computed.totalCost.toLocaleString("zh-CN")}
-            </span>
-          </p>
-        </section>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg bg-rose-50 px-3 py-2 dark:bg-rose-950/30">
+                  <div className="text-xs text-zinc-500">折扣率</div>
+                  <div className="mt-0.5 text-lg font-bold tabular-nums text-rose-700 dark:text-rose-400">
+                    {q.computed.discountPercentDisplay}%
+                  </div>
+                </div>
+                <div className="rounded-lg bg-rose-50 px-3 py-2 dark:bg-rose-950/30">
+                  <div className="text-xs text-zinc-500">还价后毛利率</div>
+                  <div className={`mt-0.5 text-lg font-bold tabular-nums ${q.computed.grossMarginAtOffer < 15 ? "text-red-600" : "text-emerald-600"}`}>
+                    {q.computed.grossMarginAtOffer}%
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950/30">
+                <span className="text-zinc-600 dark:text-zinc-400">建议审批链 → </span>
+                <span className="font-semibold text-amber-800 dark:text-amber-300">
+                  {q.computed.requiredApproval.label}
+                </span>
+              </div>
+            </section>
+
+            {/* 分层审批规则——对应图3下方表格 */}
+            <section className="rounded-xl border-2 border-amber-200 bg-white p-4 shadow-sm dark:border-amber-800 dark:bg-zinc-900">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-xs font-bold text-amber-600 dark:bg-amber-900">⑦</span>
+                授权审批规则
+              </h2>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-amber-100 text-zinc-500 dark:border-amber-900">
+                      <th className="py-2 pr-2 font-medium">层级</th>
+                      <th className="py-2 pr-2 font-medium">折扣权限</th>
+                      <th className="py-2 font-medium">审批条件</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-50 dark:divide-amber-900/50">
+                    {APPROVAL_DISCOUNT_BANDS.map((b) => {
+                      const isActive = q.computed.requiredApproval.role === b.role;
+                      return (
+                        <tr key={b.role} className={isActive ? "bg-amber-50 dark:bg-amber-950/30" : ""}>
+                          <td className={`py-2 pr-2 font-medium ${isActive ? "text-amber-800 dark:text-amber-300" : "text-zinc-700 dark:text-zinc-300"}`}>
+                            {isActive ? "▶ " : ""}{b.label}
+                          </td>
+                          <td className="py-2 pr-2 text-zinc-600 dark:text-zinc-400">{b.range}</td>
+                          <td className="py-2 text-zinc-500">
+                            {b.role === "SALES_MANAGER" ? "标准范围内" :
+                             b.role === "SALES_DIRECTOR" ? "超出经理权限" :
+                             b.role === "SALES_VP" ? "大额订单/战略客户" :
+                             "特殊项目/亏损风险"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-sm font-medium">智能系数叠加</h2>
-          <span className="text-xs text-zinc-500">
-            连乘系数 {q.computed.coefficientProduct}
-          </span>
-        </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {(
-            [
-              ["客户", q.coeffCustomer, "coeffCustomer"],
-              ["行业", q.coeffIndustry, "coeffIndustry"],
-              ["区域", q.coeffRegion, "coeffRegion"],
-              ["产品", q.coeffProduct, "coeffProduct"],
-              ["交期", q.coeffLead, "coeffLead"],
-              ["批量", q.coeffQty, "coeffQty"],
-            ] as const
-          ).map(([label, val, key]) => (
-            <label key={key} className="block text-xs">
-              <span className="text-zinc-500">{label}</span>
-              <input
-                type="number"
-                step="0.01"
-                disabled={locked}
-                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
-                value={val}
-                onChange={(e) =>
-                  setData({
-                    ...data,
-                    quote: { ...q, [key]: Number(e.target.value) },
-                  })
-                }
-                onBlur={() =>
+          {/* ==================== 图4：智能分流 ==================== */}
+          <section className="rounded-xl border-2 border-teal-200 bg-white p-4 shadow-sm dark:border-teal-800 dark:bg-zinc-900">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-teal-700 dark:text-teal-400">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-100 text-xs font-bold text-teal-600 dark:bg-teal-900">⑧</span>
+              智能决策分流
+            </h2>
+            <div className="mt-3 grid gap-4 lg:grid-cols-2">
+              {/* 自动报价通道 */}
+              <div className={`rounded-lg border-2 p-4 ${q.computed.shunt.channel === "AUTO" ? "border-emerald-400 bg-emerald-50/50 dark:border-emerald-600 dark:bg-emerald-950/20" : "border-zinc-200 bg-zinc-50/50 dark:border-zinc-700 dark:bg-zinc-800/30"}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${q.computed.shunt.channel === "AUTO" ? "bg-emerald-500 text-white" : "bg-zinc-200 text-zinc-500"}`}>
+                    {q.computed.shunt.channel === "AUTO" ? "✓ 当前" : "未命中"}
+                  </span>
+                  <h3 className="font-semibold text-emerald-800 dark:text-emerald-300">自动报价通道</h3>
+                </div>
+                <ul className="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                  <li>✓ 产品类型 = 标品/标准型号</li>
+                  <li>✓ 订单规模 = 小项目/小订单</li>
+                  <li>✓ 折扣范围 ≤ 5%</li>
+                  <li>✓ 客户评级 = 普通客户</li>
+                  <li>✓ 毛利率 ≥ 25%</li>
+                </ul>
+                <div className="mt-2 text-[10px] text-emerald-700 dark:text-emerald-400">
+                  策略：报不到就拿不到，标准化快速响应
+                </div>
+              </div>
+              {/* 人机协同通道 */}
+              <div className={`rounded-lg border-2 p-4 ${q.computed.shunt.channel === "COLLAB" ? "border-amber-400 bg-amber-50/50 dark:border-amber-600 dark:bg-amber-950/20" : "border-zinc-200 bg-zinc-50/50 dark:border-zinc-700 dark:bg-zinc-800/30"}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${q.computed.shunt.channel === "COLLAB" ? "bg-amber-500 text-white" : "bg-zinc-200 text-zinc-500"}`}>
+                    {q.computed.shunt.channel === "COLLAB" ? "✓ 当前" : "未命中"}
+                  </span>
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-300">人机协同决策</h3>
+                </div>
+                <ul className="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                  <li>✓ 产品类型 = 定制化/复杂产品</li>
+                  <li>✓ 客户评级 = 战略/大客户</li>
+                  <li>✓ 订单规模 = 大项目/大批量</li>
+                  <li>✓ 折扣范围 &gt; 5%（超权限）</li>
+                  <li>✓ 毛利率 &lt; 25%</li>
+                </ul>
+                <div className="mt-2 text-[10px] text-amber-700 dark:text-amber-400">
+                  策略：不惜代价拿下，确保重点项目不流失
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 rounded-lg bg-teal-50 px-3 py-2 text-xs text-zinc-600 dark:bg-teal-950/30 dark:text-zinc-400">
+              <span className="font-medium">本单命中条件：</span>
+              {q.computed.shunt.reasons.map((r, i) => (
+                <span key={i}>{i > 0 ? " · " : ""}{r}</span>
+              ))}
+            </div>
+          </section>
+
+          {/* ==================== 智能报价单——对应图2下半部分 ==================== */}
+          <section className="rounded-xl border-2 border-indigo-200 bg-white p-4 shadow-sm dark:border-indigo-800 dark:bg-zinc-900">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900">⑨</span>
+              智能报价单
+            </h2>
+            <div className="mt-3 grid gap-4 lg:grid-cols-3">
+              {/* 左栏：报价信息 */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-zinc-500">客户名称</span><span className="font-medium">{data.customer.name}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500">项目名称</span><span className="font-medium">{data.name}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500">产品规格</span><span>{data.productName || "—"}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500">数量</span><span className="tabular-nums">{data.quantity.toLocaleString()} PCS</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500">交付周期</span><span>{data.leadDays} 个工作日</span></div>
+                <div className="border-t border-zinc-100 pt-2 dark:border-zinc-800">
+                  <div className="flex justify-between"><span className="text-zinc-500">初始成本</span><span className="tabular-nums">¥{q.computed.totalCost.toLocaleString("zh-CN")}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">系数调整</span><span className="tabular-nums">× {q.computed.coefficientProduct}</span></div>
+                  <div className="flex justify-between border-t border-zinc-100 pt-2 font-semibold dark:border-zinc-800">
+                    <span>建议报价</span>
+                    <span className="text-red-600 tabular-nums">¥{q.suggestedPrice.toLocaleString("zh-CN")}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-zinc-500 mt-1">
+                    <span>毛利率</span>
+                    <span className="tabular-nums">{q.computed.grossMarginAtSuggest}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 中栏：AI 建议 */}
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 dark:border-indigo-900 dark:bg-indigo-950/20">
+                <h3 className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">AI 报价建议</h3>
+                <div className="mt-2 space-y-1.5 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
+                  {q.aiSuggestion.split("\n").filter(Boolean).map((line, i) => (
+                    <p key={i} className="flex items-start gap-1.5">
+                      <span className="mt-0.5 text-indigo-500">✓</span>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* 右栏：状态追踪 */}
+              <div className="rounded-lg border border-zinc-100 bg-zinc-50/50 p-3 dark:border-zinc-800 dark:bg-zinc-800/30">
+                <h3 className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">报价状态追踪</h3>
+                <div className="mt-2 space-y-2">
+                  {timeline.slice(0, 5).map((ev) => (
+                    <div key={ev.at + ev.title} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${ev.title.includes("通过") || ev.title.includes("完成") ? "bg-emerald-500" : ev.title.includes("待") ? "bg-amber-500" : "bg-blue-500"}`} />
+                        {ev.title}
+                      </span>
+                      <span className="text-zinc-400 tabular-nums">
+                        {new Date(ev.at).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                  ))}
+                  {q.pendingRole && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        → 待审批
+                      </span>
+                      <span className="text-amber-600 font-medium">{demoRoleLabelForUi(q.pendingRole)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 操作按钮——对应图2底部 */}
+            <div className="mt-4 flex flex-wrap gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+              <button
+                type="button"
+                disabled={locked || busy || !!q.pendingRole}
+                onClick={() => void submitApproval()}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-500 disabled:opacity-50"
+              >
+                ☑ 提交审批
+              </button>
+              <button
+                type="button"
+                disabled={locked || busy}
+                onClick={() =>
                   void patchQuote({
+                    material: q.material,
+                    labor: q.labor,
+                    overhead: q.overhead,
+                    period: q.period,
                     coeffCustomer: q.coeffCustomer,
                     coeffIndustry: q.coeffIndustry,
                     coeffRegion: q.coeffRegion,
@@ -472,268 +901,28 @@ export function Workbench({ projectId }: { projectId: string }) {
                     refreshBenchmarks: true,
                   })
                 }
-              />
-            </label>
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <div className="rounded-lg bg-red-600 px-4 py-3 text-white shadow">
-            <div className="text-xs opacity-90">建议价</div>
-            <div className="text-xl font-semibold tabular-nums">
-              ¥{q.suggestedPrice.toLocaleString("zh-CN")}
+                className="rounded-lg border-2 border-amber-400 bg-white px-5 py-2.5 text-sm font-semibold text-amber-700 shadow hover:bg-amber-50 disabled:opacity-50 dark:bg-zinc-900 dark:text-amber-400"
+              >
+                ☑ 调整报价
+              </button>
+              <button
+                type="button"
+                disabled={locked || busy || !q.pendingRole || !canActApprove}
+                onClick={() => void approve()}
+                className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-50"
+              >
+                ✓ 审批通过
+              </button>
             </div>
-          </div>
-          <div className="text-sm text-zinc-600 dark:text-zinc-400">
-            建议毛利率{" "}
-            <span className="font-semibold text-zinc-900 dark:text-zinc-50">
-              {q.computed.grossMarginAtSuggest}%
-            </span>
-          </div>
-        </div>
-          </section>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-sm font-medium">参考对比</h2>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[320px] text-left text-xs">
-              <thead>
-                <tr className="border-b border-zinc-100 text-zinc-500 dark:border-zinc-800">
-                  <th className="py-2 pr-2">口径</th>
-                  <th className="py-2 pr-2 text-right">价格</th>
-                  <th className="py-2 text-right">较建议价</th>
-                </tr>
-              </thead>
-              <tbody>
-                {q.benchmarks.map((b) => (
-                  <tr
-                    key={b.name}
-                    className="border-b border-zinc-50 dark:border-zinc-800/80"
-                  >
-                    <td className="py-2 pr-2">{b.name}</td>
-                    <td className="py-2 pr-2 text-right tabular-nums">
-                      ¥{b.price.toLocaleString("zh-CN")}
-                    </td>
-                    <td
-                      className={`py-2 text-right tabular-nums ${
-                        b.diffPct <= 0 ? "text-emerald-600" : "text-amber-600"
-                      }`}
-                    >
-                      {b.diffPct > 0 ? "+" : ""}
-                      {b.diffPct}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-sm font-medium">胜率（规则加权）</h2>
-          <div className="mt-3 space-y-2 text-xs">
-            {(
-              [
-                ["价格竞争力", q.wsPrice, "wsPrice"],
-                ["客情", q.wsRelation, "wsRelation"],
-                ["交付", q.wsDelivery, "wsDelivery"],
-                ["技术匹配", q.wsTech, "wsTech"],
-                ["账期", q.wsPayment, "wsPayment"],
-              ] as const
-            ).map(([label, val, key]) => (
-              <div key={key} className="flex items-center gap-2">
-                <span className="w-20 text-zinc-500">{label}</span>
-                <input
-                  type="range"
-                  min={0}
- max={100}
-                  disabled={locked}
-                  value={val}
-                  className="flex-1"
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      quote: { ...q, [key]: Number(e.target.value) },
-                    })
-                  }
-                  onMouseUp={() =>
-                    void patchQuote({
-                      wsPrice: q.wsPrice,
-                      wsRelation: q.wsRelation,
-                      wsDelivery: q.wsDelivery,
-                      wsTech: q.wsTech,
-                      wsPayment: q.wsPayment,
-                    })
-                  }
-                  onTouchEnd={() =>
-                    void patchQuote({
-                      wsPrice: q.wsPrice,
-                      wsRelation: q.wsRelation,
-                      wsDelivery: q.wsDelivery,
-                      wsTech: q.wsTech,
-                      wsPayment: q.wsPayment,
-                    })
-                  }
-                />
-                <span className="w-8 text-right tabular-nums">{val}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-zinc-500">综合胜率</span>
-              <span className="font-semibold text-emerald-600">
-                {q.computed.winRate}%
-              </span>
-            </div>
-            <div className="mt-1 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-              <div
-                className="h-full rounded-full bg-emerald-500"
-                style={{ width: `${q.computed.winRate}%` }}
-              />
-            </div>
-          </div>
-        </section>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-sm font-medium">客户还价</h2>
-          <label className="mt-3 block text-sm">
-            <span className="text-zinc-500">还价金额（空=未还价）</span>
-            <input
-              type="number"
-              disabled={locked}
-              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-950"
-              value={q.counterPrice ?? ""}
-              placeholder={`参考 ${q.suggestedPrice}`}
-              onChange={(e) => {
-                const v = e.target.value;
-                setData({
-                  ...data,
-                  quote: {
-                    ...q,
-                    counterPrice: v === "" ? null : Number(v),
-                  },
-                });
-              }}
-              onBlur={() =>
-                void patchQuote({ counterPrice: q.counterPrice })
-              }
-            />
-          </label>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            折扣约{" "}
-            <span className="font-medium text-zinc-900 dark:text-zinc-50">
-              {q.computed.discountPercentDisplay}%
-            </span>
-            ，还价后毛利率{" "}
-            <span className="font-medium">{q.computed.grossMarginAtOffer}%</span>
-          </p>
-          <p className="mt-2 text-sm">
-            建议审批链：{" "}
-            <span className="font-medium">
-              {q.computed.requiredApproval.label}
-            </span>
-          </p>
-        </section>
-
-        <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-sm font-medium">智能分流</h2>
-          <p className="mt-2 text-sm">
-            当前通道：{" "}
-            <span
-              className={
-                q.computed.shunt.channel === "AUTO"
-                  ? "font-semibold text-emerald-600"
-                  : "font-semibold text-amber-600"
-              }
-            >
-              {q.computed.shunt.channel === "AUTO"
-                ? "自动报价"
-                : "人机协同"}
-            </span>
-          </p>
-          <ul className="mt-2 list-inside list-disc text-xs text-zinc-600 dark:text-zinc-400">
-            {q.computed.shunt.reasons.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </section>
-          </div>
-
-          <QuoteRuleExplainCard quote={q} />
-
-          <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium">报价建议（规则文案）</h2>
-        <pre className="mt-3 whitespace-pre-wrap rounded-lg bg-zinc-50 p-3 text-sm text-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
-          {q.aiSuggestion}
-        </pre>
-          </section>
-
-          <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium">状态时间线</h2>
-        <ol className="mt-4 space-y-3 border-l border-zinc-200 pl-4 dark:border-zinc-700">
-          {timeline.map((ev) => (
-            <li key={ev.at + ev.title} className="relative text-sm">
-              <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-zinc-400" />
-              <div className="font-medium">{ev.title}</div>
-              <div className="text-xs text-zinc-500">
-                {new Date(ev.at).toLocaleString("zh-CN")}
-                {ev.detail ? ` · ${ev.detail}` : ""}
-              </div>
-            </li>
-          ))}
-        </ol>
-        {q.pendingRole ? (
-          <p className="mt-4 text-sm text-amber-700 dark:text-amber-400">
-            待审批角色：
-            <strong>{demoRoleLabelForUi(q.pendingRole)}</strong>
-            {canActApprove
-              ? " · 当前身份可点「审批通过」"
-              : " · 请在右上角将「试点角色」切换为不低于该档后再审批（登录模式请换具备权限的账号）"}
-          </p>
-        ) : null}
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button
-            type="button"
-            disabled={locked || busy || !!q.pendingRole}
-            onClick={() => void submitApproval()}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-          >
-            提交审批
-          </button>
-          <button
-            type="button"
-            disabled={locked || busy || !q.pendingRole || !canActApprove}
-            onClick={() => void approve()}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-          >
-            审批通过
-          </button>
-          <button
-            type="button"
-            disabled={locked || busy}
-            onClick={() =>
-              void patchQuote({
-                material: q.material,
-                labor: q.labor,
-                overhead: q.overhead,
-                period: q.period,
-                coeffCustomer: q.coeffCustomer,
-                coeffIndustry: q.coeffIndustry,
-                coeffRegion: q.coeffRegion,
-                coeffProduct: q.coeffProduct,
-                coeffLead: q.coeffLead,
-                coeffQty: q.coeffQty,
-                refreshBenchmarks: true,
-              })
-            }
-            className="rounded-lg border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-600"
-          >
-            重新测算
-          </button>
-        </div>
+            {q.pendingRole ? (
+              <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
+                待审批角色：
+                <strong>{demoRoleLabelForUi(q.pendingRole)}</strong>
+                {canActApprove
+                  ? " · 当前身份可点「审批通过」"
+                  : " · 请切换为不低于该权限的角色后再审批"}
+              </p>
+            ) : null}
           </section>
         </div>
 
