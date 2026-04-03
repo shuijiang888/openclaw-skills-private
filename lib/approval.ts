@@ -32,13 +32,18 @@ export function canApprove(
   return ROLE_ORDER[actor] >= ROLE_ORDER[required];
 }
 
+/**
+ * 将请求头中的演示角色解析为枚举。
+ * 未知或伪造值回落到「销售总监」，与前台 RoleSwitcher 默认一致，避免误放行为 ADMIN。
+ */
 export function parseDemoRole(
   raw: string | null | undefined,
 ): DemoRole {
-  const r = (raw ?? "SALES_MANAGER").toUpperCase();
+  const r = (raw ?? "").trim().toUpperCase();
   if (r === "SALES_MANAGER" || r === "MANAGER") return "SALES_MANAGER";
   if (r === "SALES_DIRECTOR" || r === "DIRECTOR") return "SALES_DIRECTOR";
   if (r === "SALES_VP" || r === "VP") return "SALES_VP";
   if (r === "GM" || r === "GENERAL_MANAGER") return "GM";
-  return "ADMIN";
+  if (r === "ADMIN" || r === "SYSTEM") return "ADMIN";
+  return "SALES_DIRECTOR";
 }

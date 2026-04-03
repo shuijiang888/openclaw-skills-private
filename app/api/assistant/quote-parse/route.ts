@@ -1,4 +1,18 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import {
+  ASSISTANT_CSRF_COOKIE,
+  ASSISTANT_CSRF_HEADER,
+} from "@/lib/agent-csrf-constants";
+import {
+  createAssistantCsrfToken,
+  isAssistantCsrfEnabled,
+} from "@/lib/agent-csrf";
+import {
+  getRequestClientKey,
+  checkAgentRateLimit,
+} from "@/lib/agent-rate-limit";
+import { validateQuoteParseBody } from "@/lib/agent-quote-parse-validation";
 import {
   newRequestId,
   withRequestIdHeader,
@@ -6,26 +20,12 @@ import {
 } from "@/lib/agent-audit";
 import {
   parseQuoteNaturalLanguage,
-  QUOTE_COEFF_DEFAULTS,
   type CoeffPatch,
 } from "@/lib/quote-natural-language";
 import { getOllamaConfig, parseQuoteWithOllama } from "@/lib/ollama-quote-assistant";
 
 /** 本地 35B 推理可能超过 60s，放宽上限（部署到 Vercel 等时亦生效） */
 export const maxDuration = 300;
-
-type BaselineBody = Partial<typeof QUOTE_COEFF_DEFAULTS>;
-
-function mergeBaseline(body: BaselineBody | undefined): Record<string, number> {
-  return {
-    coeffCustomer: body?.coeffCustomer ?? QUOTE_COEFF_DEFAULTS.coeffCustomer,
-    coeffIndustry: body?.coeffIndustry ?? QUOTE_COEFF_DEFAULTS.coeffIndustry,
-    coeffRegion: body?.coeffRegion ?? QUOTE_COEFF_DEFAULTS.coeffRegion,
-    coeffProduct: body?.coeffProduct ?? QUOTE_COEFF_DEFAULTS.coeffProduct,
-    coeffLead: body?.coeffLead ?? QUOTE_COEFF_DEFAULTS.coeffLead,
-    coeffQty: body?.coeffQty ?? QUOTE_COEFF_DEFAULTS.coeffQty,
-  };
-}
 
 export type QuoteParseResponse = {
   source: "ollama" | "rules";
@@ -36,32 +36,90 @@ export type QuoteParseResponse = {
   patch: CoeffPatch;
 };
 
-/** 供前端展示是否已配置本机 Ollama */
+/** 供前端展示是否已配置本机 Ollama；生产环境可下发 CSRF token */
 export async function GET() {
   const cfg = getOllamaConfig();
-  return NextResponse.json({
+  const csrfOn = isAssistantCsrfEnabled();
+  const payload: Record<string, unknown> = {
     ollamaEnabled: Boolean(cfg),
     model: cfg?.model ?? null,
-  });
+    csrfRequired: csrfOn,
+  };
+
+  if (csrfOn) {
+    const token = createAssistantCsrfToken();
+    payload.csrfToken = token;
+    const res = NextResponse.json(payload);
+    res.cookies.set(ASSISTANT_CSRF_COOKIE, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 4,
+    });
+    return res;
+  }
+
+  return NextResponse.json(payload);
 }
 
 export async function POST(req: Request) {
   const requestId = newRequestId();
   const rh = withRequestIdHeader(requestId);
 
-  const body = (await req.json()) as {
-    text?: string;
-    baseline?: BaselineBody;
-  };
-  const text = body.text?.trim() ?? "";
-  if (!text) {
+  const limited = checkAgentRateLimit(getRequestClientKey(req));
+  if (!limited.ok) {
     return NextResponse.json(
-      { error: "text 不能为空" },
+      {
+        error: "请求过于频繁，请稍后重试",
+        code: "rate_limited",
+        requestId,
+      },
+      {
+        status: 429,
+        headers: {
+          ...rh,
+          "Retry-After": String(limited.retryAfterSec),
+        },
+      },
+    );
+  }
+
+  if (isAssistantCsrfEnabled()) {
+    const jar = await cookies();
+    const cookieTok = jar.get(ASSISTANT_CSRF_COOKIE)?.value;
+    const headerTok = req.headers.get(ASSISTANT_CSRF_HEADER)?.trim();
+    if (!cookieTok || !headerTok || cookieTok !== headerTok) {
+      return NextResponse.json(
+        {
+          error: "安全校验失败，请刷新页面后重试",
+          code: "csrf_failed",
+          requestId,
+        },
+        { status: 403, headers: rh },
+      );
+    }
+  }
+
+  let raw: unknown;
+  try {
+    raw = await req.json();
+  } catch {
+    return NextResponse.json(
+      { error: "请求体不是合法 JSON", code: "bad_json", requestId },
       { status: 400, headers: rh },
     );
   }
 
-  const baseline = mergeBaseline(body.baseline);
+  const parsed = validateQuoteParseBody(raw);
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.error, code: "validation_error", requestId },
+      { status: 400, headers: rh },
+    );
+  }
+
+  const { text, baseline } = parsed.value;
   const cfg = getOllamaConfig();
 
   let response: QuoteParseResponse;

@@ -2,6 +2,7 @@ import {
   normalizeModelCoeffPatch,
   type ParseQuoteLanguageResult,
 } from "@/lib/quote-natural-language";
+import { assertOllamaBaseUrlSafe } from "@/lib/ollama-ssrf-guard";
 
 type OllamaChatResponse = {
   message?: { content?: string };
@@ -17,6 +18,13 @@ export function getOllamaConfig(): { baseUrl: string; model: string } | null {
   const baseUrl = (
     process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434"
   ).replace(/\/$/, "");
+  try {
+    assertOllamaBaseUrlSafe(baseUrl);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[profit-web] Ollama disabled: unsafe OLLAMA_BASE_URL — ${msg}`);
+    return null;
+  }
   const model = process.env.OLLAMA_MODEL ?? "qwen3.5:35b";
   return { baseUrl, model };
 }

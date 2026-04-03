@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AgentMascot } from "@/components/AgentMascot";
 import { demoHeaders } from "@/components/RoleSwitcher";
+import { ASSISTANT_CSRF_HEADER } from "@/lib/agent-csrf-constants";
 import {
   parseQuoteNaturalLanguage,
   type CoeffPatch,
@@ -86,7 +87,26 @@ export function QuoteAssistantPanel({
   );
   const [ollamaProbe, setOllamaProbe] = useState<OllamaStatusJson | null>(null);
   const [probeBusy, setProbeBusy] = useState(false);
+  /** 与 GET /api/assistant/quote-parse 下发的 Cookie 成对，生产环境 CSRF 必填 */
+  const [assistantCsrf, setAssistantCsrf] = useState<string | null>(null);
+  const [assistantCsrfRequired, setAssistantCsrfRequired] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const syncAssistantConfig = useCallback((j: {
+    ollamaEnabled?: boolean;
+    model?: string | null;
+    csrfToken?: string;
+    csrfRequired?: boolean;
+  }) => {
+    setOllamaConfigured(Boolean(j.ollamaEnabled));
+    setOllamaModel(j.model ?? null);
+    setAssistantCsrfRequired(Boolean(j.csrfRequired));
+    if (typeof j.csrfToken === "string" && j.csrfToken.length > 0) {
+      setAssistantCsrf(j.csrfToken);
+    } else if (!j.csrfRequired) {
+      setAssistantCsrf(null);
+    }
+  }, []);
 
   const runOllamaProbe = useCallback(() => {
     setProbeBusy(true);
@@ -119,17 +139,14 @@ export function QuoteAssistantPanel({
   useEffect(() => {
     void fetch("/api/assistant/quote-parse")
       .then((r) => r.json())
-      .then(
-        (j: { ollamaEnabled?: boolean; model?: string | null }) => {
-          setOllamaConfigured(Boolean(j.ollamaEnabled));
-          setOllamaModel(j.model ?? null);
-        },
-      )
+      .then(syncAssistantConfig)
       .catch(() => {
         setOllamaConfigured(false);
         setOllamaModel(null);
+        setAssistantCsrf(null);
+        setAssistantCsrfRequired(false);
       });
-  }, []);
+  }, [syncAssistantConfig]);
 
   const applyLocalRules = useCallback(() => {
     const r = parseQuoteNaturalLanguage(text, baseline);
@@ -154,10 +171,23 @@ export function QuoteAssistantPanel({
         headers: {
           "Content-Type": "application/json",
           ...demoHeaders(),
+          ...(assistantCsrf
+            ? { [ASSISTANT_CSRF_HEADER]: assistantCsrf }
+            : {}),
         },
         body: JSON.stringify({ text, baseline }),
       });
       if (!res.ok) {
+        const errJson = (await res.json().catch(() => ({}))) as {
+          code?: string;
+        };
+        if (res.status === 403 && errJson.code === "csrf_failed") {
+          const r2 = await fetch("/api/assistant/quote-parse");
+          if (r2.ok) {
+            const j2 = (await r2.json()) as { csrfToken?: string };
+            if (typeof j2.csrfToken === "string") setAssistantCsrf(j2.csrfToken);
+          }
+        }
         throw new Error(`HTTP ${res.status}`);
       }
       const data = (await res.json()) as ParseApiResponse;
@@ -178,7 +208,7 @@ export function QuoteAssistantPanel({
     } finally {
       setParsing(false);
     }
-  }, [text, baseline, applyLocalRules]);
+  }, [text, baseline, applyLocalRules, assistantCsrf]);
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -191,6 +221,10 @@ export function QuoteAssistantPanel({
     reader.readAsText(f, "UTF-8");
     e.target.value = "";
   };
+
+  const assistantRemoteReady =
+    ollamaConfigured !== null &&
+    (!assistantCsrfRequired || assistantCsrf !== null);
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-violet-200/80 bg-gradient-to-b from-violet-50/90 via-white to-white p-4 shadow-md dark:border-violet-900/40 dark:from-violet-950/50 dark:via-slate-900 dark:to-slate-950">
@@ -287,11 +321,18 @@ export function QuoteAssistantPanel({
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
+        {ollamaConfigured === null ? (
+          <p className="mt-1.5 text-[10px] text-zinc-500">正在连接助手服务…</p>
+        ) : assistantCsrfRequired && !assistantCsrf ? (
+          <p className="mt-1.5 text-[10px] text-zinc-500">
+            正在准备安全会话（CSRF）…
+          </p>
+        ) : null}
 
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={disabled || parsing}
+            disabled={disabled || parsing || !assistantRemoteReady}
             onClick={() => void runParse()}
             className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-500 disabled:opacity-50"
           >
