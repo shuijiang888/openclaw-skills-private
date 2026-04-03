@@ -15,7 +15,10 @@ import {
   projectStatusLabel,
 } from "@/lib/display-labels";
 import { canApprove, parseDemoRole } from "@/lib/approval";
-import { canUseQuoteAssistant } from "@/lib/demo-role-modules";
+import {
+  canAccessConsoleAgentAudit,
+  canUseQuoteAssistant,
+} from "@/lib/demo-role-modules";
 import type { CoeffPatch } from "@/lib/quote-natural-language";
 import { parseTimeline } from "@/lib/timeline";
 
@@ -78,34 +81,46 @@ export function Workbench({ projectId }: { projectId: string }) {
     null,
   );
 
-  const showRequestAuditTip = useCallback((message: string, res: Response) => {
-    const rid = res.headers.get("x-request-id");
-    if (!rid) {
-      setTip(message);
-      window.setTimeout(() => setTip(null), 2600);
-      return;
-    }
-    setTip(
-      <span>
-        {message}{" "}
-        <span className="text-emerald-900/90 dark:text-emerald-100/90">
-          请求 ID{" "}
-          <code className="rounded bg-emerald-200/70 px-1 font-mono text-[10px] dark:bg-emerald-900/70">
-            {rid}
-          </code>
-        </span>
-        {" · "}
-        <Link
-          href="/console/agent-audit"
-          className="font-medium underline underline-offset-2"
-        >
-          智能体审计
-        </Link>
-        可对齐检索。
-      </span>,
-    );
-    window.setTimeout(() => setTip(null), 9000);
-  }, []);
+  const showRequestAuditTip = useCallback(
+    (message: string, res: Response) => {
+      const rid = res.headers.get("x-request-id");
+      if (!rid) {
+        setTip(message);
+        window.setTimeout(() => setTip(null), 2600);
+        return;
+      }
+      const canAuditUi = canAccessConsoleAgentAudit(demoRole);
+      setTip(
+        <span>
+          {message}{" "}
+          <span className="text-emerald-900/90 dark:text-emerald-100/90">
+            请求 ID{" "}
+            <code className="rounded bg-emerald-200/70 px-1 font-mono text-[10px] dark:bg-emerald-900/70">
+              {rid}
+            </code>
+          </span>
+          {" · "}
+          {canAuditUi ? (
+            <>
+              <Link
+                href="/console/agent-audit"
+                className="font-medium underline underline-offset-2"
+              >
+                智能体审计
+              </Link>
+              可对齐检索。
+            </>
+          ) : (
+            <span className="text-emerald-900/80 dark:text-emerald-100/80">
+              审计留痕可在切换为「管理员」后从「智能体审计」检索。
+            </span>
+          )}
+        </span>,
+      );
+      window.setTimeout(() => setTip(null), 9000);
+    },
+    [demoRole],
+  );
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/projects/${projectId}`);

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FxiaokeBrandBadge } from "@/components/FxiaokeBrandBadge";
 import { useDemoRole } from "@/components/RoleSwitcher";
 import { parseDemoRole, type DemoRole } from "@/lib/approval";
+import { canAccessConsole } from "@/lib/demo-role-modules";
+import { APP_VERSION } from "@/lib/app-release";
 
 function roleMaySeeStrategy(role: DemoRole): boolean {
   return role !== "SALES_MANAGER";
@@ -47,16 +49,18 @@ export function SiteFooter() {
               产品路线
             </Link>
           ) : null}
-          <Link
-            href="/console/readiness"
-            className="hover:text-amber-700 dark:hover:text-amber-400"
-          >
-            落地准备
-          </Link>
+          {canAccessConsole(role) ? (
+            <Link
+              href="/console/readiness"
+              className="hover:text-amber-700 dark:hover:text-amber-400"
+            >
+              落地准备（后台）
+            </Link>
+          ) : null}
         </div>
       </div>
       <div className="border-t border-slate-100 py-3 text-center text-[11px] text-slate-400 dark:border-slate-800 dark:text-slate-500">
-        © 演示用途 · 数据均为样例 · 不构成报价或审计依据
+        v{APP_VERSION} · © 演示用途 · 数据均为样例 · 不构成报价或审计依据
       </div>
     </footer>
   );

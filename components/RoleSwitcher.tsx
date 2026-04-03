@@ -80,8 +80,8 @@ export function RoleSwitcher() {
           ))}
         </select>
       </div>
-      <span className="hidden text-[10px] text-slate-500 lg:inline dark:text-slate-500">
-        菜单与审批能力随身份更新
+      <span className="hidden max-w-[14rem] text-[10px] leading-snug text-slate-500 lg:inline dark:text-slate-500">
+        菜单、审批与助手随身份更新；经理无助手，总经理后台只读导入
       </span>
     </div>
   );
