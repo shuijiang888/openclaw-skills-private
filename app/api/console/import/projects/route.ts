@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildAiSuggestion, suggestedPriceFromCosts, totalCost } from "@/lib/calc";
 import { defaultBenchmarkPrices } from "@/lib/benchmarks";
-import { canAccessConsoleCustomers } from "@/lib/demo-role-modules";
+import { canImportConsoleCsv } from "@/lib/demo-role-modules";
 import { demoRoleFromRequest } from "@/lib/http";
 import { parseProjectCsvImport } from "@/lib/parse-project-csv";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const role = demoRoleFromRequest(req);
-  if (!canAccessConsoleCustomers(role)) {
+  if (!canImportConsoleCsv(role)) {
     return NextResponse.json(
       { error: "需要管理员演示身份，并在请求头携带 x-demo-role: ADMIN" },
       { status: 403 },

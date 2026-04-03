@@ -2,11 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { demoHeaders } from "@/components/RoleSwitcher";
+import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
+import { parseDemoRole } from "@/lib/approval";
+import { canImportConsoleCsv } from "@/lib/demo-role-modules";
 
 export function ProjectsCsvImport() {
   const router = useRouter();
+  const demoRole = parseDemoRole(useDemoRole());
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -50,6 +53,15 @@ export function ProjectsCsvImport() {
       setBusy(false);
     }
   }, [router]);
+
+  if (!canImportConsoleCsv(demoRole)) {
+    return (
+      <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 py-3 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+        <strong className="font-semibold">总经理只读：</strong>
+        项目列表与审批可在此查看；CSV 批量导入请使用「管理员」身份。
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-950/40">

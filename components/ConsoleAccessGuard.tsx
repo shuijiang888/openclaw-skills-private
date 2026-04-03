@@ -4,8 +4,8 @@ import { useDemoRole } from "@/components/RoleSwitcher";
 import {
   canAccessConsole,
   canAccessConsoleAgentAudit,
-  canAccessConsoleCustomers,
   canAccessConsoleRules,
+  canViewConsoleCustomers,
 } from "@/lib/demo-role-modules";
 import { parseDemoRole } from "@/lib/approval";
 import { usePathname, useRouter } from "next/navigation";
@@ -27,7 +27,7 @@ export function ConsoleAccessGuard({
     }
     if (
       pathname.startsWith("/console/customers") &&
-      !canAccessConsoleCustomers(role)
+      !canViewConsoleCustomers(role)
     ) {
       router.replace("/console");
       return;

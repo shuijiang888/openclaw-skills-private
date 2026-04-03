@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgentMascot } from "@/components/AgentMascot";
-import { demoHeaders } from "@/components/RoleSwitcher";
+import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
+import type { DemoRole } from "@/lib/approval";
+import { parseDemoRole } from "@/lib/approval";
 import { ASSISTANT_CSRF_HEADER } from "@/lib/agent-csrf-constants";
 import {
   parseQuoteNaturalLanguage,
   type CoeffPatch,
 } from "@/lib/quote-natural-language";
+import { getRolePlaybook } from "@/lib/role-playbook";
 
 type Baseline = {
   coeffCustomer: number;
@@ -51,24 +54,29 @@ export type QuoteAgentQuickActions = {
   onRefreshProject: () => void | Promise<void>;
 };
 
-const EXAMPLES = [
-  "战略客户，加急两周内交付，小批量试产，需要定制改板。",
-  "内销标品，年度框大单，交期宽裕，价格竞争激烈。",
-  "出口欧洲，行业壁垒较高，非标准结构件。",
-];
-
 export function QuoteAssistantPanel({
   baseline,
   disabled,
   onApplyCoefficients,
   agentQuickActions,
+  demoRole: demoRoleProp,
 }: {
   baseline: Baseline;
   disabled: boolean;
   onApplyCoefficients: (patch: CoeffPatch) => void;
   /** A1：与报价台主按钮同源 API，便于在助手内一键触发 */
   agentQuickActions?: QuoteAgentQuickActions | null;
+  /** 与左侧工作台身份一致时，示例与引导随角色变化 */
+  demoRole?: DemoRole;
 }) {
+  const sessionRole = parseDemoRole(useDemoRole());
+  const actorRole = demoRoleProp ?? sessionRole;
+  const playbook = useMemo(
+    () => getRolePlaybook(actorRole),
+    [actorRole],
+  );
+  const examples = playbook.quoteExamples;
+
   const [text, setText] = useState("");
   const [parsedSummary, setParsedSummary] = useState<string[]>([]);
   const [parsedHints, setParsedHints] = useState<string[]>([]);
@@ -236,7 +244,15 @@ export function QuoteAssistantPanel({
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-violet-950 dark:text-violet-200">
                 报价智能助手
+                <span className="ml-2 rounded-md bg-violet-200/60 px-1.5 py-0.5 text-[10px] font-medium text-violet-900 dark:bg-violet-900/50 dark:text-violet-200">
+                  {playbook.label}
+                </span>
               </h2>
+              <p className="mt-0.5 text-[10px] font-medium text-violet-900/85 dark:text-violet-200/85">
+                本档优先：{playbook.priorities[0]?.title ?? "系数与风险"} —{" "}
+                {playbook.priorities[0]?.detail.slice(0, 72)}
+                {(playbook.priorities[0]?.detail.length ?? 0) > 72 ? "…" : ""}
+              </p>
               <p className="mt-1 text-[11px] leading-relaxed text-violet-800/80 dark:text-violet-300/70">
                 用中文描述商机与客户诉求；优先通过本机{" "}
                 <strong>Ollama</strong> 大模型解析系数（需在{" "}
@@ -375,7 +391,7 @@ export function QuoteAssistantPanel({
           快捷示例（点击填入）：
         </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
-          {EXAMPLES.map((ex) => (
+          {examples.map((ex) => (
             <button
               key={ex.slice(0, 12)}
               type="button"

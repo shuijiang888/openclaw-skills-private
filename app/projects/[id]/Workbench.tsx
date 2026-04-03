@@ -6,6 +6,7 @@ import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { QuoteAssistantPanel } from "@/components/QuoteAssistantPanel";
+import { SalesManagerBenchCard } from "@/components/SalesManagerBenchCard";
 import { QuoteRuleExplainCard } from "@/components/QuoteRuleExplainCard";
 import { buildQuoteSummaryText } from "@/lib/build-quote-summary";
 import {
@@ -722,15 +723,9 @@ export function Workbench({ projectId }: { projectId: string }) {
         </div>
 
         <aside className="mt-8 space-y-4 xl:sticky xl:top-24 xl:mt-0">
-          {!assistantAllowed ? (
-            <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-              <strong className="text-zinc-800 dark:text-zinc-200">销售经理</strong>
-              演示档：可使用左侧测算与「提交审批」；{" "}
-              <strong>报价智能助手</strong>
-              请在切换为「销售总监」及以上身份后使用。
-            </p>
-          ) : null}
+          {!assistantAllowed ? <SalesManagerBenchCard /> : null}
           <QuoteAssistantPanel
+            demoRole={demoRole}
             disabled={locked || !assistantAllowed}
             baseline={{
               coeffCustomer: q.coeffCustomer,

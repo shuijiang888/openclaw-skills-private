@@ -24,6 +24,7 @@ import {
   parseQuoteNaturalLanguage,
   type CoeffPatch,
 } from "@/lib/quote-natural-language";
+import { demoRoleFromRequest } from "@/lib/http";
 import { getOllamaConfig, parseQuoteWithOllama } from "@/lib/ollama-quote-assistant";
 import { QUOTE_PARSE_PROMPT_VERSION } from "@/lib/prompts/quote-parse-system";
 
@@ -125,6 +126,7 @@ export async function POST(req: Request) {
 
   const { text, baseline } = parsed.value;
   const cfg = getOllamaConfig();
+  const actorRole = demoRoleFromRequest(req);
   const textDigest = textDigestForAudit(text);
   const injectionSignals = detectUserPromptInjectionSignals(text);
 
@@ -134,7 +136,7 @@ export async function POST(req: Request) {
 
   if (cfg) {
     try {
-      const llm = await parseQuoteWithOllama(text, baseline);
+      const llm = await parseQuoteWithOllama(text, baseline, actorRole);
       outputTruncated = llm.outputTruncated;
       schemaRejected = llm.schemaRejected;
       response = {
@@ -182,6 +184,7 @@ export async function POST(req: Request) {
     req,
     meta: {
       source: response.source,
+      actorRole,
       textLength: textDigest.length,
       textSha256Prefix: textDigest.sha256Prefix,
       promptVersion: QUOTE_PARSE_PROMPT_VERSION,

@@ -32,7 +32,7 @@ export const DEMO_NAV_LINKS = [
 export const DEMO_CONSOLE_SIDEBAR_LINKS = [
   { href: "/console", label: "控制台", roles: BACKOFFICE },
   { href: "/console/pipeline", label: "项目与审批", roles: BACKOFFICE },
-  { href: "/console/customers", label: "主数据 · 客户", roles: ["ADMIN"] as DemoRole[] },
+  { href: "/console/customers", label: "主数据 · 客户", roles: BACKOFFICE },
   { href: "/console/readiness", label: "落地准备", roles: BACKOFFICE },
   {
     href: "/console/rules",
@@ -67,8 +67,17 @@ export function canUseQuoteAssistant(role: DemoRole): boolean {
   return NO_JUNIOR_SALES.includes(role);
 }
 
-/** GM 仅能看控制台摘要与审批，不可进主数据/规则 */
-export function canAccessConsoleCustomers(role: DemoRole): boolean {
+/** 总经理 + 管理员可读客户主数据；批量导入仅管理员 */
+export function canViewConsoleCustomers(role: DemoRole): boolean {
+  return role === "GM" || role === "ADMIN";
+}
+
+export function canEditConsoleCustomers(role: DemoRole): boolean {
+  return role === "ADMIN";
+}
+
+/** CSV 导入等项目/客户批量写库操作 */
+export function canImportConsoleCsv(role: DemoRole): boolean {
   return role === "ADMIN";
 }
 

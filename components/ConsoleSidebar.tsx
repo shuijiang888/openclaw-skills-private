@@ -13,8 +13,8 @@ export function ConsoleSidebar() {
 
   const foot =
     role === "ADMIN"
-      ? "管理员：可维护主数据、系数与规则。"
-      : "总经理：可查看控制台、审批队列与落地准备；主数据与规则仅管理员可见。";
+      ? "管理员：主数据、系数与规则、CSV 导入及智能体审计。"
+      : "总经理：控制台摘要、客户主数据只读、项目审批；导入与规则维护请管理员。";
 
   return (
     <aside className="w-48 shrink-0">

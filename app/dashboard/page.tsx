@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { PageContainer } from "@/components/PageContainer";
+import { RoleHomePanel } from "@/components/RoleHomePanel";
 import { buildBossBriefingFromProjects } from "@/lib/boss-briefing";
 import { computePortfolioMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
@@ -48,6 +49,7 @@ export default async function DashboardPage({
           若需体验控制台，请将右上角切换为「总经理」或「管理员」。
         </div>
       ) : null}
+      <RoleHomePanel />
       <div className="rounded-2xl border border-slate-200/90 bg-white/80 px-5 py-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
         <p className="text-[11px] font-semibold tracking-wide text-amber-800 dark:text-amber-400">
           经营简报
