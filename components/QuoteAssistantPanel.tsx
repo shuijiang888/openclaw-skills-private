@@ -76,6 +76,7 @@ export function QuoteAssistantPanel({
     [actorRole],
   );
   const examples = playbook.quoteExamples;
+  const quickPhrases = playbook.agentQuickPhrases ?? [];
 
   const [text, setText] = useState("");
   const [parsedSummary, setParsedSummary] = useState<string[]>([]);
@@ -391,19 +392,47 @@ export function QuoteAssistantPanel({
           快捷示例（点击填入）：
         </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
-          {examples.map((ex) => (
+          {examples.map((ex, i) => (
             <button
-              key={ex.slice(0, 12)}
+              key={`ex-${i}`}
               type="button"
               disabled={disabled}
               onClick={() => setText(ex)}
               className="max-w-full truncate rounded-full border border-violet-200/80 bg-white/80 px-2.5 py-1 text-[10px] text-violet-900 hover:bg-violet-50 dark:border-violet-800 dark:bg-slate-900 dark:text-violet-200"
               title={ex}
             >
-              {ex.slice(0, 18)}…
+              {ex.length > 20 ? `${ex.slice(0, 18)}…` : ex}
             </button>
           ))}
         </div>
+
+        {quickPhrases.length > 0 ? (
+          <>
+            <p className="mt-3 text-[10px] text-violet-700/70 dark:text-violet-400/70">
+              角色话术（追加到输入框，便于与描述混写）：
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {quickPhrases.map((qp) => (
+                <button
+                  key={qp.label}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() =>
+                    setText((prev) =>
+                      prev.trim()
+                        ? `${prev.trim()}\n${qp.text}`
+                        : qp.text,
+                    )
+                  }
+                  className="rounded-full border border-emerald-200/90 bg-emerald-50/80 px-2.5 py-1 text-[10px] font-medium text-emerald-900 hover:bg-emerald-100/80 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                  title={qp.text}
+                >
+                  {qp.label}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
 
         {agentQuickActions ? (
           <div className="mt-4 rounded-xl border border-violet-300/60 bg-violet-100/30 p-3 dark:border-violet-800/60 dark:bg-violet-950/30">

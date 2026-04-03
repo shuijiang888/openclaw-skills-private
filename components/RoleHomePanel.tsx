@@ -51,6 +51,12 @@ export function RoleHomePanel() {
         ))}
       </ul>
       <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200/80 pt-4 dark:border-slate-700">
+        <Link
+          href="/projects?focus=my-queue"
+          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-500 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+        >
+          待我审批队列 →
+        </Link>
         {topOps.map((l) => (
           <Link
             key={l.href}
