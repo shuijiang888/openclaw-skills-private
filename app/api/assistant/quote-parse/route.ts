@@ -13,16 +13,19 @@ import {
   checkAgentRateLimit,
 } from "@/lib/agent-rate-limit";
 import { validateQuoteParseBody } from "@/lib/agent-quote-parse-validation";
+import { textDigestForAudit } from "@/lib/agent-audit-digest";
 import {
   newRequestId,
   withRequestIdHeader,
   writeAgentAuditSafe,
 } from "@/lib/agent-audit";
+import { detectUserPromptInjectionSignals } from "@/lib/agent-injection-heuristics";
 import {
   parseQuoteNaturalLanguage,
   type CoeffPatch,
 } from "@/lib/quote-natural-language";
 import { getOllamaConfig, parseQuoteWithOllama } from "@/lib/ollama-quote-assistant";
+import { QUOTE_PARSE_PROMPT_VERSION } from "@/lib/prompts/quote-parse-system";
 
 /** 本地 35B 推理可能超过 60s，放宽上限（部署到 Vercel 等时亦生效） */
 export const maxDuration = 300;
@@ -44,6 +47,7 @@ export async function GET() {
     ollamaEnabled: Boolean(cfg),
     model: cfg?.model ?? null,
     csrfRequired: csrfOn,
+    promptVersion: QUOTE_PARSE_PROMPT_VERSION,
   };
 
   if (csrfOn) {
@@ -121,12 +125,18 @@ export async function POST(req: Request) {
 
   const { text, baseline } = parsed.value;
   const cfg = getOllamaConfig();
+  const textDigest = textDigestForAudit(text);
+  const injectionSignals = detectUserPromptInjectionSignals(text);
 
   let response: QuoteParseResponse;
+  let outputTruncated = false;
+  let schemaRejected = false;
 
   if (cfg) {
     try {
       const llm = await parseQuoteWithOllama(text, baseline);
+      outputTruncated = llm.outputTruncated;
+      schemaRejected = llm.schemaRejected;
       response = {
         source: "ollama",
         model: llm.model,
@@ -156,6 +166,15 @@ export async function POST(req: Request) {
     };
   }
 
+  if (injectionSignals.length > 0) {
+    const guardHint =
+      "系统已尝试仅按业务语义解析；若输入中含指令类语句，请勿依赖其对系数的影响，以审批与规则为准。";
+    response = {
+      ...response,
+      hints: [guardHint, ...response.hints].slice(0, 12),
+    };
+  }
+
   await writeAgentAuditSafe({
     requestId,
     route: "POST /api/assistant/quote-parse",
@@ -163,11 +182,19 @@ export async function POST(req: Request) {
     req,
     meta: {
       source: response.source,
-      textLength: text.length,
+      textLength: textDigest.length,
+      textSha256Prefix: textDigest.sha256Prefix,
+      promptVersion: QUOTE_PARSE_PROMPT_VERSION,
+      injectionSignals,
+      outputTruncated,
+      schemaRejected,
       patchKeys: Object.keys(response.patch),
       model: response.model ?? null,
+      fallbackReason: response.fallbackReason ?? null,
     },
   });
 
-  return NextResponse.json(response, { headers: rh });
+  return NextResponse.json(response, {
+    headers: { ...rh, "x-profit-prompt-version": QUOTE_PARSE_PROMPT_VERSION },
+  });
 }
