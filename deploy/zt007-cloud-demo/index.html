@@ -3,184 +3,280 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>智探007 · 统一门户</title>
+  <title>纷享销客AI价值服务 · 统一门户</title>
   <style>
     :root {
-      --bg: #071126;
-      --panel: #121d35;
-      --line: #28446f;
-      --text: #e8f0ff;
-      --muted: #9fb4d6;
-      --brand: #22d3ee;
-      --brand2: #3b82f6;
+      --bg1: #061127;
+      --bg2: #0b1832;
+      --panel: rgba(17, 31, 58, 0.82);
+      --line: rgba(125, 173, 255, 0.28);
+      --text: #e8f1ff;
+      --muted: #aac2e8;
+      --brand-a: #2dd4bf;
+      --brand-b: #3b82f6;
+      --brand-c: #0ea5e9;
+      --ok: #22c55e;
+      --warn: #f59e0b;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       color: var(--text);
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: radial-gradient(circle at 80% -20%, rgba(34,211,238,0.2), transparent 40%),
-        linear-gradient(180deg, #071126, #0b1730 60%, #0d1b37);
+      background:
+        radial-gradient(circle at 10% -10%, rgba(45, 212, 191, 0.22), transparent 34%),
+        radial-gradient(circle at 90% -10%, rgba(59, 130, 246, 0.28), transparent 38%),
+        linear-gradient(180deg, var(--bg1), var(--bg2) 58%, #102247);
     }
-    .wrap { width: min(1120px, 94vw); margin: 0 auto; padding: 18px; }
+    .wrap { width: min(1180px, 94vw); margin: 0 auto; padding: 18px; }
     .hero {
+      position: relative;
+      overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: 20px;
-      background: linear-gradient(160deg, rgba(12,27,53,0.95), rgba(17,36,68,0.95));
-      padding: 28px 20px;
-      box-shadow: 0 16px 36px rgba(0,0,0,0.2);
+      border-radius: 22px;
+      background: linear-gradient(155deg, rgba(10,25,49,0.94), rgba(16,37,73,0.88));
+      box-shadow: 0 22px 40px rgba(0, 0, 0, 0.26);
+      padding: 28px 22px 24px;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -90px;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(59,130,246,0.28), rgba(59,130,246,0));
+      pointer-events: none;
+    }
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .logo-line { display: inline-flex; align-items: center; gap: 8px; }
+    .logo-line img {
+      height: 22px;
+      width: auto;
+      filter: drop-shadow(0 0 8px rgba(59,130,246,0.3));
     }
     .tag {
-      display: inline-block;
-      border: 1px solid #3f5d93;
+      border: 1px solid #3f629f;
       border-radius: 999px;
-      padding: 5px 12px;
+      background: rgba(59,130,246,0.15);
+      color: #d9e9ff;
       font-size: 12px;
-      color: #d9e8ff;
-      background: rgba(59,130,246,0.18);
+      padding: 5px 11px;
     }
     h1 {
-      margin: 12px 0 8px 0;
-      font-size: clamp(26px, 5vw, 44px);
-      line-height: 1.15;
+      margin: 12px 0 8px;
+      font-size: clamp(29px, 5.2vw, 46px);
+      line-height: 1.12;
+      letter-spacing: 0.2px;
+    }
+    .gradient {
+      background: linear-gradient(90deg, var(--brand-a), var(--brand-b), var(--brand-c));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
     .sub {
-      max-width: 840px;
+      max-width: 860px;
       color: var(--muted);
       line-height: 1.7;
-      font-size: clamp(14px, 2.6vw, 17px);
+      font-size: clamp(14px, 2.5vw, 17px);
     }
-    .chips {
+    .chip-row {
       margin-top: 14px;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
     .chip {
-      border: 1px solid #385b92;
+      border: 1px solid #3a5d97;
       border-radius: 999px;
+      background: rgba(30,58,138,0.16);
       padding: 4px 10px;
       font-size: 12px;
-      color: #d4e7ff;
-      background: rgba(30,58,138,0.18);
+      color: #d6e8ff;
     }
-    .grid {
+    .hero-banner {
+      margin-top: 14px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(108, 154, 233, 0.28);
+      background: #0f1e3d;
+    }
+    .hero-banner img {
+      width: 100%;
+      height: min(220px, 32vw);
+      min-height: 140px;
+      object-fit: cover;
+      display: block;
+      opacity: 0.9;
+    }
+    .cards {
       margin-top: 16px;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
     .card {
       border: 1px solid var(--line);
       border-radius: 16px;
-      background: linear-gradient(180deg, #121d35, #162744);
+      background: linear-gradient(180deg, rgba(19, 35, 65, 0.88), rgba(20, 42, 78, 0.84));
       padding: 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: 250px;
     }
     .card.primary {
-      border-color: #3fbde4;
-      box-shadow: inset 0 0 0 1px rgba(34,211,238,0.25);
+      border-color: rgba(45, 212, 191, 0.58);
+      box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.26);
     }
-    .card .k {
+    .k {
       font-size: 12px;
-      color: #95b1da;
       letter-spacing: 0.4px;
+      color: #95b3e0;
       text-transform: uppercase;
     }
-    .card h3 {
-      margin: 6px 0 6px 0;
-      font-size: 23px;
+    h3 { margin: 7px 0 6px; font-size: 24px; }
+    p { margin: 0; line-height: 1.62; color: #c9dcfb; }
+    .status {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      border: 1px solid #3a5b93;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 12px;
+      color: #d8e6ff;
     }
-    .card p {
-      margin: 0;
-      color: #c6d9f8;
-      line-height: 1.6;
-      min-height: 72px;
-    }
+    .dot { width: 7px; height: 7px; border-radius: 999px; }
+    .dot.ok { background: var(--ok); }
+    .dot.warn { background: var(--warn); }
     .cta {
-      margin-top: 14px;
+      margin-top: auto;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      text-decoration: none;
       border-radius: 10px;
-      padding: 10px 14px;
+      border: 1px solid #3e619c;
+      background: #203863;
+      color: #eaf3ff;
+      text-decoration: none;
       font-weight: 700;
       font-size: 14px;
-      border: 1px solid #3d5f9a;
-      color: #eaf2ff;
-      background: #1f3763;
+      padding: 10px 14px;
     }
     .cta.primary {
-      border-color: #22d3ee;
-      background: linear-gradient(90deg, var(--brand), var(--brand2));
-      color: #041021;
+      border-color: rgba(45, 212, 191, 0.7);
+      color: #051728;
+      background: linear-gradient(90deg, var(--brand-a), var(--brand-b));
     }
-    .panel {
+    .foot {
       margin-top: 14px;
-      border: 1px dashed #3f5d93;
+      border: 1px dashed #3f629f;
       border-radius: 12px;
-      padding: 10px 12px;
-      color: #d8e8ff;
       background: rgba(30,58,138,0.14);
+      color: #d6e6ff;
       font-size: 13px;
+      padding: 10px 12px;
+      line-height: 1.6;
     }
-    @media (max-width: 1040px) {
-      .grid { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 1080px) {
+      .cards { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 760px) {
       .wrap { padding: 12px; }
-      .hero { padding: 22px 14px; border-radius: 16px; }
-      .grid { grid-template-columns: 1fr; }
-      .card p { min-height: auto; }
+      .hero { padding: 22px 14px 16px; border-radius: 16px; }
+      .cards { grid-template-columns: 1fr; }
+      .card { min-height: 210px; }
       .cta { width: 100%; }
+      .hero-banner img { height: 140px; }
     }
   </style>
 </head>
 <body>
   <main class="wrap">
     <section class="hero">
-      <span class="tag">Unified Entry Portal</span>
-      <h1>智探007 · 系统化在线门户</h1>
+      <div class="hero-top">
+        <div class="logo-line">
+          <img src="https://a9.fspage.com/FSR/official-site/img/fxiaoke-logo-v2.png" alt="纷享销客 logo" />
+          <span class="tag">AI Value Service Portal</span>
+        </div>
+        <span class="tag">Unified Entry · Mobile / Pad / PC</span>
+      </div>
+      <h1>纷享销客<span class="gradient">AI价值服务</span>统一门户</h1>
       <p class="sub">
-        这是当前云端发布入口：你可以从一个页面直观查看并进入各业务系统。
-        已接入「智探007」完整功能页，支持手机 / Pad / PC 自适应访问。
+        面向企业增长与一线执行的多 Agent 入口，统一展示核心系统、状态与价值动作。
+        已上线「智探007」完整能力，其他模块已预留标准入口位，支持持续扩展。
       </p>
-      <div class="chips">
-        <span class="chip">Mobile Ready</span>
-        <span class="chip">Pad Ready</span>
-        <span class="chip">Desktop Ready</span>
-        <span class="chip">Role-aware Demo</span>
+      <div class="chip-row">
+        <span class="chip">企业级 Agent 矩阵</span>
+        <span class="chip">价值闭环驱动</span>
+        <span class="chip">可运营可扩展</span>
+        <span class="chip">低成本发布</span>
+      </div>
+      <div class="hero-banner">
+        <img src="https://a9.fspage.com/FSR/official-site/img/home-page/banner-tuosida.jpg" alt="纷享销客品牌视觉元素" />
       </div>
     </section>
 
-    <section class="grid">
+    <section class="cards">
       <article class="card primary">
         <div class="k">Intelligence-to-Action OS</div>
         <h3>智探007</h3>
         <p>
-          情报采集、行动卡、任务悬赏、积分兑现、管理驾驶舱的一体化闭环。
-          点击进入完整功能页面进行验收。
+          情报采集、行动卡、任务悬赏、积分兑现、管理驾驶舱一体化闭环。
+          这是当前主验收系统，可直接进入完整功能页面。
         </p>
-        <a class="cta primary" href="/zt007/">进入智探007完整功能页</a>
+        <span class="status"><span class="dot ok"></span>已上线</span>
+        <a class="cta primary" href="/zt007/">进入智探007</a>
       </article>
 
       <article class="card">
-        <div class="k">Roadmap</div>
-        <h3>盈利决策工作台</h3>
-        <p>门户已预留多系统扩展位，可继续接入报价/审批/罗盘系统并统一导航。</p>
-        <a class="cta" href="/zt007/#arch">查看架构说明</a>
+        <div class="k">Profit Engine</div>
+        <h3>盈利系统agent</h3>
+        <p>
+          面向经营结果的利润守护与增长导航，连接流程数据、策略规则与执行反馈。
+          已预留标准入口，可平滑接入正式服务。
+        </p>
+        <span class="status"><span class="dot warn"></span>预留入口</span>
+        <a class="cta" href="/zt007/#admin">查看演示承载位</a>
       </article>
 
       <article class="card">
-        <div class="k">Operations</div>
-        <h3>管理与运营</h3>
-        <p>支持后续接入管理后台、公告、系统状态与灰度发布入口，便于单人运维。</p>
-        <a class="cta" href="/zt007/#admin">查看管理驾驶舱示例</a>
+        <div class="k">CPQ + CRM</div>
+        <h3>纷享销客报价agent</h3>
+        <p>
+          面向报价效率、可审计与审批协同的智能代理入口，支持后续与 OpenAPI 深度联动。
+          当前先提供门户入口位。
+        </p>
+        <span class="status"><span class="dot warn"></span>预留入口</span>
+        <a class="cta" href="/zt007/#today">查看报价相关演示</a>
+      </article>
+
+      <article class="card">
+        <div class="k">Capability Hub</div>
+        <h3>SKILL大市场</h3>
+        <p>
+          面向技能组件、场景模板与业务插件的统一市场，支持多角色按需调用和治理。
+          已预留专业展示位与后续扩展空间。
+        </p>
+        <span class="status"><span class="dot warn"></span>预留入口</span>
+        <a class="cta" href="/zt007/#tasks">查看技能任务示例</a>
       </article>
     </section>
 
-    <div class="panel">
-      验收建议：先从「进入智探007完整功能页」开始，检查行动卡、任务悬赏、提交情报、积分兑换与角色切换流程。
+    <div class="foot">
+      验收建议：先进入「智探007」体验完整流程，再返回门户查看多系统入口布局与扩展位。
+      <br />
+      品牌元素来自纷享销客官网公开页面资源（logo/视觉图）用于本次内部演示。
     </div>
   </main>
 </body>
