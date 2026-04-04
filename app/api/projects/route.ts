@@ -8,6 +8,13 @@ import {
 import { appendTimeline } from "@/lib/timeline";
 import { defaultBenchmarkPrices } from "@/lib/benchmarks";
 import { enrichProject } from "@/lib/serialize";
+import {
+  battleCardTemplateById,
+  normalizeFlowStage,
+  parseBattleCardId,
+  stageFromProjectStatus,
+  statusFromFlowStage,
+} from "@/lib/sales-flow";
 
 export async function GET() {
   const rows = await prisma.project.findMany({
@@ -52,6 +59,26 @@ export async function POST(req: Request) {
     title: "成本与系数计算完成",
     detail: `建议价 ${suggestedPrice}`,
   });
+  const stage = normalizeFlowStage(
+    body.flowStage,
+    stageFromProjectStatus("PRICED"),
+  );
+  const battleCard = parseBattleCardId(body.battleCard);
+  const template = battleCardTemplateById(battleCard);
+  const nextStep =
+    typeof body.nextStep === "string" && body.nextStep.trim()
+      ? body.nextStep.trim()
+      : template?.defaultNextStep ?? "";
+  const dueInput = body.nextStepDueAt;
+  const nextStepDueAt =
+    typeof dueInput === "string" && dueInput.trim()
+      ? new Date(dueInput)
+      : template
+        ? new Date(Date.now() + template.dueInDays * 24 * 60 * 60 * 1000)
+        : null;
+  const validNextStepDueAt =
+    nextStepDueAt && !Number.isNaN(nextStepDueAt.getTime()) ? nextStepDueAt : null;
+  const status = statusFromFlowStage(stage);
 
   const project = await prisma.project.create({
     data: {
@@ -62,7 +89,12 @@ export async function POST(req: Request) {
       leadDays: Number(body.leadDays ?? 15),
       isStandard: Boolean(body.isStandard ?? true),
       isSmallOrder: Boolean(body.isSmallOrder ?? true),
-      status: "PRICED",
+      status,
+      flowStage: stage,
+      nextStep,
+      nextStepDueAt: validNextStepDueAt,
+      battleCard,
+      lastStageAt: new Date(),
       quote: {
         create: {
           ...coeffs,

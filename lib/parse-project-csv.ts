@@ -5,6 +5,7 @@ const VALID_STATUS = new Set([
   "PRICED",
   "PENDING_APPROVAL",
   "APPROVED",
+  "CLOSED_LOST",
 ]);
 
 export type ParsedProjectRow = {
@@ -157,7 +158,10 @@ export function parseProjectCsvImport(text: string): {
     if (!VALID_STATUS.has(statusRaw)) {
       return {
         ok: false,
-        error: `第 ${rowNum} 行：status 须为 DRAFT / PRICED / PENDING_APPROVAL / APPROVED`,
+        error:
+          "第 " +
+          rowNum +
+          " 行：status 须为 DRAFT / PRICED / PENDING_APPROVAL / APPROVED / CLOSED_LOST",
       };
     }
 

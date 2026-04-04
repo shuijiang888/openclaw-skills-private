@@ -8,6 +8,12 @@ import {
 } from "@/lib/calc";
 import { requiredRoleForDiscount } from "@/lib/approval";
 import { evaluateShunt } from "@/lib/shunt";
+import {
+  dueDateLabel,
+  flowStageLabel,
+  nextStepOverdueDays,
+  stageFromProjectStatus,
+} from "@/lib/sales-flow";
 
 export type EnrichedQuote = Quote & {
   benchmarks: ReturnType<typeof defaultBenchmarkPrices>;
@@ -89,11 +95,23 @@ export function enrichQuote(
 export function enrichProject(
   project: Project & { customer: Customer; quote: Quote | null },
 ) {
+  const normalizedStage = project.flowStage || stageFromProjectStatus(project.status);
+  const overdueDays = nextStepOverdueDays(project.nextStepDueAt);
+  const flow = {
+    stage: normalizedStage,
+    stageLabel: flowStageLabel(normalizedStage),
+    nextStep: project.nextStep,
+    dueAtLabel: dueDateLabel(project.nextStepDueAt),
+    overdueDays,
+    isOverdue: overdueDays > 0,
+    battleCard: project.battleCard,
+  };
   if (!project.quote) {
-    return { ...project, quote: null };
+    return { ...project, quote: null, flow };
   }
   return {
     ...project,
     quote: enrichQuote(project.quote, project, project.customer),
+    flow,
   };
 }

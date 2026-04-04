@@ -5,6 +5,7 @@ export const PROJECT_STATUS_LABEL: Record<string, string> = {
   PRICED: "已测算",
   PENDING_APPROVAL: "待 Deal Desk",
   APPROVED: "已核准",
+  CLOSED_LOST: "已丢单",
 };
 
 export function projectStatusLabel(code: string): string {

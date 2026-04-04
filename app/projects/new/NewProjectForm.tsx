@@ -4,6 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { customerTierLabel } from "@/lib/display-labels";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
+import {
+  BATTLE_CARD_TEMPLATES,
+  FLOW_STAGE_OPTIONS,
+  flowStageLabel,
+} from "@/lib/sales-flow";
 
 type Customer = { id: string; name: string; tier: string };
 
@@ -25,6 +30,14 @@ export function NewProjectForm() {
   const [labor, setLabor] = useState(1200);
   const [overhead, setOverhead] = useState(2300);
   const [period, setPeriod] = useState(1000);
+  const [flowStage, setFlowStage] = useState("LEAD_QUALIFIED");
+  const [nextStep, setNextStep] = useState("完成首次客户访谈并确认关键人关系图。");
+  const [nextStepDueAt, setNextStepDueAt] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    return d.toISOString().slice(0, 10);
+  });
+  const [battleCard, setBattleCard] = useState("");
 
   useEffect(() => {
     void fetch("/api/customers")
@@ -70,6 +83,12 @@ export function NewProjectForm() {
           labor,
           overhead,
           period,
+          flowStage,
+          nextStep,
+          nextStepDueAt: nextStepDueAt
+            ? new Date(nextStepDueAt).toISOString()
+            : null,
+          battleCard: battleCard || null,
         }),
       });
       if (!res.ok) {
@@ -181,6 +200,68 @@ export function NewProjectForm() {
               onChange={(e) => setIsSmallOrder(e.target.checked)}
             />
             小额订单
+          </label>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="text-sm font-medium">流程初始化</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm">
+            <span className="text-zinc-600 dark:text-zinc-400">流程阶段</span>
+            <select
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-950"
+              value={flowStage}
+              onChange={(e) => setFlowStage(e.target.value)}
+            >
+              {FLOW_STAGE_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {flowStageLabel(s)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="text-zinc-600 dark:text-zinc-400">作战卡模板</span>
+            <select
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-950"
+              value={battleCard}
+              onChange={(e) => {
+                const id = e.target.value;
+                setBattleCard(id);
+                const template = BATTLE_CARD_TEMPLATES.find((t) => t.id === id);
+                if (!template) return;
+                setFlowStage(template.stage);
+                setNextStep(template.defaultNextStep);
+                const due = new Date();
+                due.setDate(due.getDate() + template.dueInDays);
+                setNextStepDueAt(due.toISOString().slice(0, 10));
+              }}
+            >
+              <option value="">不使用模板</option>
+              {BATTLE_CARD_TEMPLATES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="text-zinc-600 dark:text-zinc-400">下一步动作</span>
+            <input
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-950"
+              value={nextStep}
+              onChange={(e) => setNextStep(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-zinc-600 dark:text-zinc-400">截止日期</span>
+            <input
+              type="date"
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-600 dark:bg-zinc-950"
+              value={nextStepDueAt}
+              onChange={(e) => setNextStepDueAt(e.target.value)}
+            />
           </label>
         </div>
       </section>

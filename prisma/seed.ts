@@ -9,6 +9,7 @@ import { requiredRoleForDiscount } from "../lib/approval";
 import { defaultBenchmarkPrices } from "../lib/benchmarks";
 import { pilotSeedUsers } from "../lib/seed-pilot";
 import { appendTimeline } from "../lib/timeline";
+import { stageFromProjectStatus } from "../lib/sales-flow";
 
 const prisma = new PrismaClient();
 
@@ -81,6 +82,17 @@ async function createScenario(
     });
   }
 
+  const flowStage = stageFromProjectStatus(args.status);
+  const nextStep =
+    args.status === "CLOSED_LOST"
+      ? "完成丢单复盘并录入关键原因（预算/竞品/关系/交付）。"
+      : args.status === "APPROVED"
+        ? "安排上线后 14 天复盘，沉淀样板案例。"
+        : args.status === "PENDING_APPROVAL"
+          ? "准备 Deal Desk 材料并明确让步边界。"
+          : "推进下一次客户触达，明确负责人与输出物。";
+  const nextStepDueAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
   await prisma.project.create({
     data: {
       name: args.name,
@@ -90,6 +102,10 @@ async function createScenario(
       leadDays: args.leadDays,
       isStandard: args.isStandard,
       isSmallOrder: args.isSmallOrder,
+      flowStage,
+      nextStep,
+      nextStepDueAt,
+      lastStageAt: new Date(),
       status: args.status,
       quote: {
         create: {

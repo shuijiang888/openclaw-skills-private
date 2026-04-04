@@ -26,10 +26,23 @@ model Project {
   leadDays     Int      @default(15)
   isStandard   Boolean  @default(true)
   isSmallOrder Boolean  @default(true)
+  /// 线索到赢单阶段：LEAD_QUALIFIED | DISCOVERY | SOLUTION | PROPOSAL | DEAL_DESK | CLOSED_WON | CLOSED_LOST
+  flowStage    String   @default("LEAD_QUALIFIED")
+  /// 当前最重要的下一步动作（用于周会推进）
+  nextStep     String   @default("")
+  /// 下一步动作截止时间（用于超期提醒）
+  nextStepDueAt DateTime?
+  /// 作战卡片模板标识，如 COMPETITOR_SWAP / EXEC_VISIT / POC_ESCORT
+  battleCard   String?
+  /// 最近一次阶段变更时间
+  lastStageAt  DateTime @default(now())
   status       String   @default("DRAFT")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   quote        Quote?
+
+  @@index([flowStage])
+  @@index([nextStepDueAt])
 }
 
 model Quote {

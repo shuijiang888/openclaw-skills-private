@@ -21,6 +21,11 @@ import {
 } from "@/lib/demo-role-modules";
 import type { CoeffPatch } from "@/lib/quote-natural-language";
 import { parseTimeline } from "@/lib/timeline";
+import {
+  BATTLE_CARD_TEMPLATES,
+  FLOW_STAGE_OPTIONS,
+  flowStageLabel,
+} from "@/lib/sales-flow";
 
 type EnrichedQuote = {
   id: string;
@@ -62,6 +67,17 @@ type ProjectDTO = {
   id: string;
   name: string;
   status: string;
+  flow: {
+    stage: string;
+    stageLabel: string;
+    nextStep: string;
+    dueAtLabel: string;
+    overdueDays: number;
+    isOverdue: boolean;
+    battleCard: string | null;
+  };
+  nextStepDueAt: string | null;
+  battleCard: string | null;
   productName: string;
   quantity: number;
   leadDays: number;
@@ -80,6 +96,10 @@ export function Workbench({ projectId }: { projectId: string }) {
   const [lastPatchRequestId, setLastPatchRequestId] = useState<string | null>(
     null,
   );
+  const [flowStage, setFlowStage] = useState("LEAD_QUALIFIED");
+  const [nextStepDraft, setNextStepDraft] = useState("");
+  const [nextStepDueAt, setNextStepDueAt] = useState("");
+  const [battleCard, setBattleCard] = useState("");
 
   const showRequestAuditTip = useCallback(
     (message: string, res: Response) => {
@@ -128,7 +148,14 @@ export function Workbench({ projectId }: { projectId: string }) {
       setErr("加载失败");
       return;
     }
-    setData(await res.json());
+    const j = (await res.json()) as ProjectDTO;
+    setData(j);
+    setFlowStage(j.flow?.stage ?? "LEAD_QUALIFIED");
+    setNextStepDraft(j.flow?.nextStep ?? "");
+    setNextStepDueAt(
+      j.nextStepDueAt ? new Date(j.nextStepDueAt).toISOString().slice(0, 10) : "",
+    );
+    setBattleCard(j.battleCard ?? "");
     setErr(null);
   }, [projectId]);
 
@@ -153,6 +180,35 @@ export function Workbench({ projectId }: { projectId: string }) {
       dispatchProfitDataChanged({ debounceMs: 500 });
     } catch {
       setErr("保存失败");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function patchFlow(body: Record<string, unknown>) {
+    if (!data) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/projects/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...demoHeaders() },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("流程更新失败");
+      const next = (await res.json()) as ProjectDTO;
+      setData(next);
+      setFlowStage(next.flow?.stage ?? "LEAD_QUALIFIED");
+      setNextStepDraft(next.flow?.nextStep ?? "");
+      setNextStepDueAt(
+        next.nextStepDueAt
+          ? new Date(next.nextStepDueAt).toISOString().slice(0, 10)
+          : "",
+      );
+      setBattleCard(next.battleCard ?? "");
+      dispatchProfitDataChanged({ debounceMs: 500 });
+    } catch {
+      setErr("流程更新失败");
     } finally {
       setBusy(false);
     }
@@ -217,11 +273,14 @@ export function Workbench({ projectId }: { projectId: string }) {
 
   const q = data.quote;
   const timeline = parseTimeline(q.timelineJson);
-  const locked = data.status === "APPROVED";
+  const locked = data.status === "APPROVED" || data.status === "CLOSED_LOST";
   const pendingParsed = q.pendingRole ? parseDemoRole(q.pendingRole) : null;
   const canActApprove =
     pendingParsed !== null && canApprove(demoRole, pendingParsed);
   const assistantAllowed = canUseQuoteAssistant(demoRole);
+  const selectedBattleCardTemplate = BATTLE_CARD_TEMPLATES.find(
+    (t) => t.id === battleCard,
+  );
 
   function applyCoeffPatch(patch: CoeffPatch) {
     if (!data?.quote) return;
@@ -428,6 +487,123 @@ export function Workbench({ projectId }: { projectId: string }) {
           </p>
         </section>
           </div>
+
+          <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-sm font-medium">流程推进与作战卡</h2>
+              <span className="text-xs text-zinc-500">
+                当前阶段：{flowStageLabel(flowStage)}
+              </span>
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-4">
+              <label className="block text-xs">
+                <span className="text-zinc-500">流程阶段</span>
+                <select
+                  value={flowStage}
+                  disabled={busy || locked}
+                  onChange={(e) => setFlowStage(e.target.value)}
+                  onBlur={() => void patchFlow({ flowStage })}
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                >
+                  {FLOW_STAGE_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {flowStageLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs lg:col-span-2">
+                <span className="text-zinc-500">下一步动作</span>
+                <input
+                  value={nextStepDraft}
+                  disabled={busy || locked}
+                  onChange={(e) => setNextStepDraft(e.target.value)}
+                  onBlur={() => void patchFlow({ nextStep: nextStepDraft })}
+                  placeholder="例如：安排客户高层共访，锁定预算与里程碑"
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                />
+              </label>
+              <label className="block text-xs">
+                <span className="text-zinc-500">截止日期</span>
+                <input
+                  type="date"
+                  value={nextStepDueAt}
+                  disabled={busy || locked}
+                  onChange={(e) => setNextStepDueAt(e.target.value)}
+                  onBlur={() =>
+                    void patchFlow({
+                      nextStepDueAt: nextStepDueAt
+                        ? new Date(nextStepDueAt).toISOString()
+                        : null,
+                    })
+                  }
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                />
+              </label>
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-4">
+              <label className="block text-xs lg:col-span-2">
+                <span className="text-zinc-500">作战卡模板</span>
+                <select
+                  value={battleCard}
+                  disabled={busy || locked}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setBattleCard(id);
+                    const template = BATTLE_CARD_TEMPLATES.find(
+                      (t) => t.id === id,
+                    );
+                    if (template) {
+                      setFlowStage(template.stage);
+                      setNextStepDraft(template.defaultNextStep);
+                      const due = new Date();
+                      due.setDate(due.getDate() + template.dueInDays);
+                      setNextStepDueAt(due.toISOString().slice(0, 10));
+                    }
+                  }}
+                  onBlur={() =>
+                    void patchFlow({
+                      battleCard: battleCard || null,
+                      flowStage,
+                      nextStep: nextStepDraft,
+                      nextStepDueAt: nextStepDueAt
+                        ? new Date(nextStepDueAt).toISOString()
+                        : null,
+                    })
+                  }
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                >
+                  <option value="">不使用模板</option>
+                  {BATTLE_CARD_TEMPLATES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 lg:col-span-2">
+                {selectedBattleCardTemplate ? (
+                  <>
+                    <p className="font-medium text-zinc-800 dark:text-zinc-200">
+                      模板清单：{selectedBattleCardTemplate.checklist.join(" / ")}
+                    </p>
+                    <p className="mt-1 text-zinc-500">
+                      推荐在 {selectedBattleCardTemplate.dueInDays} 天内完成首轮动作闭环。
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-zinc-500">
+                    选择作战卡后会自动填充阶段、下一步动作与建议截止日期。
+                  </p>
+                )}
+              </div>
+            </div>
+            {data.flow.isOverdue ? (
+              <p className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">
+                当前下一步已超期 {data.flow.overdueDays} 天，请在周会前更新推进动作。
+              </p>
+            ) : null}
+          </section>
 
           <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-center justify-between gap-3">

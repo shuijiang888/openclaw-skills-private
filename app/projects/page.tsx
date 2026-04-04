@@ -24,6 +24,11 @@ function mapToRows(
         ? p.quote.computed.grossMarginAtSuggest
         : null,
     pendingRole: p.quote?.pendingRole ?? null,
+    flowStageLabel: p.flow.stageLabel,
+    nextStep: p.flow.nextStep,
+    dueAtLabel: p.flow.dueAtLabel,
+    isOverdue: p.flow.isOverdue,
+    overdueDays: p.flow.overdueDays,
   }));
 }
 

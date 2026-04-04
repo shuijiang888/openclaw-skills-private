@@ -9,6 +9,7 @@ import { discountPercent } from "@/lib/calc";
 import { requiredRoleForDiscount } from "@/lib/approval";
 import { appendTimeline } from "@/lib/timeline";
 import { enrichProject } from "@/lib/serialize";
+import { normalizeFlowStage } from "@/lib/sales-flow";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -45,7 +46,11 @@ export async function POST(req: Request, { params }: Params) {
     }),
     prisma.project.update({
       where: { id: quote.projectId },
-      data: { status: "PENDING_APPROVAL" },
+      data: {
+        status: "PENDING_APPROVAL",
+        flowStage: normalizeFlowStage("DEAL_DESK"),
+        lastStageAt: new Date(),
+      },
     }),
   ]);
 

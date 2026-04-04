@@ -16,6 +16,11 @@ export type ProjectListRow = {
   suggestedPrice: number | null;
   grossMarginAtSuggest: number | null;
   pendingRole: string | null;
+  flowStageLabel: string;
+  nextStep: string;
+  dueAtLabel: string;
+  isOverdue: boolean;
+  overdueDays: number;
 };
 
 type FilterKey = "all" | "pending_any" | "pending_mine";
@@ -116,6 +121,8 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
             <tr>
               <th className="px-4 py-3 font-medium">项目</th>
               <th className="px-4 py-3 font-medium">客户</th>
+              <th className="px-4 py-3 font-medium">流程阶段</th>
+              <th className="px-4 py-3 font-medium">下一步动作</th>
               <th className="px-4 py-3 font-medium">状态</th>
               <th className="px-4 py-3 font-medium">待 Deal Desk 角色</th>
               <th className="px-4 py-3 font-medium text-right">建议价</th>
@@ -125,7 +132,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-zinc-500">
                   {filter === "pending_mine"
                     ? "当前身份下暂无待您处理的 Deal Desk。"
                     : "暂无项目。"}
@@ -161,6 +168,30 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                     </td>
                     <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                       {p.customerName}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                        {p.flowStageLabel}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-zinc-600 dark:text-zinc-400">
+                      {p.nextStep ? (
+                        <div className="space-y-1">
+                          <div className="line-clamp-2">{p.nextStep}</div>
+                          <div
+                            className={
+                              p.isOverdue
+                                ? "font-medium text-red-600 dark:text-red-400"
+                                : "text-zinc-500"
+                            }
+                          >
+                            截止 {p.dueAtLabel}
+                            {p.isOverdue ? ` · 超期 ${p.overdueDays} 天` : ""}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-zinc-400">未设置</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">

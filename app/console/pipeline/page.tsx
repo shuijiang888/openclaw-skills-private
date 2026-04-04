@@ -3,6 +3,7 @@ import { CsvExportLink } from "@/components/CsvExportLink";
 import { ProjectsCsvImport } from "@/components/ProjectsCsvImport";
 import { prisma } from "@/lib/prisma";
 import { enrichProject } from "@/lib/serialize";
+import { projectStatusLabel } from "@/lib/display-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,8 @@ export default async function ConsolePipelinePage() {
             <tr>
               <th className="px-4 py-3">项目</th>
               <th className="px-4 py-3">客户</th>
+              <th className="px-4 py-3">流程阶段</th>
+              <th className="px-4 py-3">下一步动作</th>
               <th className="px-4 py-3">状态</th>
               <th className="px-4 py-3 text-right">建议价</th>
               <th className="px-4 py-3 text-right">建议客户价值</th>
@@ -54,7 +57,33 @@ export default async function ConsolePipelinePage() {
                   <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                     {p.customer.name}
                   </td>
-                  <td className="px-4 py-3">{p.status}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                      {p.flow.stageLabel}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-zinc-600 dark:text-zinc-400">
+                    {p.flow.nextStep ? (
+                      <div className="space-y-1">
+                        <div>{p.flow.nextStep}</div>
+                        <div
+                          className={
+                            p.flow.isOverdue
+                              ? "font-medium text-red-600 dark:text-red-400"
+                              : "text-zinc-500"
+                          }
+                        >
+                          截止 {p.flow.dueAtLabel}
+                          {p.flow.isOverdue
+                            ? ` · 超期 ${p.flow.overdueDays} 天`
+                            : ""}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-zinc-400">未设置</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">{projectStatusLabel(p.status)}</td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {q ? `¥${q.suggestedPrice.toLocaleString("zh-CN")}` : "—"}
                   </td>

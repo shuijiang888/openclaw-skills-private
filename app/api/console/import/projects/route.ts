@@ -6,6 +6,7 @@ import { canImportConsoleCsv } from "@/lib/demo-role-modules";
 import { demoRoleFromRequest } from "@/lib/http";
 import { parseProjectCsvImport } from "@/lib/parse-project-csv";
 import { prisma } from "@/lib/prisma";
+import { stageFromProjectStatus } from "@/lib/sales-flow";
 
 export const runtime = "nodejs";
 
@@ -93,6 +94,13 @@ export async function POST(req: Request) {
             isStandard: row.isStandard,
             isSmallOrder: row.isSmallOrder,
             status: row.status,
+            flowStage: stageFromProjectStatus(row.status),
+            nextStep:
+              row.status === "CLOSED_LOST"
+                ? "补录丢单复盘：关键决策人与主要流失原因。"
+                : "补充下一步动作：明确负责人、截止时间与验证标准。",
+            nextStepDueAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            lastStageAt: new Date(),
           },
         });
         await tx.quote.create({

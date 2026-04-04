@@ -9,6 +9,7 @@ import { canApprove, parseDemoRole, type DemoRole } from "@/lib/approval";
 import { appendTimeline } from "@/lib/timeline";
 import { demoRoleFromRequest } from "@/lib/http";
 import { enrichProject } from "@/lib/serialize";
+import { normalizeFlowStage } from "@/lib/sales-flow";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -73,7 +74,11 @@ export async function POST(req: Request, { params }: Params) {
     }),
     prisma.project.update({
       where: { id: quote.projectId },
-      data: { status: "APPROVED" },
+      data: {
+        status: "APPROVED",
+        flowStage: normalizeFlowStage("CLOSED_WON"),
+        lastStageAt: new Date(),
+      },
     }),
   ]);
 
