@@ -228,8 +228,8 @@ sudo mv /etc/nginx/conf.d/default.conf.disabled-before-unified /etc/nginx/conf.d
 # 若你当时改的文件名不同，把 .disabled 文件改回原名即可
 
 docker rm -f profit-web 2>/dev/null || true
-sudo cp -a /root/nginx-backup-YYYYMMDD/html /usr/share/nginx/html
-# 把 YYYYMMDD 换成你阶段 0 备份文件夹的真实名字
+ls /root/nginx-backup-*   # 先看文件夹全名
+sudo cp -a /root/nginx-backup-这里填日期/html/. /usr/share/nginx/html/
 
 sudo nginx -t && sudo systemctl reload nginx
 ```
