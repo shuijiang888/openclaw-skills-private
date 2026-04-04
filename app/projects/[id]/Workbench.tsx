@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
+import { ProfitNodeAiCopilot } from "@/components/ProfitNodeAiCopilot";
 import { QuoteAssistantPanel } from "@/components/QuoteAssistantPanel";
 import { SalesManagerBenchCard } from "@/components/SalesManagerBenchCard";
 import { QuoteRuleExplainCard } from "@/components/QuoteRuleExplainCard";
@@ -661,6 +662,39 @@ export function Workbench({ projectId }: { projectId: string }) {
           </ul>
         </section>
           </div>
+
+          <ProfitNodeAiCopilot
+            demoRole={demoRole}
+            disabled={locked || busy}
+            baseline={{
+              coeffCustomer: q.coeffCustomer,
+              coeffIndustry: q.coeffIndustry,
+              coeffRegion: q.coeffRegion,
+              coeffProduct: q.coeffProduct,
+              coeffLead: q.coeffLead,
+              coeffQty: q.coeffQty,
+            }}
+            context={{
+              projectName: data.name,
+              customerName: data.customer.name,
+              customerTier: customerTierLabel(data.customer.tier),
+              productName: data.productName,
+              quantity: data.quantity,
+              leadDays: data.leadDays,
+              status: projectStatusLabel(data.status),
+              isStandard: data.isStandard,
+              isSmallOrder: data.isSmallOrder,
+              suggestedPrice: q.suggestedPrice,
+              counterPrice: q.counterPrice,
+              grossMarginAtSuggest: q.computed.grossMarginAtSuggest,
+              grossMarginAtOffer: q.computed.grossMarginAtOffer,
+              winRate: q.computed.winRate,
+              requiredApprovalLabel: q.computed.requiredApproval.label,
+              shuntChannel: q.computed.shunt.channel,
+              shuntReasons: q.computed.shunt.reasons,
+            }}
+            onApplyCoefficients={applyCoeffPatch}
+          />
 
           <QuoteRuleExplainCard quote={q} />
 
