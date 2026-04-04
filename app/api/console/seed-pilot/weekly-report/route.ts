@@ -5,6 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { canViewSeedPilot } from "@/lib/seed-pilot-permissions";
 import type { PilotStage } from "@/lib/seed-pilot";
 import { computeSeedPilotSlaState } from "@/lib/seed-pilot";
+import {
+  newRequestId,
+  writeAgentAuditSafe,
+  withRequestIdHeader,
+} from "@/lib/agent-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,9 +22,14 @@ function escapeCsv(v: string): string {
 }
 
 export async function GET(req: Request) {
+  const requestId = newRequestId();
+  const headers = withRequestIdHeader(requestId);
   const role = demoRoleFromRequest(req);
   if (!canViewSeedPilot(role)) {
-    return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
+    return NextResponse.json(
+      { error: ADMIN_API_FORBIDDEN },
+      { status: 403, headers },
+    );
   }
 
   const rows = await prisma.seedPilotUser.findMany({
@@ -72,10 +82,21 @@ export async function GET(req: Request) {
     lines.push(row.join(","));
   }
   const csv = `${lines.join("\n")}\n`;
+  await writeAgentAuditSafe({
+    requestId,
+    route: "GET /api/console/seed-pilot/weekly-report",
+    action: "seed_pilot_weekly_report_export",
+    req,
+    meta: {
+      rowCount: rows.length,
+      exportedAt: new Date().toISOString(),
+    },
+  });
 
   return new NextResponse(csv, {
     status: 200,
     headers: {
+      ...headers,
       "content-type": "text/csv; charset=utf-8",
       "content-disposition": `attachment; filename="seed-pilot-weekly-report.csv"`,
       "cache-control": "no-store",

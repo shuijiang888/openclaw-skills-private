@@ -12,6 +12,29 @@ npm run db:seed
 npm run dev
 ```
 
+### 并行双开对比（推荐：旧版 vs CRM 插件版）
+若你需要“分别跑、分别看、分别改”，建议使用 git worktree + 双端口 + 双数据库：
+
+```bash
+cd /workspace
+git fetch origin main feature/fxiaoke-crm-agent
+git worktree add /workspace-run-old main
+git worktree add /workspace-run-crm feature/fxiaoke-crm-agent
+```
+
+分别在两个目录中执行（数据库文件务必不同）：
+
+- 旧版：`/workspace-run-old`，端口 `3000`，`DATABASE_URL=file:./prisma/dev-old.db`
+- CRM 版：`/workspace-run-crm`，端口 `3001`，`DATABASE_URL=file:./prisma/dev-crm.db`
+
+也可直接用仓库脚本一键生成双开命令：
+
+```bash
+bash scripts/run-dual-preview.sh
+```
+
+脚本只打印建议命令，不会自动覆盖你的 `.env` 或直接启动服务。
+
 ### 使用真实库的安全提示
 如果你的 `.env` 设置了 `DATABASE_URL="file:./prisma/real.db"`（或其他真实 SQLite 文件），请**不要**执行全量 `npm run db:seed`（会清空业务数据）。只需要：
 
@@ -48,6 +71,15 @@ npm run dev
 | `/templates/compass-alert-rules-import-template.csv` | `conditionLabel`, `actionLabel`, `sortOrder`（见 `lib/parse-compass-alert-rules-csv.ts`） | **系数与规则** `/console/rules` → 罗盘对策矩阵批量导入（`POST /api/console/import/compass-alert-rules`） |
 
 说明：表头大小写不敏感；客户/项目导入 API 还要求 VP 权限（演示模式 `x-demo-role: VP`，登录模式 VP 账号）。
+
+### 种子测试运营（50 人）
+
+- 入口：`/console/seed-pilot`
+- 能力：
+  - 邀请/激活/反馈/复盘阶段推进
+  - SLA 超时高亮（便于周会追踪阻塞）
+  - 一键补发邀请
+  - 周报导出：`GET /api/console/seed-pilot/weekly-report`（CSV）
 
 ### 打不开页面时
 

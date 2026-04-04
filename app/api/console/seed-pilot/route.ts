@@ -11,6 +11,7 @@ import {
 import {
   calcSeedPilotSlaOverdueDays,
   defaultSeedPilotSlaByStage,
+  isSeedPilotActiveStatus,
   seedPilotSlaLabel,
 } from "@/lib/seed-pilot";
 
@@ -64,6 +65,22 @@ export async function GET(req: Request) {
   return NextResponse.json({
     summary,
     rows: rows.map((r) => ({
+      ...(isSeedPilotActiveStatus(r.pilotStage)
+        ? {
+            slaDays: defaultSeedPilotSlaByStage[r.pilotStage],
+            slaLabel: seedPilotSlaLabel(r.pilotStage),
+            overdueDays: calcSeedPilotSlaOverdueDays({
+              stage: r.pilotStage,
+              invitedAt: r.invitedAt,
+              activatedAt: r.activatedAt,
+              lastActivityAt: r.lastActivityAt,
+            }),
+          }
+        : {
+            slaDays: 0,
+            slaLabel: "已关闭",
+            overdueDays: 0,
+          }),
       id: r.id,
       email: r.email,
       name: r.name,
@@ -80,14 +97,6 @@ export async function GET(req: Request) {
       notes: r.notes,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
-      slaDays: defaultSeedPilotSlaByStage[r.pilotStage as PilotStage],
-      slaLabel: seedPilotSlaLabel(r.pilotStage as PilotStage),
-      overdueDays: calcSeedPilotSlaOverdueDays({
-        stage: r.pilotStage as PilotStage,
-        invitedAt: r.invitedAt,
-        activatedAt: r.activatedAt,
-        lastActivityAt: r.lastActivityAt,
-      }),
     })),
   });
 }
