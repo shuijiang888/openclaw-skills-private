@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { demoRoleFromRequest } from "@/lib/http";
+import { ztRoleFromRequest } from "@/lib/http";
 import { getRequestUserContext } from "@/lib/request-user";
 import { applyPointsAndSyncRank } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
+import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 
 function randomCode() {
   return `RDM-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -25,10 +26,13 @@ export async function GET(req: Request) {
         });
     return NextResponse.json({ items: rows });
   }
-  const role = demoRoleFromRequest(req);
+  const role = ztRoleFromRequest(req);
+  const roles = actorRoleCandidatesForZt(role);
   // keep role-specific history for non-admin/GM views
   const where =
-    role === "GM" || role === "ADMIN" ? undefined : { actorRole: role };
+    role === "GENERAL" || role === "ADMIN" || role === "SUPERADMIN"
+      ? undefined
+      : { actorRole: { in: roles } };
   const rows = await prisma.ztRedemption.findMany({
     where,
     orderBy: { createdAt: "desc" },
@@ -40,7 +44,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  const role = demoRoleFromRequest(req);
+  const role = ztRoleFromRequest(req);
   const body = (await req.json()) as {
     item?: string;
     pointsCost?: number;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { demoRoleFromRequest } from "@/lib/http";
+import { ztRoleFromRequest } from "@/lib/http";
+import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 import { getRequestUserContext } from "@/lib/request-user";
 import { applyPointsAndSyncRank } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
@@ -10,15 +11,18 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(req: Request, { params }: Params) {
   await ensureZtBootstrap();
   const { id } = await params;
-  const actorRole = demoRoleFromRequest(req);
+  const actorRole = ztRoleFromRequest(req);
+  const candidateRoles = actorRoleCandidatesForZt(actorRole);
   const userCtx = getRequestUserContext(req);
 
-  const card = await prisma.ztActionCard.findUnique({ where: { id } });
+  const card = await prisma.ztActionCard.findFirst({
+    where: { id, assignedRole: { in: candidateRoles } },
+  });
   if (!card) {
-    return NextResponse.json({ error: "Action card not found" }, { status: 404 });
-  }
-  if (card.assignedRole !== actorRole) {
-    return NextResponse.json({ error: "Card not assigned to current role" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Action card not found for current role" },
+      { status: 404 },
+    );
   }
   if (card.status === "DONE") {
     return NextResponse.json({ ok: true, points: 0, alreadyDone: true });

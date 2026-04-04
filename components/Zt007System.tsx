@@ -109,6 +109,23 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function Zt007System() {
   const role = useDemoRole();
+  const roleLabel =
+    {
+      SALES_MANAGER: "销售经理",
+      SALES_DIRECTOR: "销售总监",
+      SALES_VP: "销售副总裁",
+      GM: "总经理",
+      ADMIN: "管理员",
+      SOLDIER: "战士",
+      SQUAD_LEADER: "班长",
+      PLATOON_LEADER: "排长",
+      COMPANY_COMMANDER: "连长",
+      DIVISION_COMMANDER: "师长",
+      CORPS_COMMANDER: "军长",
+      COMMANDER: "司令",
+      GENERAL: "将军",
+      SUPERADMIN: "超超级管理员",
+    }[role] ?? role;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
@@ -183,7 +200,9 @@ export function Zt007System() {
     { name: "行动卡闭环（完成即入积分）", status: "已发布", href: "/zt007" },
     { name: "任务悬赏众包", status: "已发布", href: "/zt007" },
     { name: "积分兑换", status: "已发布", href: "/zt007" },
-    { name: "个人工作台", status: "已发布", href: "/zt007/me" },
+    { name: "个人工作台", status: "已发布", href: "/personal" },
+    { name: "智探007系统维护", status: "已发布", href: "/console/system" },
+    { name: "智探007用户组织", status: "已发布", href: "/console/users" },
     { name: "盈利报价工作台", status: "已发布", href: "/dashboard" },
     { name: "后台规则/审计", status: "已发布", href: "/console" },
     { name: "健康检查页", status: "已发布", href: "/health-check" },
@@ -263,6 +282,9 @@ export function Zt007System() {
             </h1>
             <p className="mt-2 text-sm text-slate-300">
               一个系统入口覆盖：今日行动卡、情报众包任务、积分荣誉、管理看板与双模式架构视图。
+            </p>
+            <p className="mt-2 text-xs text-cyan-100/90">
+              当前演示角色：{roleLabel}
             </p>
           </div>
           <button

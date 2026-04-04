@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { demoRoleFromRequest } from "@/lib/http";
+import { ztRoleFromRequest } from "@/lib/http";
 import { getRequestUserContext } from "@/lib/request-user";
 import { readUserProgress } from "@/lib/zt-points";
+import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   await ensureZtBootstrap();
-  const actorRole = demoRoleFromRequest(req);
+  const actorRole = ztRoleFromRequest(req);
+  const actorRoleCandidates = actorRoleCandidatesForZt(actorRole);
   const userCtx = getRequestUserContext(req);
 
   const [
@@ -27,10 +29,15 @@ export async function GET(req: Request) {
     prisma.ztSubmission.count(),
     userCtx.userId
       ? prisma.ztPointWallet.findUnique({ where: { userId: userCtx.userId } })
-      : prisma.ztPointWallet.findUnique({ where: { actorRole } }),
+      : prisma.ztPointWallet.findFirst({
+          where: { actorRole: { in: actorRoleCandidates } },
+          orderBy: { updatedAt: "desc" },
+        }),
     userCtx.userId
       ? prisma.ztRedemption.count({ where: { userId: userCtx.userId } })
-      : prisma.ztRedemption.count({ where: { actorRole } }),
+      : prisma.ztRedemption.count({
+          where: { actorRole: { in: actorRoleCandidates } },
+        }),
     readUserProgress(prisma, userCtx.userId),
   ]);
 

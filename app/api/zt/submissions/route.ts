@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { demoRoleFromRequest } from "@/lib/http";
+import { ztRoleFromRequest } from "@/lib/http";
 import { getRequestUserContext } from "@/lib/request-user";
 import { applyPointsAndSyncRank } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
+import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 
 export async function GET(req: Request) {
   await ensureZtBootstrap();
-  const role = demoRoleFromRequest(req);
+  const role = ztRoleFromRequest(req);
+  const roles = actorRoleCandidatesForZt(role);
   const rows = await prisma.ztSubmission.findMany({
     where:
-      role === "GM" || role === "ADMIN" ? undefined : { actorRole: role },
+      role === "GENERAL" || role === "ADMIN" || role === "SUPERADMIN"
+        ? undefined
+        : { actorRole: { in: roles } },
     orderBy: { createdAt: "desc" },
     take: 50,
   });
@@ -19,7 +23,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   await ensureZtBootstrap();
-  const role = demoRoleFromRequest(req);
+  const role = ztRoleFromRequest(req);
   const uctx = getRequestUserContext(req);
   const body = (await req.json()) as {
     taskId?: string;

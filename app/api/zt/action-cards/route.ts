@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { demoRoleFromRequest } from "@/lib/http";
+import { ztRoleFromRequest } from "@/lib/http";
 import { getRequestUserContext } from "@/lib/request-user";
+import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 export const dynamic = "force-dynamic";
@@ -9,9 +10,16 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  const role = demoRoleFromRequest(req);
+  const role = ztRoleFromRequest(req);
+  const roleCandidates = actorRoleCandidatesForZt(role);
   const rows = await prisma.ztActionCard.findMany({
-    where: { assignedRole: ctx.userId ? ctx.ztRole : role },
+    where: {
+      assignedRole: {
+        in: ctx.userId
+          ? actorRoleCandidatesForZt(ctx.ztRole)
+          : roleCandidates,
+      },
+    },
     orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
     take: 10,
   });
@@ -20,7 +28,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   await ensureZtBootstrap();
-  const role = demoRoleFromRequest(req);
+  const role = ztRoleFromRequest(req);
   const body = (await req.json()) as Record<string, unknown>;
   const title = String(body.title ?? "").trim();
   const reason = String(body.reason ?? "").trim();

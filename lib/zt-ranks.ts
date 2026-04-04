@@ -88,3 +88,24 @@ export function rankOrderByLabel(label: string): number {
   const idx = ZT_POINT_RANKS.findIndex((x) => x.label === label);
   return idx >= 0 ? idx + 1 : 1;
 }
+
+export function legacyDemoRoleForZt(role: ZtUserRole): string {
+  if (role === "SUPERADMIN" || role === "ADMIN") return "ADMIN";
+  if (role === "GENERAL") return "GM";
+  if (role === "COMPANY_COMMANDER") return "SALES_VP";
+  if (
+    role === "DIVISION_COMMANDER" ||
+    role === "CORPS_COMMANDER" ||
+    role === "COMMANDER"
+  ) {
+    return "SALES_VP";
+  }
+  if (role === "PLATOON_LEADER") return "SALES_DIRECTOR";
+  if (role === "SQUAD_LEADER" || role === "SOLDIER") return "SALES_MANAGER";
+  return "SALES_MANAGER";
+}
+
+export function actorRoleCandidatesForZt(role: ZtUserRole): string[] {
+  const v = [role, legacyDemoRoleForZt(role)];
+  return Array.from(new Set(v.filter(Boolean)));
+}

@@ -16,6 +16,15 @@ export const ROLE_OPTIONS = [
   { value: "SALES_VP", label: "销售副总裁" },
   { value: "GM", label: "总经理" },
   { value: "ADMIN", label: "管理员" },
+  { value: "SOLDIER", label: "战士（智探007）" },
+  { value: "SQUAD_LEADER", label: "班长（智探007）" },
+  { value: "PLATOON_LEADER", label: "排长（智探007）" },
+  { value: "COMPANY_COMMANDER", label: "连长（智探007）" },
+  { value: "DIVISION_COMMANDER", label: "师长（智探007）" },
+  { value: "CORPS_COMMANDER", label: "军长（智探007）" },
+  { value: "COMMANDER", label: "司令（智探007）" },
+  { value: "GENERAL", label: "将军（智探007）" },
+  { value: "SUPERADMIN", label: "超超级管理员（智探007）" },
 ] as const;
 
 /** 与 .env 中 NEXT_PUBLIC_PROFIT_AUTH_MODE=session 一致 */
@@ -29,6 +38,15 @@ const ROLE_LABEL: Record<string, string> = {
   SALES_VP: "销售副总裁",
   GM: "总经理",
   ADMIN: "管理员",
+  SOLDIER: "战士",
+  SQUAD_LEADER: "班长",
+  PLATOON_LEADER: "排长",
+  COMPANY_COMMANDER: "连长",
+  DIVISION_COMMANDER: "师长",
+  CORPS_COMMANDER: "军长",
+  COMMANDER: "司令",
+  GENERAL: "将军",
+  SUPERADMIN: "超超级管理员",
 };
 
 export function getDemoRole(): string {
