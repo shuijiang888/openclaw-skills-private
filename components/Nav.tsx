@@ -23,7 +23,6 @@ export function Nav() {
     { href: "/", label: "门户" },
     { href: "/zt007", label: "智探007总览" },
     { href: "/personal", label: "我的战情台" },
-    { href: "/health-check", label: "健康检查" },
     ...(canAccessConsole(role)
       ? [
           { href: "/console/system", label: "系统维护" },

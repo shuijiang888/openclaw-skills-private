@@ -11,7 +11,7 @@ export function PortalHomeButton() {
       title="一键返回首页门户"
     >
       <span aria-hidden>🏠</span>
-      返回首页门户
+      返回系统门户
     </Link>
   );
 }

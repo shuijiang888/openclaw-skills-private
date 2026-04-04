@@ -6,6 +6,7 @@ import { useDemoRole } from "@/components/RoleSwitcher";
 import { parseDemoRole, type DemoRole } from "@/lib/approval";
 import { canAccessConsole } from "@/lib/demo-role-modules";
 import { APP_VERSION } from "@/lib/app-release";
+import { usePathname } from "next/navigation";
 
 function roleMaySeeStrategy(role: DemoRole): boolean {
   return role !== "SALES_MANAGER";
@@ -13,27 +14,60 @@ function roleMaySeeStrategy(role: DemoRole): boolean {
 
 export function SiteFooter() {
   const role = parseDemoRole(useDemoRole());
+  const pathname = usePathname();
+  const isZtContext =
+    pathname.startsWith("/zt007") ||
+    pathname.startsWith("/personal") ||
+    pathname.startsWith("/console/system") ||
+    pathname.startsWith("/console/users") ||
+    pathname.startsWith("/console/zt-system") ||
+    pathname.startsWith("/console/zt-users");
 
   return (
     <footer className="mt-auto border-t border-slate-200/80 bg-white/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/60">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-            智能盈利管理系统
+            {isZtContext ? "智探007 作战协同系统" : "智能盈利管理系统"}
           </p>
           <p className="mt-1 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            面向制造与科技型企业的报价、审批与盈利结构管理（产品试点版）。生产落地需结合贵司主数据、
-            核算口径与组织授权进行配置。
+            {isZtContext
+              ? "面向组织协同的情报、行动、积分与治理系统（产品试点版）。可独立运行，也可后续对接外部CRM。"
+              : "面向制造与科技型企业的报价、审批与盈利结构管理（产品试点版）。生产落地需结合贵司主数据、核算口径与组织授权进行配置。"}
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400">
-              品牌联合
-            </span>
-            <FxiaokeBrandBadge variant="footer" />
-          </div>
+          {!isZtContext ? (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                品牌联合
+              </span>
+              <FxiaokeBrandBadge variant="footer" />
+            </div>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500 dark:text-slate-400">
-          {roleMaySeeStrategy(role) ? (
+          {isZtContext ? (
+            <>
+              <Link
+                href="/zt007"
+                className="hover:text-cyan-700 dark:hover:text-cyan-400"
+              >
+                智探007总览
+              </Link>
+              <Link
+                href="/personal"
+                className="hover:text-cyan-700 dark:hover:text-cyan-400"
+              >
+                我的战情台
+              </Link>
+              <Link
+                href="/health-check"
+                className="hover:text-cyan-700 dark:hover:text-cyan-400"
+              >
+                健康检查
+              </Link>
+            </>
+          ) : null}
+          {!isZtContext && roleMaySeeStrategy(role) ? (
             <Link
               href="/strategy"
               className="hover:text-amber-700 dark:hover:text-amber-400"
@@ -41,7 +75,7 @@ export function SiteFooter() {
               战略全文
             </Link>
           ) : null}
-          {roleMaySeeStrategy(role) ? (
+          {!isZtContext && roleMaySeeStrategy(role) ? (
             <Link
               href="/roadmap"
               className="hover:text-amber-700 dark:hover:text-amber-400"
@@ -49,7 +83,7 @@ export function SiteFooter() {
               产品路线
             </Link>
           ) : null}
-          {canAccessConsole(role) ? (
+          {!isZtContext && canAccessConsole(role) ? (
             <Link
               href="/console/readiness"
               className="hover:text-amber-700 dark:hover:text-amber-400"
