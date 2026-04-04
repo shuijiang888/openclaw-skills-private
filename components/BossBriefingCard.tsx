@@ -94,7 +94,10 @@ export function BossBriefingCard({ data: serverData }: { data?: BossBriefingDTO 
   }, [serverData]);
 
   useEffect(() => {
-    fetchBriefing();
+    const timer = window.setTimeout(() => {
+      fetchBriefing();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchBriefing]);
 
   useEffect(() => {

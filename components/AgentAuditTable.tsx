@@ -41,7 +41,10 @@ export function AgentAuditTable() {
   }, [role]);
 
   useEffect(() => {
-    loadRows();
+    const timer = window.setTimeout(() => {
+      loadRows();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadRows]);
 
   useEffect(() => {

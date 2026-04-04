@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const STORAGE_KEY = "profit_readiness_v1";
 
@@ -75,16 +75,15 @@ const GROUPS: { title: string; items: Item[] }[] = [
 ];
 
 export function ReadinessChecklist() {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
+  const [checked, setChecked] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setChecked(JSON.parse(raw) as Record<string, boolean>);
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
     } catch {
-      /* ignore */
+      return {};
     }
-  }, []);
+  });
 
   function toggle(id: string) {
     setChecked((prev) => {

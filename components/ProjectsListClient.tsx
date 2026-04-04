@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CsvExportLink } from "@/components/CsvExportLink";
 import { useDemoRole } from "@/components/RoleSwitcher";
 import { canApprove, parseDemoRole } from "@/lib/approval";
@@ -36,12 +36,9 @@ function filterLabel(f: FilterKey): string {
 export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
   const searchParams = useSearchParams();
   const demoRole = parseDemoRole(useDemoRole());
-  const [filter, setFilter] = useState<FilterKey>("all");
-
-  useEffect(() => {
-    const focus = searchParams.get("focus");
-    if (focus === "my-queue") setFilter("pending_mine");
-  }, [searchParams]);
+  const [filter, setFilter] = useState<FilterKey>(() =>
+    searchParams.get("focus") === "my-queue" ? "pending_mine" : "all",
+  );
 
   const myPendingCount = useMemo(
     () =>
