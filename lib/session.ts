@@ -18,6 +18,7 @@ export async function signSessionToken(user: {
   name?: string;
   ztRole?: string;
   isSuperAdmin?: boolean;
+  mustChangePassword?: boolean;
 }): Promise<string> {
   return new SignJWT({
     role: user.role,
@@ -25,6 +26,7 @@ export async function signSessionToken(user: {
     email: user.email,
     name: user.name ?? "",
     isSuperAdmin: Boolean(user.isSuperAdmin),
+    mustChangePassword: Boolean(user.mustChangePassword),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
@@ -40,6 +42,7 @@ export async function verifySessionToken(token: string): Promise<{
   email: string;
   name: string;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
 }> {
   const { payload } = await jwtVerify(token, getSessionSecretBytes());
   return {
@@ -49,5 +52,6 @@ export async function verifySessionToken(token: string): Promise<{
     email: (payload.email as string) ?? "",
     name: (payload.name as string) ?? "",
     isSuperAdmin: Boolean(payload.isSuperAdmin),
+    mustChangePassword: Boolean(payload.mustChangePassword),
   };
 }

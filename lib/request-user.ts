@@ -11,6 +11,7 @@ export type RequestUserContext = {
   ztRole: ZtUserRole;
   isSuperAdmin: boolean;
   isAdminLike: boolean;
+  mustChangePassword: boolean;
 };
 
 function isTruthyFlag(value: string | null): boolean {
@@ -30,6 +31,9 @@ export function getRequestUserContext(req: Request): RequestUserContext {
   const isSuperAdmin =
     ztRole === "SUPERADMIN" || isTruthyFlag(req.headers.get("x-profit-session-superadmin"));
   const isAdminLike = isSuperAdmin || ztRole === "ADMIN";
+  const mustChangePassword = isTruthyFlag(
+    req.headers.get("x-profit-session-must-change-password"),
+  );
 
   return {
     demoRole,
@@ -39,6 +43,7 @@ export function getRequestUserContext(req: Request): RequestUserContext {
     ztRole,
     isSuperAdmin,
     isAdminLike,
+    mustChangePassword,
   };
 }
 

@@ -23,6 +23,7 @@ function isPublicApi(path: string): boolean {
   return (
     path.startsWith("/api/auth/login") ||
     path.startsWith("/api/auth/session") ||
+    path.startsWith("/api/auth/change-password") ||
     path.startsWith("/api/auth/logout") ||
     path === "/api/health"
   );
@@ -35,6 +36,7 @@ type SessionPayload = {
   email: string | null;
   name: string | null;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
 };
 
 async function readSession(
@@ -54,6 +56,7 @@ async function readSession(
       email: (payload.email as string) ?? null,
       name: (payload.name as string) ?? null,
       isSuperAdmin: Boolean(payload.isSuperAdmin),
+      mustChangePassword: Boolean(payload.mustChangePassword),
     };
   } catch {
     return null;
@@ -74,6 +77,10 @@ function appendSessionHeaders(req: NextRequest, payload: SessionPayload) {
   requestHeaders.set(
     "x-profit-session-superadmin",
     payload.isSuperAdmin ? "1" : "0",
+  );
+  requestHeaders.set(
+    "x-profit-session-must-change-password",
+    payload.mustChangePassword ? "1" : "0",
   );
   return requestHeaders;
 }
@@ -120,6 +127,23 @@ export async function proxy(req: NextRequest) {
     url.pathname = "/login";
     url.searchParams.set("next", `${path}${req.nextUrl.search}`);
     return NextResponse.redirect(url);
+  }
+
+  // 首次登录改密策略：除登录页与改密接口外，其余路径强制回到登录页完成改密。
+  if (payload.mustChangePassword) {
+    if (path.startsWith("/api/") && !isPublicApi(path)) {
+      return NextResponse.json(
+        { error: "首次登录需先修改密码" },
+        { status: 428 },
+      );
+    }
+    if (path !== "/login" && !path.startsWith("/api/")) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("forceChange", "1");
+      url.searchParams.set("next", `${path}${req.nextUrl.search}`);
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next({

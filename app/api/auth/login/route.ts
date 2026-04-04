@@ -52,6 +52,9 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
   }
+  if (!user.isActive) {
+    return NextResponse.json({ error: "账号已被停用，请联系管理员" }, { status: 403 });
+  }
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
     return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
     name: user.name,
     isSuperAdmin: user.isSuperAdmin,
     ztRole: user.role,
+    mustChangePassword: user.mustChangePassword,
   });
   const jar = await cookies();
   jar.set(PROFIT_SESSION_COOKIE, token, {
@@ -76,6 +80,12 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    user: { email: user.email, role: user.role, name: user.name },
+    mustChangePassword: user.mustChangePassword,
+    user: {
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      mustChangePassword: user.mustChangePassword,
+    },
   });
 }

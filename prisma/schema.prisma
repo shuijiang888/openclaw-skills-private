@@ -119,6 +119,9 @@ model User {
   orgUnit      ZtOrgUnit? @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
   /// 用户侧交互调用大模型权限（仍受系统总开关约束）
   ztAllowInteractiveLlm Boolean @default(true)
+  /// 首次登录强制改密（批量初始化账号默认开启）
+  mustChangePassword    Boolean  @default(false)
+  passwordChangedAt     DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
