@@ -6,7 +6,7 @@ import { useState } from "react";
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const nextPath = params.get("next") || "/dashboard";
+  const nextPath = params.get("next") || "/portal";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
