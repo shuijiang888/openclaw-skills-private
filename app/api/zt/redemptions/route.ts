@@ -11,34 +11,45 @@ function randomCode() {
 }
 
 export async function GET(req: Request) {
-  await ensureZtBootstrap();
-  const ctx = getRequestUserContext(req);
-  if (ctx.userId) {
-    const rows = ctx.isAdminLike
-      ? await prisma.ztRedemption.findMany({
-          orderBy: { createdAt: "desc" },
-          take: 50,
-        })
-      : await prisma.ztRedemption.findMany({
-          where: { userId: ctx.userId },
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        });
+  try {
+    await ensureZtBootstrap();
+    const ctx = getRequestUserContext(req);
+    if (ctx.userId) {
+      const rows = ctx.isAdminLike
+        ? await prisma.ztRedemption.findMany({
+            orderBy: { createdAt: "desc" },
+            take: 50,
+          })
+        : await prisma.ztRedemption.findMany({
+            where: { userId: ctx.userId },
+            orderBy: { createdAt: "desc" },
+            take: 20,
+          });
+      return NextResponse.json({ items: rows });
+    }
+    const role = ztRoleFromRequest(req);
+    const roles = actorRoleCandidatesForZt(role);
+    // keep role-specific history for non-admin/GM views
+    const where =
+      role === "GENERAL" || role === "ADMIN" || role === "SUPERADMIN"
+        ? undefined
+        : { actorRole: { in: roles } };
+    const rows = await prisma.ztRedemption.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
     return NextResponse.json({ items: rows });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "redemptions_unavailable",
+        message:
+          error instanceof Error ? error.message : "redemptions unavailable",
+      },
+      { status: 503 },
+    );
   }
-  const role = ztRoleFromRequest(req);
-  const roles = actorRoleCandidatesForZt(role);
-  // keep role-specific history for non-admin/GM views
-  const where =
-    role === "GENERAL" || role === "ADMIN" || role === "SUPERADMIN"
-      ? undefined
-      : { actorRole: { in: roles } };
-  const rows = await prisma.ztRedemption.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
-  return NextResponse.json({ items: rows });
 }
 
 export async function POST(req: Request) {

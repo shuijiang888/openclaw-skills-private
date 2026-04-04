@@ -8,22 +8,33 @@ import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  await ensureZtBootstrap();
-  const ctx = getRequestUserContext(req);
-  const role = ztRoleFromRequest(req);
-  const roleCandidates = actorRoleCandidatesForZt(role);
-  const rows = await prisma.ztActionCard.findMany({
-    where: {
-      assignedRole: {
-        in: ctx.userId
-          ? actorRoleCandidatesForZt(ctx.ztRole)
-          : roleCandidates,
+  try {
+    await ensureZtBootstrap();
+    const ctx = getRequestUserContext(req);
+    const role = ztRoleFromRequest(req);
+    const roleCandidates = actorRoleCandidatesForZt(role);
+    const rows = await prisma.ztActionCard.findMany({
+      where: {
+        assignedRole: {
+          in: ctx.userId
+            ? actorRoleCandidatesForZt(ctx.ztRole)
+            : roleCandidates,
+        },
       },
-    },
-    orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
-    take: 10,
-  });
-  return NextResponse.json({ role: ctx.userId ? ctx.ztRole : role, items: rows });
+      orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
+      take: 10,
+    });
+    return NextResponse.json({ role: ctx.userId ? ctx.ztRole : role, items: rows });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "action_cards_unavailable",
+        message:
+          error instanceof Error ? error.message : "action cards unavailable",
+      },
+      { status: 503 },
+    );
+  }
 }
 
 export async function POST(req: Request) {

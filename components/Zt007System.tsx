@@ -165,20 +165,54 @@ export function Zt007System() {
     setLoading(true);
     setError(null);
     try {
-      const [ov, ac, bt, sr, rr] = await Promise.all([
+      const [ov, ac, bt, sr, rr] = await Promise.allSettled([
         api<OverviewResponse>("/api/zt/overview"),
         api<{ items: ActionCard[] }>("/api/zt/action-cards"),
         api<{ items: BountyTask[] }>("/api/zt/bounty-tasks"),
         api<{ items: Submission[] }>("/api/zt/submissions/recent"),
         api<{ items: Redemption[] }>("/api/zt/redemptions"),
       ]);
-      setOverview(ov);
-      setCards(ac.items);
-      setTasks(bt.items);
-      setSubs(sr.items);
-      setReds(rr.items);
+      const failures: string[] = [];
+      if (ov.status === "fulfilled") {
+        setOverview(ov.value);
+      } else {
+        setOverview(null);
+        failures.push("总览");
+      }
+      if (ac.status === "fulfilled") {
+        setCards(ac.value.items);
+      } else {
+        setCards([]);
+        failures.push("行动卡");
+      }
+      if (bt.status === "fulfilled") {
+        setTasks(bt.value.items);
+      } else {
+        setTasks([]);
+        failures.push("任务悬赏");
+      }
+      if (sr.status === "fulfilled") {
+        setSubs(sr.value.items);
+      } else {
+        setSubs([]);
+        failures.push("最近提交");
+      }
+      if (rr.status === "fulfilled") {
+        setReds(rr.value.items);
+      } else {
+        setReds([]);
+        failures.push("积分兑换");
+      }
+      if (failures.length > 0) {
+        setError(`部分模块加载失败：${failures.join("、")}。`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
+      setOverview(null);
+      setCards([]);
+      setTasks([]);
+      setSubs([]);
+      setReds([]);
     } finally {
       setLoading(false);
     }
@@ -415,9 +449,13 @@ export function Zt007System() {
         </div>
       ) : null}
 
-      {loading || !overview ? (
+      {loading ? (
         <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-6 text-sm text-slate-300">
           正在加载智探007系统模块...
+        </div>
+      ) : !overview ? (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-6 text-sm text-amber-100">
+          部分模块暂不可用，请点击上方「Refresh」重试，或先前往「健康检查」定位异常接口。
         </div>
       ) : (
         <>
