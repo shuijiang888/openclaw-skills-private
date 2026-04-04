@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>盈利系统agent · 全功能操作台</title>
+  <style>
+    :root {
+      --bg: #081327;
+      --panel: #132343;
+      --panel2: #182c52;
+      --line: #325589;
+      --text: #e9f2ff;
+      --muted: #a5bfdf;
+      --brand: #22d3ee;
+      --brand2: #3b82f6;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 0% -10%, rgba(34,211,238,.2), transparent 30%),
+        radial-gradient(circle at 100% -20%, rgba(59,130,246,.28), transparent 40%),
+        linear-gradient(180deg, #081327, #0d1d3b 55%, #13274d);
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(1180px, 94vw); margin: 0 auto; padding: 14px; }
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 19, 39, .9);
+      backdrop-filter: blur(8px);
+    }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .sp { flex: 1; }
+    .brand { font-size: 21px; font-weight: 700; color: var(--brand); }
+    .pill {
+      border: 1px solid #4269a6;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #d6e8ff;
+      background: rgba(30,58,138,.14);
+    }
+    .nav a {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(160deg, rgba(17,34,64,.96), rgba(22,44,82,.88));
+      padding: 16px;
+    }
+    .hero h1 { margin: 8px 0; font-size: clamp(25px, 4.5vw, 38px); line-height: 1.15; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.65; }
+    .grid { display: grid; gap: 12px; }
+    .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      padding: 14px;
+    }
+    .kpi { font-size: 30px; font-weight: 700; margin-top: 6px; }
+    .muted { color: var(--muted); }
+    .title { margin: 0 0 8px 0; font-size: 20px; }
+    .small { font-size: 12px; }
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #101d39;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .badge {
+      border: 1px solid #3f629b;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #d6e7ff;
+    }
+    .badge.ok { border-color: #1d6a41; color: #bdf7d2; background: rgba(22,101,52,.2); }
+    .badge.warn { border-color: #9a5c08; color: #fde9a8; background: rgba(146,64,14,.2); }
+    .badge.danger { border-color: #9c1c1c; color: #fecaca; background: rgba(153,27,27,.2); }
+    .btn {
+      border: 1px solid #3f619a;
+      border-radius: 8px;
+      padding: 8px 11px;
+      background: #1f3966;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn.ok { background: #155737; border-color: #1d7a4b; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 8px;
+      background: #0e1a34;
+      color: #dceaff;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid #2f4f80; padding: 8px; text-align: left; }
+    .progress {
+      height: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      background: #0f172a;
+    }
+    .progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand2)); }
+    .toast {
+      position: fixed; right: 16px; bottom: 18px; z-index: 40;
+      border: 1px solid #3d639c; border-radius: 10px;
+      background: #0e1a33; color: #dbeafe; padding: 9px 12px;
+      opacity: 0; transform: translateY(8px); transition: .2s;
+    }
+    .toast.show { opacity: 1; transform: none; }
+    @media (max-width: 1080px) { .g4, .g2 { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .nav a { display: none; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap row nav">
+      <a class="brand" href="/">纷享销客AI价值服务</a>
+      <a href="#dashboard">经营总览</a>
+      <a href="#quote">报价测算</a>
+      <a href="#approval">审批队列</a>
+      <a href="#compass">盈利罗盘</a>
+      <a href="#customers">客户台账</a>
+      <a href="#actions">行动任务</a>
+      <div class="sp"></div>
+      <span class="pill">盈利系统agent</span>
+      <select id="role">
+        <option value="sales">sales</option>
+        <option value="manager">manager</option>
+        <option value="gm">gm</option>
+        <option value="admin">admin</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="row">
+        <span class="pill">Profit Operation Cockpit</span>
+        <span class="pill">全功能演示版</span>
+      </div>
+      <h1>盈利系统agent · 一站式操作台</h1>
+      <p>
+        覆盖“报价测算 → 提交审批 → 盈利罗盘 → 客户台账 → 行动任务”闭环操作。
+        你可直接在本页完成关键业务动作，并从门户统一导航进入。
+      </p>
+    </section>
+
+    <section id="dashboard" style="margin-top:12px" class="grid g4">
+      <div class="card"><div class="small muted">本周新增商机</div><div class="kpi" id="kpi-opps">27</div></div>
+      <div class="card"><div class="small muted">平均毛利率</div><div class="kpi" id="kpi-margin">18.6%</div></div>
+      <div class="card"><div class="small muted">待审批报价</div><div class="kpi" id="kpi-pending">2</div></div>
+      <div class="card"><div class="small muted">预警项目</div><div class="kpi" id="kpi-risk">1</div></div>
+    </section>
+
+    <section id="quote" style="margin-top:12px" class="grid g2">
+      <div class="card">
+        <h3 class="title">报价测算</h3>
+        <div class="small muted">输入基础成本和六项系数，自动计算建议报价与毛利率。</div>
+        <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:10px; gap:8px;">
+          <input id="cost" type="number" min="1" value="100000" placeholder="基础成本" />
+          <input id="coeffCustomer" type="number" step="0.01" value="1.05" placeholder="客户系数" />
+          <input id="coeffIndustry" type="number" step="0.01" value="1.03" placeholder="行业系数" />
+          <input id="coeffRegion" type="number" step="0.01" value="1.02" placeholder="区域系数" />
+          <input id="coeffProduct" type="number" step="0.01" value="1.08" placeholder="产品系数" />
+          <input id="coeffLead" type="number" step="0.01" value="1.00" placeholder="线索系数" />
+          <input id="coeffQty" type="number" step="0.01" value="0.98" placeholder="数量系数" />
+        </div>
+        <p style="margin-top:10px">
+          <button id="calcQuote" class="btn ok">计算建议报价</button>
+          <button id="submitApproval" class="btn">提交审批</button>
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="title">测算结果</h3>
+        <div class="item">
+          <div class="small muted">建议报价</div>
+          <div class="kpi" id="quotePrice">108,000</div>
+        </div>
+        <div class="item">
+          <div class="small muted">预计毛利率</div>
+          <div class="kpi" id="quoteMargin">7.4%</div>
+          <span id="marginLevel" class="badge warn">需关注</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="approval" style="margin-top:12px" class="card">
+      <h3 class="title">审批队列</h3>
+      <table>
+        <thead>
+          <tr><th>单号</th><th>客户</th><th>报价(¥)</th><th>毛利率</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody id="approvalTable"></tbody>
+      </table>
+    </section>
+
+    <section id="compass" style="margin-top:12px" class="grid g2">
+      <div class="card">
+        <h3 class="title">盈利罗盘</h3>
+        <div class="small muted">按毛利率与赢单概率自动归类象限，驱动策略动作。</div>
+        <div style="margin-top:10px">
+          <label class="small muted">毛利率(%)</label>
+          <input id="compassMargin" type="number" value="18" />
+        </div>
+        <div style="margin-top:8px">
+          <label class="small muted">赢单概率(%)</label>
+          <input id="compassWin" type="number" value="65" />
+        </div>
+        <p style="margin-top:10px"><button id="runCompass" class="btn ok">判定象限</button></p>
+      </div>
+      <div class="card">
+        <h3 class="title">象限判定</h3>
+        <div id="quadrant" class="item">
+          <b>成长推进象限</b>
+          <div class="small muted">策略：加快推进、增加资源保障，锁定高价值机会。</div>
+        </div>
+        <div class="small muted">Wave 目标达成进度</div>
+        <div class="progress"><span style="width:72%"></span></div>
+      </div>
+    </section>
+
+    <section id="customers" style="margin-top:12px" class="grid g2">
+      <div class="card">
+        <h3 class="title">客户台账录入</h3>
+        <form id="customerForm">
+          <p><input name="name" placeholder="客户名称" required /></p>
+          <p><input name="tier" placeholder="客户等级（A/B/C）" required /></p>
+          <p><input name="arDays" type="number" placeholder="账期（天）" required /></p>
+          <p><button class="btn ok" type="submit">新增客户</button></p>
+        </form>
+      </div>
+      <div class="card">
+        <h3 class="title">客户台账列表</h3>
+        <div id="customerList"></div>
+      </div>
+    </section>
+
+    <section id="actions" style="margin-top:12px" class="card">
+      <h3 class="title">行动任务（盈利改善）</h3>
+      <div class="item">
+        <div class="row"><b>低毛利项目复盘</b><span class="badge danger">P0</span></div>
+        <div class="small muted">目标：48小时输出降本与提价组合方案</div>
+        <p><button class="btn ok task-done" data-points="20">完成任务 +20</button></p>
+      </div>
+      <div class="item">
+        <div class="row"><b>审批超时治理</b><span class="badge warn">P1</span></div>
+        <div class="small muted">目标：本周审批SLA提升到90%以上</div>
+        <p><button class="btn ok task-done" data-points="15">完成任务 +15</button></p>
+      </div>
+      <div class="item">
+        <div class="row"><b>高价值客户提案优化</b><span class="badge ok">P1</span></div>
+        <div class="small muted">目标：提高方案匹配度与赢单概率</div>
+        <p><button class="btn ok task-done" data-points="10">完成任务 +10</button></p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const KEY = "profit_agent_demo_v1";
+    const state = Object.assign({
+      role: "sales",
+      score: 0,
+      approvals: [
+        { id: "Q-202604-001", customer: "Alpha Medical", price: 128000, margin: 7.4, status: "PENDING" },
+        { id: "Q-202604-002", customer: "SmartFab", price: 162000, margin: 19.1, status: "PENDING" }
+      ],
+      customers: [
+        { name: "Alpha Medical", tier: "A", arDays: 60 },
+        { name: "SmartFab", tier: "B", arDays: 45 }
+      ]
+    }, JSON.parse(localStorage.getItem(KEY) || "{}"));
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => Number(n).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+    const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+
+    function toast(msg) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 1700);
+    }
+
+    function renderApproval() {
+      const tbody = $("approvalTable");
+      tbody.innerHTML = state.approvals.map((x, i) => `
+        <tr>
+          <td>${x.id}</td>
+          <td>${x.customer}</td>
+          <td>${fmt(x.price)}</td>
+          <td>${x.margin}%</td>
+          <td><span class="badge ${x.status === "APPROVED" ? "ok" : x.status === "REJECTED" ? "danger" : "warn"}">${x.status}</span></td>
+          <td>
+            <button class="btn ok" onclick="approve(${i})">通过</button>
+            <button class="btn" onclick="reject(${i})">驳回</button>
+          </td>
+        </tr>`).join("");
+      $("kpi-pending").textContent = state.approvals.filter((x) => x.status === "PENDING").length;
+    }
+
+    function renderCustomers() {
+      $("customerList").innerHTML = state.customers.map((c) => `
+        <div class="item">
+          <b>${c.name}</b>
+          <div class="small muted">等级 ${c.tier} · 账期 ${c.arDays} 天</div>
+        </div>`).join("");
+    }
+
+    function renderRole() {
+      $("role").value = state.role;
+    }
+
+    function calcQuote() {
+      const cost = Number($("cost").value || 0);
+      const coeffs = [
+        Number($("coeffCustomer").value || 1),
+        Number($("coeffIndustry").value || 1),
+        Number($("coeffRegion").value || 1),
+        Number($("coeffProduct").value || 1),
+        Number($("coeffLead").value || 1),
+        Number($("coeffQty").value || 1),
+      ];
+      const price = cost * coeffs.reduce((a, b) => a * b, 1);
+      const margin = price > 0 ? ((price - cost) / price) * 100 : 0;
+      $("quotePrice").textContent = fmt(price);
+      $("quoteMargin").textContent = `${margin.toFixed(1)}%`;
+      const level = $("marginLevel");
+      if (margin >= 18) {
+        level.className = "badge ok";
+        level.textContent = "健康";
+      } else if (margin >= 10) {
+        level.className = "badge warn";
+        level.textContent = "需关注";
+      } else {
+        level.className = "badge danger";
+        level.textContent = "高风险";
+      }
+      $("kpi-margin").textContent = `${margin.toFixed(1)}%`;
+      save();
+    }
+
+    function runCompass() {
+      const m = Number($("compassMargin").value || 0);
+      const w = Number($("compassWin").value || 0);
+      let title = "";
+      let text = "";
+      if (m >= 18 && w >= 60) {
+        title = "成长推进象限";
+        text = "策略：加速推进，配置高阶资源，优先保障交付。";
+      } else if (m < 18 && w >= 60) {
+        title = "赢单保利象限";
+        text = "策略：控折扣、降成本、保住底线毛利。";
+      } else if (m >= 18 && w < 60) {
+        title = "价值验证象限";
+        text = "策略：强化价值证明与关键人突破。";
+      } else {
+        title = "风险收敛象限";
+        text = "策略：缩短周期、止损优先、必要时淘汰。";
+      }
+      $("quadrant").innerHTML = `<b>${title}</b><div class="small muted">${text}</div>`;
+      toast(`已判定：${title}`);
+    }
+
+    window.approve = function (idx) {
+      state.approvals[idx].status = "APPROVED";
+      renderApproval();
+      save();
+      toast("审批已通过");
+    };
+
+    window.reject = function (idx) {
+      state.approvals[idx].status = "REJECTED";
+      renderApproval();
+      save();
+      toast("审批已驳回");
+    };
+
+    $("calcQuote").addEventListener("click", calcQuote);
+    $("submitApproval").addEventListener("click", () => {
+      const price = Number(String($("quotePrice").textContent).replace(/,/g, "")) || 0;
+      const margin = Number(String($("quoteMargin").textContent).replace("%", "")) || 0;
+      state.approvals.unshift({
+        id: `Q-${Date.now().toString().slice(-8)}`,
+        customer: "New Opportunity",
+        price,
+        margin: Number(margin.toFixed(1)),
+        status: "PENDING",
+      });
+      renderApproval();
+      save();
+      toast("报价已提交审批");
+    });
+
+    $("runCompass").addEventListener("click", runCompass);
+    $("role").addEventListener("change", (e) => {
+      state.role = e.target.value;
+      save();
+      toast(`角色已切换为 ${state.role}`);
+    });
+
+    $("customerForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.customers.unshift({
+        name: String(fd.get("name") || "").trim(),
+        tier: String(fd.get("tier") || "").trim(),
+        arDays: Number(fd.get("arDays") || 0),
+      });
+      e.target.reset();
+      renderCustomers();
+      save();
+      toast("客户台账已新增");
+    });
+
+    document.querySelectorAll(".task-done").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.done === "1") return;
+        btn.dataset.done = "1";
+        btn.disabled = true;
+        btn.textContent = "已完成";
+        const pts = Number(btn.dataset.points || 10);
+        state.score += pts;
+        toast(`任务完成 +${pts}`);
+        save();
+      });
+    });
+
+    calcQuote();
+    renderApproval();
+    renderCustomers();
+    renderRole();
+  </script>
+</body>
+</html>
