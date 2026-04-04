@@ -114,3 +114,106 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+/// 智探007：多模态信号（MVP 结构化）
+model ZtSignal {
+  id           String   @id @default(cuid())
+  title        String
+  content      String
+  signalType   String   @default("tactical")
+  region       String   @default("")
+  sourceFormat String   @default("text")
+  actorRole    String   @default("SALES_DIRECTOR")
+  status       String   @default("NEW")
+  points       Int      @default(8)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// 智探007：今日行动卡
+model ZtActionCard {
+  id           String   @id @default(cuid())
+  title        String
+  reason       String
+  suggestion   String
+  priority     String   @default("P1")
+  status       String   @default("OPEN")
+  assignedRole String   @default("SALES_DIRECTOR")
+  rewardPoints Int      @default(10)
+  dueAt        DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([assignedRole, status])
+}
+
+/// 智探007：任务悬赏
+model ZtBountyTask {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  taskType     String   @default("tactical")
+  rewardPoints Int      @default(30)
+  status       String   @default("OPEN")
+  deadlineAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  submissions  ZtSubmission[]
+
+  @@index([status, createdAt])
+}
+
+/// 智探007：任务/自由情报提交
+model ZtSubmission {
+  id           String       @id @default(cuid())
+  taskId       String?
+  task         ZtBountyTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  title        String
+  content      String
+  signalType   String       @default("tactical")
+  region       String       @default("")
+  format       String       @default("text")
+  actorRole    String       @default("SALES_DIRECTOR")
+  status       String       @default("PENDING")
+  pointsGranted Int         @default(0)
+  createdAt    DateTime     @default(now())
+
+  @@index([actorRole, createdAt])
+}
+
+/// 智探007：角色积分钱包（MVP 按角色汇总）
+model ZtPointWallet {
+  id        String   @id @default(cuid())
+  actorRole String   @unique
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// 智探007：积分流水
+model ZtPointLedger {
+  id        String   @id @default(cuid())
+  actorRole String
+  action    String
+  points    Int
+  refType   String   @default("")
+  refId     String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([actorRole, createdAt])
+}
+
+/// 智探007：积分兑换申请（线下核销）
+model ZtRedemption {
+  id         String   @id @default(cuid())
+  actorRole  String
+  item       String
+  pointsCost Int
+  redeemCode String   @unique
+  status     String   @default("REQUESTED")
+  createdAt  DateTime @default(now())
+  verifiedAt DateTime?
+
+  @@index([actorRole, createdAt])
+}

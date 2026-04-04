@@ -68,6 +68,12 @@ export default async function LandingPage() {
               进入工作台
             </Link>
             <Link
+              href="/zt007"
+              className="inline-flex items-center justify-center rounded-xl border border-cyan-300/40 bg-cyan-500/15 px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/25"
+            >
+              智探007 系统
+            </Link>
+            <Link
               href="/about"
               className="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10"
             >
