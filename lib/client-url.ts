@@ -1,5 +1,3 @@
-"use client";
-
 const PROFIT_SUBPATH = "/profit";
 
 function detectClientBasePath(): string {

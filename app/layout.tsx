@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DataSyncListener } from "@/components/DataSyncListener";
 import { Nav } from "@/components/Nav";
+import { PortalHomeButton } from "@/components/PortalHomeButton";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default function RootLayout({
         <DataSyncListener />
         <Nav />
         <main className="w-full flex-1 px-4 py-8 sm:py-10">{children}</main>
+        <PortalHomeButton />
         <SiteFooter />
       </body>
     </html>

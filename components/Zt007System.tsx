@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
+import { withClientBasePath } from "@/lib/client-url";
 
 type Overview = {
   systemName: string;
@@ -80,7 +82,7 @@ function priorityBadge(priority: string) {
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(withClientBasePath(path), {
     ...init,
     headers: {
       "content-type": "application/json",
@@ -159,11 +161,22 @@ export function Zt007System() {
     item: "Training Session",
     pointsCost: 100,
   });
+  const [bootstrapping, setBootstrapping] = useState(false);
 
   const doneCount = useMemo(
     () => cards.filter((c) => c.status === "DONE").length,
     [cards],
   );
+
+  const publishedCapabilities = [
+    { name: "情报提交与审核入账", status: "已发布", href: "/zt007" },
+    { name: "行动卡闭环（完成即入积分）", status: "已发布", href: "/zt007" },
+    { name: "任务悬赏众包", status: "已发布", href: "/zt007" },
+    { name: "积分兑换", status: "已发布", href: "/zt007" },
+    { name: "盈利报价工作台", status: "已发布", href: "/dashboard" },
+    { name: "后台规则/审计", status: "已发布", href: "/console" },
+    { name: "健康检查页", status: "已发布", href: "/health-check" },
+  ] as const;
 
   async function markDone(id: string) {
     try {
@@ -214,6 +227,18 @@ export function Zt007System() {
     }
   }
 
+  async function bootstrapSystemData() {
+    setBootstrapping(true);
+    try {
+      await api<{ ok: boolean }>("/api/zt/bootstrap", { method: "POST" });
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "bootstrap failed");
+    } finally {
+      setBootstrapping(false);
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5">
       <section className="rounded-2xl border border-cyan-400/20 bg-slate-950/70 p-5 text-slate-100 shadow-lg shadow-cyan-500/5">
@@ -236,6 +261,40 @@ export function Zt007System() {
           >
             Refresh
           </button>
+          <button
+            type="button"
+            disabled={bootstrapping}
+            className="rounded-lg border border-cyan-400/60 bg-cyan-500/20 px-3 py-1.5 text-sm text-cyan-100 hover:bg-cyan-500/30 disabled:opacity-60"
+            onClick={() => void bootstrapSystemData()}
+          >
+            {bootstrapping ? "初始化中…" : "一键初始化数据"}
+          </button>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-cyan-200">
+            已发布能力矩阵（团队可直接使用）
+          </h2>
+          <Link
+            href={withClientBasePath("/health-check")}
+            className="text-xs font-semibold text-cyan-300 underline"
+          >
+            打开健康检查
+          </Link>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {publishedCapabilities.map((item) => (
+            <Link
+              key={item.name}
+              href={withClientBasePath(item.href)}
+              className="rounded-lg border border-slate-700 bg-slate-950/60 p-3 hover:border-cyan-500/60"
+            >
+              <p className="text-sm font-medium text-slate-100">{item.name}</p>
+              <p className="mt-1 text-xs text-emerald-300">{item.status}</p>
+            </Link>
+          ))}
         </div>
       </section>
 

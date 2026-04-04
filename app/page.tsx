@@ -33,6 +33,13 @@ const portalCards: PortalCard[] = [
     href: "/console",
     cta: "进入后台",
   },
+  {
+    title: "健康检查页",
+    subtitle: "发布验收 / 日常巡检",
+    description: "自动检查核心页面和 API 可用性，快速判断系统是否可交付给团队。",
+    href: "/health-check",
+    cta: "打开健康检查",
+  },
 ];
 
 export default function LandingPage() {
