@@ -15,7 +15,7 @@ export default function ConsoleLayout({
             运营与配置后台
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            与前台工作台共用同一套数据；此处侧重主数据、审批队列与规则可视化。
+            与前台工作台共用同一套数据；此处侧重主数据、Deal Desk 队列与规则可视化。
             <span className="mt-1 block">
               演示模式：侧栏与写权限随右上角「试点角色」变化。登录模式：角色由会话账号决定，无角色下拉。
             </span>

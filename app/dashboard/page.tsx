@@ -46,7 +46,7 @@ export default async function DashboardPage({
       {demo === "forbidden-console" ? (
         <div className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-100">
           已拦下对「管理后台」的访问：当前为业务线角色时，顶部导航不显示后台入口。
-          演示模式请将右上角「试点角色」切换为「总经理」或「管理员」；登录模式请使用具备后台权限的账号。
+          演示模式请将右上角「试点角色」切换为「销售经理」或「VP」；登录模式请使用具备后台权限的账号。
         </div>
       ) : null}
       <RoleHomePanel />
@@ -58,7 +58,7 @@ export default async function DashboardPage({
           工作台 · 经营概览
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          一眼看到利润风险池、自动化潜力与审批队列。对外汇报时可配合「战略全文」中的价值叙事使用。
+          一眼看到交易风险池、自动化潜力与 Deal Desk 队列。对外汇报时可配合「战略全文」中的价值叙事使用。
         </p>
       </div>
 
@@ -77,13 +77,13 @@ export default async function DashboardPage({
           </Link>
         </div>
         <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-          低毛利阈值 15%；自动通道口径与「智能分流」一致，可直接用于管理层汇报与试点复盘。
+          低价值阈值 15%；自动通道口径与「智能分流」一致，可直接用于管理层汇报与试点复盘。
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
               {
-                label: "建议毛利低于 15% 的报价",
+                label: "建议客户价值低于 15% 的报价",
                 value: vm.lowMarginQuoteCount,
                 hint: "老板视角风险池",
               },
@@ -93,15 +93,15 @@ export default async function DashboardPage({
                 hint: `占项目 ${autoPct}%`,
               },
               {
-                label: "待审批",
+                label: "待 Deal Desk",
                 value: vm.pendingApprovalCount,
-                hint: "与销售管理看板一致",
+                hint: "与 Deal Desk 看板一致",
                 href: "/projects",
               },
               {
                 label: "已核准",
                 value: vm.approvedCount,
-                hint: "成交闭环（试点口径）",
+                hint: "成交闭环（CRM 试点口径）",
               },
             ] as const
           ).map((c) =>
@@ -142,7 +142,7 @@ export default async function DashboardPage({
           { label: "项目", value: projectCount },
           { label: "客户", value: customerCount },
           { label: "罗盘项目", value: compassCount },
-          { label: "待审批", value: pending, href: "/projects" },
+          { label: "待 Deal Desk", value: pending, href: "/projects" },
         ].map((c) =>
           c.href ? (
             <Link

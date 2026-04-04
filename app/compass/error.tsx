@@ -10,7 +10,7 @@ export default function CompassError({
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-10">
       <h1 className="text-xl font-semibold text-red-800 dark:text-red-300">
-        盈利罗盘渲染出错
+        客户价值罗盘渲染出错
       </h1>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         若为升级代码后出现，请在{" "}

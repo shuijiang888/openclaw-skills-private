@@ -12,9 +12,9 @@ export function ConsoleSidebar() {
   const items = filterConsoleSidebarForRole(role);
 
   const foot =
-    role === "ADMIN"
-      ? "管理员：主数据、系数与规则、CSV 导入及智能体审计。"
-      : "总经理：控制台摘要、客户主数据只读、项目审批；导入与规则维护请管理员。";
+    role === "VP"
+      ? "VP：主数据、系数与规则、CSV 导入及智能体审计。"
+      : "销售经理：控制台摘要、客户主数据只读、Deal Desk 队列；导入与规则维护请 VP。";
 
   return (
     <aside className="w-48 shrink-0">

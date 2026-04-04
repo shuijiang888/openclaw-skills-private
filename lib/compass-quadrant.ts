@@ -1,7 +1,7 @@
 /** 与种子 / 设计文档一致的默认阈值（百分数，与 DB 中 grossMargin、growth 同口径） */
 export const COMPASS_QUADRANT_DEFAULTS = {
-  marginHighPct: 30,
-  growthHighPct: 20,
+  marginHighPct: 60,
+  growthHighPct: 60,
 } as const;
 
 export type CompassQuadrantCode = "STAR" | "CASH_COW" | "QUESTION" | "DOG";

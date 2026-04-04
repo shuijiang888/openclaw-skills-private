@@ -1,4 +1,4 @@
--- 旧库若缺少 CompassAlertRule 表，盈利罗盘会 500。执行后请再：npm run db:seed
+-- 旧库若缺少 CompassAlertRule 表，客户价值罗盘会 500。执行后请再：npm run db:seed
 -- 用法：npm run db:repair
 CREATE TABLE IF NOT EXISTS "CompassAlertRule" (
     "id" TEXT NOT NULL PRIMARY KEY,

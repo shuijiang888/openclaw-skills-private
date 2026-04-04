@@ -55,7 +55,7 @@ export function RoleHomePanel() {
           href="/projects?focus=my-queue"
           className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-500 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
         >
-          待我审批队列 →
+          待我 Deal Desk 队列 →
         </Link>
         {topOps.map((l) => (
           <Link

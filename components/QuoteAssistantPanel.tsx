@@ -244,7 +244,7 @@ export function QuoteAssistantPanel({
             <AgentMascot size={64} />
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-violet-950 dark:text-violet-200">
-                报价智能助手
+                销售教练
                 <span className="ml-2 rounded-md bg-violet-200/60 px-1.5 py-0.5 text-[10px] font-medium text-violet-900 dark:bg-violet-900/50 dark:text-violet-200">
                   {playbook.label}
                 </span>
@@ -255,7 +255,7 @@ export function QuoteAssistantPanel({
                 {(playbook.priorities[0]?.detail.length ?? 0) > 72 ? "…" : ""}
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-violet-800/80 dark:text-violet-300/70">
-                用中文描述商机与客户诉求；优先通过本机{" "}
+                用中文描述 CRM 商机与客户诉求；优先通过本机{" "}
                 <strong>Ollama</strong> 大模型解析系数（需在{" "}
                 <code className="rounded bg-violet-100 px-0.5 dark:bg-violet-900/50">
                   .env
@@ -333,7 +333,7 @@ export function QuoteAssistantPanel({
 
         <textarea
           className="mt-3 min-h-[120px] w-full resize-y rounded-xl border border-violet-200/70 bg-white/90 px-3 py-2.5 text-sm text-slate-900 shadow-inner placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-violet-800/60 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
-          placeholder="例如：战略客户催单，小批量加急，需要改板定制…"
+          placeholder="例如：目标客户要先上月付试用，竞争对手低价抢单，需要售前联动做 POC…"
           disabled={disabled}
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -389,7 +389,7 @@ export function QuoteAssistantPanel({
         </div>
 
         <p className="mt-2 text-[10px] text-violet-700/70 dark:text-violet-400/70">
-          快捷示例（点击填入）：
+              快捷示例（点击填入）：
         </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {examples.map((ex, i) => (
@@ -480,7 +480,7 @@ export function QuoteAssistantPanel({
                 onClick={() => void agentQuickActions.onSubmitApproval()}
                 className="rounded-lg border border-zinc-400 bg-zinc-900 px-2.5 py-1.5 text-[10px] font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
               >
-                提交审批
+                提交 Deal Desk
               </button>
               <button
                 type="button"
@@ -494,7 +494,7 @@ export function QuoteAssistantPanel({
                 onClick={() => void agentQuickActions.onApprove()}
                 className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[10px] font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
               >
-                审批通过
+                Deal Desk 通过
               </button>
               <a
                 href="/api/export/projects"

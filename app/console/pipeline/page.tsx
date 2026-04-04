@@ -17,7 +17,7 @@ export default async function ConsolePipelinePage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          按状态总览商机；待审批行可点击进前台工作台完成提交与审批。
+          按状态总览商机；待 Deal Desk 行可点击进前台工作台完成提交与批复。
         </p>
         <CsvExportLink href="/api/export/projects">导出项目 CSV</CsvExportLink>
       </div>
@@ -30,7 +30,7 @@ export default async function ConsolePipelinePage() {
               <th className="px-4 py-3">客户</th>
               <th className="px-4 py-3">状态</th>
               <th className="px-4 py-3 text-right">建议价</th>
-              <th className="px-4 py-3 text-right">建议毛利</th>
+              <th className="px-4 py-3 text-right">建议客户价值</th>
               <th className="px-4 py-3">待批角色</th>
             </tr>
           </thead>

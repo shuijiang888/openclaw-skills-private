@@ -67,24 +67,24 @@ export function buildBossBriefingFromProjects(
   const topCustomerConcentrationPct = concentrationTopCustomerPct(rows);
 
   const bullets = [
-    `建议价口径毛利率低于 15% 的报价共 ${vm.lowMarginQuoteCount} 单，构成当前主要利润风险池（试点阈值与经营看板一致）。`,
-    `约 ${autoPct}% 的项目测算走自动通道，${collabChannelCount} 单需人机协同复核，可作为流程标准化与例外管理的讨论抓手。`,
-    `待审批 ${vm.pendingApprovalCount} 单、已核准 ${vm.approvedCount} 单；平均胜率约 ${avgWinRate}%（规则合成，来源为工作台 WinScore）。`,
+    `建议价口径客户价值低于 15% 的报价共 ${vm.lowMarginQuoteCount} 单，构成当前主要风险池（试点阈值与经营看板一致）。`,
+    `约 ${autoPct}% 的项目测算走自动通道，${collabChannelCount} 单需 Deal Desk 协同复核，可作为流程标准化与例外管理的讨论抓手。`,
+    `待 Deal Desk ${vm.pendingApprovalCount} 单、已核准 ${vm.approvedCount} 单；平均赢单概率约 ${avgWinRate}%（规则合成，来源为工作台 WinScore）。`,
     `TOP1 客户项目占比约 ${topCustomerConcentrationPct}%${
       strategicCustomerProjectCount > 0
         ? `；其中战略客户相关项目 ${strategicCustomerProjectCount} 个`
         : ""
-    }，可对照盈利罗盘看集中度与象限迁移。`,
+    }，可对照客户价值罗盘看集中度与象限迁移。`,
   ];
 
   const nLow = Math.min(3, vm.lowMarginQuoteCount);
   const decisions = [
-    `是否在周例会前清空待审批队列（当前 ${vm.pendingApprovalCount} 单），并明确 SLA 责任人（试点叙事）。`,
+    `是否在周例会前清空待 Deal Desk 队列（当前 ${vm.pendingApprovalCount} 单），并明确 SLA 责任人（试点叙事）。`,
     topCustomerConcentrationPct >= 35
-      ? `TOP 客户项目占比 ${topCustomerConcentrationPct}% 偏高，是否对新增折扣增设「总经理」加签（试点讨论项）。`
+      ? `TOP 客户项目占比 ${topCustomerConcentrationPct}% 偏高，是否对新增折扣增设「VP」加签（试点讨论项）。`
       : `是否将自动通道覆盖率从 ${autoPct}% 作为下季度运营目标，并配套培训与模板（试点讨论项）。`,
     nLow > 0
-      ? `是否将低毛利清单中 ${nLow} 项纳入工艺/采购降本专题，两周内回报进展（试点讨论项）。`
+      ? `是否将低客户价值清单中 ${nLow} 项纳入方案优化专题，两周内回报进展（试点讨论项）。`
       : `是否启动一轮标杆客户回访，验证胜率与价格弹性假设（试点讨论项）。`,
   ];
 

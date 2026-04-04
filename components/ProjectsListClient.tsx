@@ -25,9 +25,9 @@ function filterLabel(f: FilterKey): string {
     case "all":
       return "全部";
     case "pending_any":
-      return "待审批";
+      return "待 Deal Desk";
     case "pending_mine":
-      return "待我处理";
+      return "待我 Deal Desk";
     default:
       return f;
   }
@@ -80,7 +80,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
         <div>
           <h1 className="text-2xl font-semibold">项目列表</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            点击项目进入智能报价工作台。筛选随右上角「试点角色」（演示模式）或会话角色（登录模式）与待审角色联动。
+            点击项目进入 CRM 插件工作台。筛选随右上角「试点角色」（演示模式）或会话角色（登录模式）与 Deal Desk 角色联动。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
             href="/projects/new"
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
           >
-            新建报价
+            新建商机
           </Link>
         </div>
       </div>
@@ -120,9 +120,9 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
               <th className="px-4 py-3 font-medium">项目</th>
               <th className="px-4 py-3 font-medium">客户</th>
               <th className="px-4 py-3 font-medium">状态</th>
-              <th className="px-4 py-3 font-medium">待审角色</th>
+              <th className="px-4 py-3 font-medium">待 Deal Desk 角色</th>
               <th className="px-4 py-3 font-medium text-right">建议价</th>
-              <th className="px-4 py-3 font-medium text-right">毛利率</th>
+              <th className="px-4 py-3 font-medium text-right">客户价值</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -130,7 +130,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
                   {filter === "pending_mine"
-                    ? "当前身份下暂无待您处理的审批。"
+                    ? "当前身份下暂无待您处理的 Deal Desk。"
                     : "暂无项目。"}
                 </td>
               </tr>
@@ -158,7 +158,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                       </Link>
                       {isMine ? (
                         <span className="ml-2 rounded bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:bg-amber-800/50 dark:text-amber-100">
-                          待我处理
+                          待我 Deal Desk
                         </span>
                       ) : null}
                     </td>

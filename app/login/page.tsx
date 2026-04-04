@@ -17,7 +17,7 @@ export default function LoginPage() {
           登录后继续
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          使用管理员创建的账号登录；角色由账号绑定，不再使用右上角的「试点角色」切换（演示模式专用）。
+          使用 VP 创建的账号登录；角色由账号绑定，不再使用右上角的「试点角色」切换（演示模式专用）。
         </p>
       </div>
       <Suspense fallback={<p className="text-center text-sm text-slate-500">加载表单…</p>}>

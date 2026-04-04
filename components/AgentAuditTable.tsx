@@ -21,7 +21,7 @@ export function AgentAuditTable() {
   const [err, setErr] = useState<string | null>(null);
 
   const loadRows = useCallback(() => {
-    if (role !== "ADMIN") {
+    if (role !== "VP") {
       setRows([]);
       return;
     }
@@ -45,16 +45,16 @@ export function AgentAuditTable() {
   }, [loadRows]);
 
   useEffect(() => {
-    if (role !== "ADMIN") return;
+    if (role !== "VP") return;
     const onSync = () => loadRows();
     window.addEventListener(PROFIT_DATA_CHANGED, onSync);
     return () => window.removeEventListener(PROFIT_DATA_CHANGED, onSync);
   }, [role, loadRows]);
 
-  if (role !== "ADMIN") {
+  if (role !== "VP") {
     return (
       <p className="text-sm text-amber-800 dark:text-amber-200">
-        请将右上角「试点角色」切换为「管理员」，或使用管理员账号登录后查看审计日志。
+        请将右上角「试点角色」切换为「VP」，或使用 VP 账号登录后查看审计日志。
       </p>
     );
   }
@@ -70,7 +70,7 @@ export function AgentAuditTable() {
   if (rows.length === 0) {
     return (
       <p className="text-sm text-zinc-500">
-        暂无记录。在报价台保存报价/调整系数、使用助手解析、提交或完成审批后会出现条目（需已执行{" "}
+        暂无记录。在报价台保存报价/调整系数、使用销售教练解析、提交或完成 Deal Desk 后会出现条目（需已执行{" "}
         <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">db push</code>）。
       </p>
     );

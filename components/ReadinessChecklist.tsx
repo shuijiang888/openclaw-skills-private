@@ -17,13 +17,13 @@ const GROUPS: { title: string; items: Item[] }[] = [
       },
       {
         id: "b2",
-        title: "审批授权与折扣档位制度",
+        title: "Deal Desk 授权与折扣档位策略",
         detail: "职级与折扣区间对应，可与系统规则配置对齐。",
       },
       {
         id: "b3",
-        title: "客户/产品分级标准",
-        detail: "战略客户、标品、小额订单等定义清晰。",
+        title: "客户/订阅包分级标准",
+        detail: "战略客户、标准订阅包、轻量商机等定义清晰。",
       },
       {
         id: "b4",

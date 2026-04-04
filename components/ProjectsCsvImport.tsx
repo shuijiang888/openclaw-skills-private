@@ -57,8 +57,8 @@ export function ProjectsCsvImport() {
   if (!canImportConsoleCsv(demoRole)) {
     return (
       <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 py-3 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
-        <strong className="font-semibold">总经理只读：</strong>
-        项目列表与审批可在此查看；CSV 批量导入请使用「管理员」身份。
+        <strong className="font-semibold">销售经理只读：</strong>
+        项目列表与 Deal Desk 可在此查看；CSV 批量导入请使用「VP」身份。
       </div>
     );
   }
@@ -69,7 +69,7 @@ export function ProjectsCsvImport() {
         批量导入项目与报价（CSV · 反向导入）
       </h3>
       <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-        须<strong>管理员</strong>身份。表头必填{" "}
+        须<strong>VP</strong>身份。表头必填{" "}
         <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">customerName</code>、
         <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">projectName</code>与成本四列{" "}
         <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">material</code>…

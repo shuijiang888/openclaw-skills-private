@@ -20,10 +20,10 @@ export function Nav() {
               <BrandMark />
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
-                  智能盈利管理系统
+                  纷享销客 CRM 增利插件
                 </div>
                 <div className="truncate text-[11px] font-medium tracking-wide text-amber-800/90 dark:text-amber-400/90">
-                  报价 · 审批 · 盈利结构
+                  订阅报价 · Deal Desk · 销售教练
                 </div>
               </div>
             </Link>

@@ -18,9 +18,9 @@ const HEADER = [
   "metaJson",
 ] as const;
 
-/** 管理员导出智能体审计；演示模式须 x-demo-role: ADMIN，登录模式须管理员账号。最多 5000 条，新在前 */
+/** VP 导出智能体审计；演示模式须 x-demo-role: VP，登录模式须 VP 账号。最多 5000 条，新在前 */
 export async function GET(req: Request) {
-  if (demoRoleFromRequest(req) !== "ADMIN") {
+  if (demoRoleFromRequest(req) !== "VP") {
     return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
   }
 

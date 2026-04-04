@@ -54,8 +54,8 @@ export function CompassAlertRulesCsvImport() {
   if (!canAccessConsoleRules(demoRole)) {
     return (
       <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 py-3 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
-        <strong className="font-semibold">批量导入需管理员：</strong>
-        请将右上角「试点角色」设为「管理员」，或使用管理员账号登录后再导入。
+        <strong className="font-semibold">批量导入需 VP：</strong>
+        请将右上角「试点角色」设为「VP」，或使用 VP 角色账号登录后再导入。
       </div>
     );
   }

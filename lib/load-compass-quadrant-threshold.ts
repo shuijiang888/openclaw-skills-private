@@ -70,7 +70,7 @@ export async function upsertCompassQuadrantThresholdSafe(
       return {
         ok: false,
         error:
-          "数据库未就绪：请在 profit-web 执行 npx prisma generate && npx prisma db push && npm run db:seed，然后重启 npm run dev",
+          "数据库未就绪：请在项目目录执行 npx prisma generate && npx prisma db push && npm run db:seed，然后重启 npm run dev",
       };
     }
     const row = await delegate.upsert({

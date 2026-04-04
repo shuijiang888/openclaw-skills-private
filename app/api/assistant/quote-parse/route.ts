@@ -199,7 +199,7 @@ export async function POST(req: Request) {
 
   if (injectionSignals.length > 0) {
     const guardHint =
-      "系统已尝试仅按业务语义解析；若输入中含指令类语句，请勿依赖其对系数的影响，以审批与规则为准。";
+      "系统已尝试仅按业务语义解析；若输入中含指令类语句，请勿依赖其对系数的影响，以 Deal Desk 规则为准。";
     response = {
       ...response,
       hints: [guardHint, ...response.hints].slice(0, 12),

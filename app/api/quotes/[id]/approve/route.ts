@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: Params) {
   }
   if (!quote.pendingRole) {
     return NextResponse.json(
-      { error: "当前无需审批" },
+      { error: "当前无需 Deal Desk 批复" },
       { status: 400, headers: rh },
     );
   }
@@ -58,7 +58,7 @@ export async function POST(req: Request, { params }: Params) {
   const approvedPrice = quote.counterPrice ?? quote.suggestedPrice;
   const timelineJson = appendTimeline(quote.timelineJson, {
     kind: "approve",
-    title: "审批通过",
+    title: "Deal Desk 批复通过",
     detail: `成交价 ${approvedPrice}（操作角色 ${actor}）`,
   });
 

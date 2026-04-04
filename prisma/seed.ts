@@ -1,13 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import {
-  suggestedPriceFromCosts,
-  totalCost,
   buildAiSuggestion,
   discountPercent,
+  suggestedPriceFromCosts,
+  totalCost,
 } from "../lib/calc";
 import { requiredRoleForDiscount } from "../lib/approval";
-import { appendTimeline } from "../lib/timeline";
 import { defaultBenchmarkPrices } from "../lib/benchmarks";
+import { appendTimeline } from "../lib/timeline";
 
 const prisma = new PrismaClient();
 
@@ -44,11 +44,7 @@ async function createScenario(
 ) {
   const suggestedPrice = suggestedPriceFromCosts(args.coeffs);
   const cost = totalCost(args.coeffs);
-  const ai = buildAiSuggestion({
-    suggestedPrice,
-    cost,
-    customerTier,
-  });
+  const ai = buildAiSuggestion({ suggestedPrice, cost, customerTier });
 
   let pendingRole: string | null = args.forcePendingRole ?? null;
   if (
@@ -62,24 +58,24 @@ async function createScenario(
 
   let timelineJson = appendTimeline(undefined, {
     kind: "seed",
-    title: "试点示例数据初始化",
+    title: "CRM 插件试点数据初始化",
     detail: args.note ?? args.name,
   });
   timelineJson = appendTimeline(timelineJson, {
     kind: "calc",
-    title: "成本与系数测算完成",
+    title: "订阅报价测算完成",
     detail: `建议价 ${suggestedPrice}`,
   });
   if (args.status === "PENDING_APPROVAL") {
     timelineJson = appendTimeline(timelineJson, {
       kind: "submit",
-      title: "已提交审批（试点示例）",
+      title: "已提交 Deal Desk（试点示例）",
     });
   }
   if (args.status === "APPROVED") {
     timelineJson = appendTimeline(timelineJson, {
       kind: "approve",
-      title: "审批通过（试点示例）",
+      title: "Deal Desk 批复通过（试点示例）",
       detail: `成交价 ${args.approvedPrice ?? args.counterPrice ?? suggestedPrice}`,
     });
   }
@@ -115,7 +111,14 @@ async function seedBulk(
   base: Coeffs,
 ) {
   const regions = ["华东", "华南", "华北", "西南", "海外"];
-  const lines = ["HDI", "FPC", "刚挠", "金属基", "高频", "MiniLED", "封装基板"];
+  const packages = [
+    "增长版",
+    "专业版",
+    "企业版",
+    "销售自动化包",
+    "客户成功包",
+    "渠道管理包",
+  ];
   const statuses = [
     "PRICED",
     "PRICED",
@@ -129,40 +132,42 @@ async function seedBulk(
     "DRAFT",
   ] as const;
 
-  for (let i = 1; i <= 56; i++) {
+  for (let i = 1; i <= 50; i++) {
     const c = customers[i % customers.length];
     const st = statuses[i % statuses.length];
-    const m = 2600 + ((i * 173) % 10400);
     const coeffs: Coeffs = {
       ...base,
-      material: m,
-      labor: 350 + ((i * 67) % 1300),
-      overhead: 550 + ((i * 71) % 2100),
-      period: 180 + ((i * 41) % 950),
-      coeffCustomer: 1.05 + ((i % 6) * 0.025),
-      coeffIndustry: 1.04 + ((i % 5) * 0.02),
-      coeffRegion: 0.92 + ((i % 4) * 0.02),
-      coeffProduct: 1.02 + ((i % 7) * 0.015),
-      coeffLead: 1.03 + ((i % 5) * 0.012),
-      coeffQty: 0.86 + ((i % 9) * 0.014),
+      material: 2200 + ((i * 137) % 3200),
+      labor: 350 + ((i * 47) % 700),
+      overhead: 500 + ((i * 61) % 850),
+      period: 220 + ((i * 31) % 500),
+      coeffCustomer: 1.02 + ((i % 6) * 0.03),
+      coeffIndustry: 0.95 + ((i % 5) * 0.03),
+      coeffRegion: 0.9 + ((i % 4) * 0.03),
+      coeffProduct: 1.0 + ((i % 6) * 0.025),
+      coeffLead: 0.94 + ((i % 5) * 0.03),
+      coeffQty: 0.86 + ((i % 8) * 0.02),
     };
-    const qty = 400 + ((i * 127) % 12000);
-    const name = `${regions[i % regions.length]}·${lines[i % lines.length]}批量 #${String(i).padStart(3, "0")}`;
+
+    const seats = 20 + ((i * 9) % 220);
+    const leadDays = 7 + (i % 22);
+    const termMonths = 1 + (i % 12);
+    const packageName = packages[i % packages.length];
+    const name = `${regions[i % regions.length]}·${packageName}订阅 #${String(i).padStart(3, "0")}`;
 
     let counter: number | null = null;
     let force: string | null = null;
     let approvedPrice: number | null = null;
 
     if (st === "PENDING_APPROVAL") {
-      if (i % 4 === 0) {
+      if (i % 3 === 0) {
         const sp = suggestedPriceFromCosts(coeffs);
-        counter = Math.round(sp * (0.86 + (i % 4) * 0.03) * 100) / 100;
+        counter = Math.round(sp * (0.85 + (i % 4) * 0.035) * 100) / 100;
       } else {
-        force = (["SALES_MANAGER", "SALES_DIRECTOR", "SALES_VP"] as const)[
-          i % 3
-        ];
+        force = (["AE", "SALES_MANAGER", "VP"] as const)[i % 3];
       }
     }
+
     if (st === "APPROVED") {
       const sp = suggestedPriceFromCosts(coeffs);
       approvedPrice = i % 2 === 0 ? Math.round(sp * 0.97 * 100) / 100 : sp;
@@ -170,17 +175,63 @@ async function seedBulk(
 
     await createScenario(c.id, c.tier, {
       name,
-      productName: `${qty} PCS / ${10 + (i % 35)} 天`,
-      quantity: qty,
-      leadDays: 10 + (i % 35),
+      productName: `${seats} 席位 / ${termMonths} 个月 / ${leadDays} 天上线`,
+      quantity: seats,
+      leadDays,
       isStandard: i % 5 !== 0,
-      isSmallOrder: i % 4 === 0,
+      isSmallOrder: seats < 80,
       status: st,
       coeffs,
       counterPrice: counter,
       approvedPrice,
       forcePendingRole: force,
-      note: `规模试点示例批次 ${i}`,
+      note: `CRM 插件规模试点批次 ${i}`,
+    });
+  }
+}
+
+async function seedUsers() {
+  const userRows = [
+    ...Array.from({ length: 12 }, (_, i) => ({
+      email: `sdr${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
+      role: "SDR",
+      name: `SDR${String(i + 1).padStart(2, "0")}`,
+    })),
+    ...Array.from({ length: 18 }, (_, i) => ({
+      email: `ae${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
+      role: "AE",
+      name: `AE${String(i + 1).padStart(2, "0")}`,
+    })),
+    ...Array.from({ length: 10 }, (_, i) => ({
+      email: `se${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
+      role: "PRE_SALES",
+      name: `SE${String(i + 1).padStart(2, "0")}`,
+    })),
+    ...Array.from({ length: 7 }, (_, i) => ({
+      email: `manager${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
+      role: "SALES_MANAGER",
+      name: `销售经理${String(i + 1).padStart(2, "0")}`,
+    })),
+    ...Array.from({ length: 3 }, (_, i) => ({
+      email: `vp${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
+      role: "VP",
+      name: `VP${String(i + 1).padStart(2, "0")}`,
+    })),
+  ];
+
+  for (const row of userRows) {
+    await prisma.user.upsert({
+      where: { email: row.email },
+      create: {
+        email: row.email,
+        name: row.name,
+        role: row.role,
+        passwordHash: "seed-only-login-disabled",
+      },
+      update: {
+        name: row.name,
+        role: row.role,
+      },
     });
   }
 }
@@ -198,24 +249,24 @@ async function main() {
   await prisma.customer.deleteMany();
 
   const customerRows = [
-    { name: "华信通信技术", tier: "STRATEGIC", arDays: 75 },
-    { name: "云栈数据科技", tier: "KEY", arDays: 45 },
-    { name: "XX 通信科技", tier: "KEY", arDays: 45 },
-    { name: "长风汽车电子", tier: "KEY", arDays: 60 },
-    { name: "捷联工控", tier: "NORMAL", arDays: 30 },
-    { name: "晨曦消费电子", tier: "NORMAL", arDays: 35 },
-    { name: "海港医疗电子", tier: "KEY", arDays: 40 },
-    { name: "九州能源装备", tier: "NORMAL", arDays: 55 },
-    { name: "星河光电科技", tier: "KEY", arDays: 42 },
-    { name: "超导新材股份", tier: "NORMAL", arDays: 38 },
-    { name: "领航防务系统", tier: "STRATEGIC", arDays: 90 },
-    { name: "维科医疗器械", tier: "KEY", arDays: 50 },
-    { name: "蓝图机器人", tier: "KEY", arDays: 36 },
-    { name: "恒润电力电子", tier: "NORMAL", arDays: 48 },
-    { name: "晶都半导体", tier: "KEY", arDays: 44 },
-    { name: "驭速汽车零部件", tier: "KEY", arDays: 58 },
-    { name: "海睿物联网", tier: "NORMAL", arDays: 33 },
-    { name: "磐石精密制造", tier: "NORMAL", arDays: 40 },
+    { name: "星云零售集团", tier: "STRATEGIC", arDays: 45 },
+    { name: "海纳医药营销", tier: "KEY", arDays: 38 },
+    { name: "远航工业服务", tier: "KEY", arDays: 42 },
+    { name: "华迈新能源渠道", tier: "KEY", arDays: 35 },
+    { name: "新域科技销售", tier: "NORMAL", arDays: 30 },
+    { name: "安诺数字制造", tier: "NORMAL", arDays: 33 },
+    { name: "博晟教育服务", tier: "KEY", arDays: 36 },
+    { name: "锦程物流网络", tier: "NORMAL", arDays: 40 },
+    { name: "数联金融顾问", tier: "KEY", arDays: 32 },
+    { name: "启明医疗器械", tier: "NORMAL", arDays: 34 },
+    { name: "蓝鲸消费科技", tier: "STRATEGIC", arDays: 50 },
+    { name: "天域汽车服务", tier: "KEY", arDays: 41 },
+    { name: "卓越家居渠道", tier: "KEY", arDays: 37 },
+    { name: "联拓供应链", tier: "NORMAL", arDays: 39 },
+    { name: "华岭通讯运营", tier: "KEY", arDays: 35 },
+    { name: "优迈文旅集团", tier: "KEY", arDays: 43 },
+    { name: "朗星跨境电商", tier: "NORMAL", arDays: 34 },
+    { name: "明川企业服务", tier: "NORMAL", arDays: 31 },
   ];
 
   for (const c of customerRows) {
@@ -226,204 +277,201 @@ async function main() {
   const cid = (name: string) => customers.find((c) => c.name === name)!.id;
 
   const base: Coeffs = {
-    material: 5200,
-    labor: 900,
-    overhead: 1400,
-    period: 500,
-    coeffCustomer: 1.12,
-    coeffIndustry: 1.08,
-    coeffRegion: 1,
+    material: 2600,
+    labor: 480,
+    overhead: 720,
+    period: 360,
+    coeffCustomer: 1.1,
+    coeffIndustry: 1.02,
+    coeffRegion: 0.98,
     coeffProduct: 1.06,
-    coeffLead: 1.05,
-    coeffQty: 0.96,
+    coeffLead: 1.0,
+    coeffQty: 0.94,
   };
 
-  await createScenario(cid("XX 通信科技"), "KEY", {
-    name: "5G 基站 HDI 板",
-    productName: "10K PCS / 15 天交期",
-    quantity: 10000,
-    leadDays: 15,
+  await createScenario(cid("蓝鲸消费科技"), "STRATEGIC", {
+    name: "集团 CRM 企业版扩容",
+    productName: "300 席位 / 12 个月 / 20 天上线",
+    quantity: 300,
+    leadDays: 20,
     isStandard: false,
     isSmallOrder: false,
-    status: "PRICED",
+    status: "PENDING_APPROVAL",
     coeffs: {
       ...base,
-      material: 8500,
-      labor: 1200,
-      overhead: 2300,
-      period: 1000,
-      coeffCustomer: 1.15,
-      coeffIndustry: 1.1,
-      coeffRegion: 0.95,
-      coeffProduct: 1.2,
-      coeffLead: 1.08,
-      coeffQty: 0.92,
+      material: 4200,
+      labor: 650,
+      overhead: 980,
+      period: 560,
+      coeffCustomer: 1.2,
+      coeffIndustry: 1.08,
+      coeffProduct: 1.18,
+      coeffLead: 1.07,
+      coeffQty: 0.9,
     },
-    counterPrice: 16000,
-    note: "经典案例：高议价，提交审批可走总监/VP 链",
+    counterPrice: null,
+    forcePendingRole: "SALES_MANAGER",
+    note: "高客户价值，需销售经理牵头 Deal Desk。",
   });
 
-  await createScenario(cid("捷联工控"), "NORMAL", {
-    name: "标准工控板小批量",
-    productName: "500 PCS / 20 天",
-    quantity: 500,
-    leadDays: 20,
+  await createScenario(cid("新域科技销售"), "NORMAL", {
+    name: "标准增长版月付试用",
+    productName: "40 席位 / 1 个月 / 7 天上线",
+    quantity: 40,
+    leadDays: 7,
     isStandard: true,
     isSmallOrder: true,
     status: "PRICED",
-    coeffs: { ...base, coeffQty: 0.94 },
-    counterPrice: null,
-    note: "自动通道候选：标品+小额+无还价",
+    coeffs: { ...base, coeffQty: 0.96, coeffLead: 0.97 },
+    note: "自动通道候选：标准包 + 小单 + 低折扣。",
   });
 
-  await createScenario(cid("云栈数据科技"), "KEY", {
-    name: "数据中心背板扩容",
-    productName: "3K PCS / 25 天",
-    quantity: 3000,
-    leadDays: 25,
+  await createScenario(cid("海纳医药营销"), "KEY", {
+    name: "医药渠道管理包首年签约",
+    productName: "160 席位 / 12 个月 / 18 天上线",
+    quantity: 160,
+    leadDays: 18,
     isStandard: true,
     isSmallOrder: false,
     status: "PENDING_APPROVAL",
-    coeffs: { ...base, material: 6800, coeffCustomer: 1.18 },
+    coeffs: { ...base, material: 3500, coeffCustomer: 1.16, coeffProduct: 1.1 },
     counterPrice: null,
-    forcePendingRole: "SALES_MANAGER",
-    note: "待审批（经理档）：可切换经理身份直接通过",
+    forcePendingRole: "AE",
+    note: "AE 档 Deal Desk 待办。",
   });
 
-  const coeffsCar = {
+  const coeffsComplex = {
     ...base,
-    material: 9100,
-    labor: 1400,
-    overhead: 2600,
-    period: 900,
-    coeffCustomer: 1.14,
-    coeffIndustry: 1.12,
+    material: 4700,
+    labor: 760,
+    overhead: 1120,
+    period: 620,
+    coeffCustomer: 1.18,
+    coeffIndustry: 1.1,
+    coeffProduct: 1.22,
+    coeffLead: 1.1,
   };
-  const sugCar = suggestedPriceFromCosts(coeffsCar);
-  await createScenario(cid("长风汽车电子"), "KEY", {
-    name: "车规域控制器 PCB",
-    productName: "2K PCS / 30 天 AEC-Q",
-    quantity: 2000,
-    leadDays: 30,
+  const sugComplex = suggestedPriceFromCosts(coeffsComplex);
+  await createScenario(cid("远航工业服务"), "KEY", {
+    name: "多组织协同定制包",
+    productName: "220 席位 / 24 个月 / 25 天上线",
+    quantity: 220,
+    leadDays: 25,
     isStandard: false,
     isSmallOrder: false,
     status: "PENDING_APPROVAL",
-    coeffs: coeffsCar,
-    counterPrice: Math.round(sugCar * 0.82 * 100) / 100,
-    note: "深度折扣 → 通常需 VP/总经理",
+    coeffs: coeffsComplex,
+    counterPrice: Math.round(sugComplex * 0.8 * 100) / 100,
+    note: "深度折扣，通常需 VP 特批。",
   });
 
-  await createScenario(cid("晨曦消费电子"), "NORMAL", {
-    name: "穿戴设备软板",
-    productName: "8K PCS / 12 天",
-    quantity: 8000,
-    leadDays: 12,
+  await createScenario(cid("卓越家居渠道"), "KEY", {
+    name: "渠道管理包年度续费",
+    productName: "120 席位 / 12 个月 / 10 天上线",
+    quantity: 120,
+    leadDays: 10,
     isStandard: true,
     isSmallOrder: false,
     status: "APPROVED",
-    coeffs: { ...base, material: 3100, labor: 600, overhead: 900, period: 350 },
-    counterPrice: null,
-    approvedPrice: null,
-    note: "已核准：按建议价成交",
+    coeffs: { ...base, material: 2900, labor: 420, overhead: 680, period: 300 },
+    note: "已核准：按建议价成交。",
   });
-  const wear = await prisma.project.findFirst({
-    where: { name: "穿戴设备软板" },
+  const renew = await prisma.project.findFirst({
+    where: { name: "渠道管理包年度续费" },
     include: { quote: true },
   });
-  if (wear?.quote) {
-    const sp = wear.quote.suggestedPrice;
+  if (renew?.quote) {
     await prisma.quote.update({
-      where: { id: wear.quote.id },
-      data: { approvedPrice: sp },
+      where: { id: renew.quote.id },
+      data: { approvedPrice: renew.quote.suggestedPrice },
     });
   }
 
-  await createScenario(cid("海港医疗电子"), "KEY", {
-    name: "监护仪主控模块",
-    productName: "1.2K PCS / 18 天",
-    quantity: 1200,
-    leadDays: 18,
+  await createScenario(cid("博晟教育服务"), "KEY", {
+    name: "教育行业销售自动化试点",
+    productName: "90 席位 / 6 个月 / 14 天上线",
+    quantity: 90,
+    leadDays: 14,
     isStandard: false,
-    isSmallOrder: true,
+    isSmallOrder: false,
     status: "DRAFT",
-    coeffs: { ...base, material: 4200, coeffProduct: 1.15 },
-    counterPrice: null,
-    note: "草稿：可进工作台继续改成本/系数",
+    coeffs: { ...base, material: 3100, coeffProduct: 1.14 },
+    note: "草稿：待售前补齐 POC 方案后再提交。",
   });
 
-  await createScenario(cid("华信通信技术"), "STRATEGIC", {
-    name: "骨干网光模块载板",
-    productName: "5K PCS / 22 天",
-    quantity: 5000,
-    leadDays: 22,
+  await createScenario(cid("星云零售集团"), "STRATEGIC", {
+    name: "零售全域 CRM 升级",
+    productName: "420 席位 / 24 个月 / 28 天上线",
+    quantity: 420,
+    leadDays: 28,
     isStandard: false,
     isSmallOrder: false,
     status: "PENDING_APPROVAL",
     coeffs: {
       ...base,
-      material: 12000,
-      labor: 1800,
-      overhead: 3200,
-      period: 1200,
-      coeffCustomer: 1.22,
-      coeffIndustry: 1.15,
+      material: 5600,
+      labor: 840,
+      overhead: 1300,
+      period: 760,
+      coeffCustomer: 1.24,
+      coeffIndustry: 1.13,
+      coeffProduct: 1.2,
+      coeffLead: 1.08,
+      coeffQty: 0.89,
     },
     counterPrice: null,
-    forcePendingRole: "SALES_DIRECTOR",
-    note: "战略客户：强制人机协同，待总监",
+    forcePendingRole: "SALES_MANAGER",
+    note: "战略客户：强制 Deal Desk 协同。",
   });
 
-  await createScenario(cid("九州能源装备"), "NORMAL", {
-    name: "储能 BMS 控制板",
-    productName: "600 PCS / 28 天",
-    quantity: 600,
-    leadDays: 28,
+  await createScenario(cid("朗星跨境电商"), "NORMAL", {
+    name: "跨境销售管理标准版",
+    productName: "60 席位 / 12 个月 / 9 天上线",
+    quantity: 60,
+    leadDays: 9,
     isStandard: true,
     isSmallOrder: true,
     status: "APPROVED",
     coeffs: base,
-    counterPrice: null,
-    approvedPrice: null,
-    note: "已成交试点示例",
+    note: "已成交试点示例。",
   });
-  const bms = await prisma.project.findFirst({
-    where: { name: "储能 BMS 控制板" },
+  const cross = await prisma.project.findFirst({
+    where: { name: "跨境销售管理标准版" },
     include: { quote: true },
   });
-  if (bms?.quote) {
-    const sp = bms.quote.suggestedPrice;
+  if (cross?.quote) {
+    const sp = cross.quote.suggestedPrice;
     const deal = Math.round(sp * 0.96 * 100) / 100;
     await prisma.quote.update({
-      where: { id: bms.quote.id },
+      where: { id: cross.quote.id },
       data: { counterPrice: deal, approvedPrice: deal },
     });
   }
 
-  await createScenario(cid("云栈数据科技"), "KEY", {
-    name: "AI 服务器电源板",
-    productName: "1.5K PCS / 21 天",
-    quantity: 1500,
-    leadDays: 21,
+  await createScenario(cid("数联金融顾问"), "KEY", {
+    name: "金融行业客户成功包",
+    productName: "110 席位 / 12 个月 / 16 天上线",
+    quantity: 110,
+    leadDays: 16,
     isStandard: true,
     isSmallOrder: false,
     status: "PRICED",
-    coeffs: { ...base, material: 7800, coeffIndustry: 1.14 },
-    counterPrice: null,
-    note: "待议价：可填客户还价后提交审批",
+    coeffs: { ...base, material: 3400, coeffIndustry: 1.12 },
+    note: "待议价：可填客户还价后提交 Deal Desk。",
   });
 
-  await createScenario(cid("捷联工控"), "NORMAL", {
-    name: "网关通信子卡",
-    productName: "2K PCS / 16 天",
-    quantity: 2000,
-    leadDays: 16,
+  await createScenario(cid("明川企业服务"), "NORMAL", {
+    name: "SMB 线索管理快速包",
+    productName: "35 席位 / 3 个月 / 8 天上线",
+    quantity: 35,
+    leadDays: 8,
     isStandard: true,
     isSmallOrder: true,
     status: "PENDING_APPROVAL",
-    coeffs: { ...base, material: 2800, labor: 500, overhead: 800, period: 300 },
+    coeffs: { ...base, material: 2400, labor: 360, overhead: 520, period: 230 },
     counterPrice: null,
-    forcePendingRole: "SALES_VP",
-    note: "试点 VP 档待办",
+    forcePendingRole: "VP",
+    note: "VP 档待办样例。",
   });
 
   await seedBulk(
@@ -433,204 +481,84 @@ async function main() {
 
   const compass = [
     {
-      name: "5G 基站 HDI",
-      customerName: "华系通信",
-      grossMargin: 32,
-      growth: 25,
+      name: "集团 CRM 企业版扩容",
+      customerName: "蓝鲸消费科技",
+      grossMargin: 82,
+      growth: 76,
       quadrant: "STAR",
-      strategy: "关键保护 · 加大交付与产能倾斜",
+      strategy: "高价值高概率：优先投入售前与客户成功资源",
       priority: "最高",
       sortOrder: 1,
     },
     {
-      name: "数据中心背板",
-      customerName: "云栈数据",
-      grossMargin: 28,
-      growth: 8,
+      name: "医药渠道管理包首年签约",
+      customerName: "海纳医药营销",
+      grossMargin: 74,
+      growth: 58,
       quadrant: "CASH_COW",
-      strategy: "维持份额 · 稳现金流",
+      strategy: "高价值低概率：强化高层共识与风险兜底条款",
       priority: "高",
       sortOrder: 2,
     },
     {
-      name: "AI 服务器电源板",
-      customerName: "云栈数据",
-      grossMargin: 26,
-      growth: 42,
-      quadrant: "STAR",
-      strategy: "高增赛道 · 评估产能与材料锁价",
-      priority: "最高",
+      name: "标准增长版月付试用",
+      customerName: "新域科技销售",
+      grossMargin: 44,
+      growth: 72,
+      quadrant: "QUESTION",
+      strategy: "低价值高概率：标准化推进，控制投入强度",
+      priority: "中",
       sortOrder: 3,
     },
     {
-      name: "车规域控 PCB",
-      customerName: "长风汽车",
-      grossMargin: 14,
-      growth: 35,
-      quadrant: "QUESTION",
-      strategy: "降本或提价 · 谨慎扩产",
-      priority: "中",
+      name: "跨境销售管理标准版",
+      customerName: "朗星跨境电商",
+      grossMargin: 38,
+      growth: 42,
+      quadrant: "DOG",
+      strategy: "低价值低概率：限制折扣，优先高潜客户",
+      priority: "低",
       sortOrder: 4,
     },
     {
-      name: "医疗监护主控",
-      customerName: "海港医疗",
-      grossMargin: 22,
-      growth: 12,
-      quadrant: "CASH_COW",
-      strategy: "稳健维护 · 关注注册与合规成本",
-      priority: "中高",
+      name: "零售全域 CRM 升级",
+      customerName: "星云零售集团",
+      grossMargin: 86,
+      growth: 63,
+      quadrant: "STAR",
+      strategy: "战略客户：Deal Desk 全程跟进并锁定多阶段扩容",
+      priority: "最高",
       sortOrder: 5,
     },
     {
-      name: "储能 BMS 板",
-      customerName: "九州能源",
-      grossMargin: 19,
-      growth: 55,
-      quadrant: "QUESTION",
-      strategy: "高增长低毛利 · 需套期或长单锁价",
-      priority: "中",
+      name: "多组织协同定制包",
+      customerName: "远航工业服务",
+      grossMargin: 68,
+      growth: 39,
+      quadrant: "CASH_COW",
+      strategy: "高价值低概率：收敛范围后再给折扣",
+      priority: "高",
       sortOrder: 6,
     },
     {
-      name: "消费电子软板",
-      customerName: "晨曦集合单",
-      grossMargin: 11,
-      growth: -3,
-      quadrant: "DOG",
-      strategy: "收缩 SKU · 止损",
-      priority: "低",
+      name: "教育行业销售自动化试点",
+      customerName: "博晟教育服务",
+      grossMargin: 49,
+      growth: 66,
+      quadrant: "QUESTION",
+      strategy: "通过 POC 提升赢单概率，避免超配售前资源",
+      priority: "中",
       sortOrder: 7,
     },
     {
-      name: "工控小批量",
-      customerName: "捷联工控",
-      grossMargin: 27,
-      growth: 6,
-      quadrant: "CASH_COW",
-      strategy: "保留利基 · 自动化报价提效",
-      priority: "中",
-      sortOrder: 8,
-    },
-    {
-      name: "防务雷达射频板",
-      customerName: "领航防务",
-      grossMargin: 35,
+      name: "金融行业客户成功包",
+      customerName: "数联金融顾问",
+      grossMargin: 57,
       growth: 48,
-      quadrant: "STAR",
-      strategy: "高壁垒 · 保交付与合规审查",
-      priority: "最高",
-      sortOrder: 9,
-    },
-    {
-      name: "手术机器人传感板",
-      customerName: "维科医疗",
-      grossMargin: 30,
-      growth: 22,
-      quadrant: "STAR",
-      strategy: "高毛利高增 · 扩产前先锁供应链",
-      priority: "最高",
-      sortOrder: 10,
-    },
-    {
-      name: "协作臂控制板",
-      customerName: "蓝图机器人",
-      grossMargin: 24,
-      growth: 31,
-      quadrant: "STAR",
-      strategy: "赛道热 · 关注价格战与账期",
-      priority: "高",
-      sortOrder: 11,
-    },
-    {
-      name: "光伏逆变器功率板",
-      customerName: "恒润电力",
-      grossMargin: 18,
-      growth: 40,
-      quadrant: "QUESTION",
-      strategy: "量大利薄 · 套保+长单",
-      priority: "中",
-      sortOrder: 12,
-    },
-    {
-      name: "车规灯驱模组",
-      customerName: "驭速汽车",
-      grossMargin: 16,
-      growth: 18,
-      quadrant: "QUESTION",
-      strategy: "降价压力大 · 差异化或退出低端",
-      priority: "中",
-      sortOrder: 13,
-    },
-    {
-      name: "晶圆测试接口板",
-      customerName: "晶都半导体",
-      grossMargin: 29,
-      growth: 9,
-      quadrant: "CASH_COW",
-      strategy: "利基稳态 · 维持服务响应",
-      priority: "高",
-      sortOrder: 14,
-    },
-    {
-      name: "MiniLED 背光 FPC",
-      customerName: "星河光电",
-      grossMargin: 21,
-      growth: 28,
-      quadrant: "CASH_COW",
-      strategy: "技术迭代快 · 绑定头部客户",
-      priority: "中高",
-      sortOrder: 15,
-    },
-    {
-      name: "超导滤波子卡",
-      customerName: "超导新材",
-      grossMargin: 13,
-      growth: 52,
-      quadrant: "QUESTION",
-      strategy: "科研转量产 · 严控打样成本",
-      priority: "中",
-      sortOrder: 16,
-    },
-    {
-      name: "海外白牌机顶盒",
-      customerName: "海睿物联网",
-      grossMargin: 9,
-      growth: -2,
       quadrant: "DOG",
-      strategy: "低毛利负增长 · 收缩或代工",
-      priority: "低",
-      sortOrder: 17,
-    },
-    {
-      name: "精密冲压件配套 PCB",
-      customerName: "磐石精密",
-      grossMargin: 25,
-      growth: 7,
-      quadrant: "CASH_COW",
-      strategy: "稳定利基 · 自动化报价覆盖",
-      priority: "中",
-      sortOrder: 18,
-    },
-    {
-      name: "东南亚代工大单",
-      customerName: "海外渠道",
-      grossMargin: 12,
-      growth: 15,
-      quadrant: "QUESTION",
-      strategy: "账期与汇兑风险 · 需信用证",
-      priority: "中",
-      sortOrder: 19,
-    },
-    {
-      name: "西南园区集采",
-      customerName: "区域代理",
-      grossMargin: 20,
-      growth: 11,
-      quadrant: "CASH_COW",
-      strategy: "走量保现金 · 防止串货压价",
-      priority: "中",
-      sortOrder: 20,
+      strategy: "先做关键异议突破，再决定是否延展投入",
+      priority: "中低",
+      sortOrder: 8,
     },
   ];
 
@@ -639,16 +567,12 @@ async function main() {
   }
 
   const compassAlertRules = [
-    { conditionLabel: "毛利率 <15%", actionLabel: "成本优化或提价", sortOrder: 0 },
-    {
-      conditionLabel: "单一客户占比 >30%",
-      actionLabel: "客户结构分散",
-      sortOrder: 1,
-    },
-    { conditionLabel: "账期 >90 天", actionLabel: "加强回款 / 收紧信用", sortOrder: 2 },
-    { conditionLabel: "材料成本占比 >60%", actionLabel: "锁价或对冲", sortOrder: 3 },
-    { conditionLabel: "竞品降价 >10%", actionLabel: "差异化叙事", sortOrder: 4 },
-    { conditionLabel: "产能利用率 <70%", actionLabel: "调整排产或外协", sortOrder: 5 },
+    { conditionLabel: "客户价值 <50 且 赢单概率 <50", actionLabel: "限制投入，聚焦高潜商机", sortOrder: 0 },
+    { conditionLabel: "客户价值 >=70 但 赢单概率 <55", actionLabel: "Deal Desk 升级评审并安排高层共访", sortOrder: 1 },
+    { conditionLabel: "赢单概率 >=70 但客户价值 <55", actionLabel: "采用标准订阅包快速成交，控制折扣", sortOrder: 2 },
+    { conditionLabel: "折扣 >20%", actionLabel: "仅 VP 可批，必须写明回收路径", sortOrder: 3 },
+    { conditionLabel: "预计上线周期 <10 天", actionLabel: "售前确认交付边界并更新风险说明", sortOrder: 4 },
+    { conditionLabel: "战略客户且非标准包", actionLabel: "强制销售教练协同并保留完整时间线", sortOrder: 5 },
   ];
   for (const row of compassAlertRules) {
     await prisma.compassAlertRule.create({ data: row });
@@ -657,10 +581,12 @@ async function main() {
   await prisma.compassQuadrantThreshold.create({
     data: {
       id: "default",
-      marginHighPct: 30,
-      growthHighPct: 20,
+      marginHighPct: 60,
+      growthHighPct: 60,
     },
   });
+
+  await seedUsers();
 }
 
 main()

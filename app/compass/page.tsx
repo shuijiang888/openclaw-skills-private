@@ -13,10 +13,19 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const Q_LABEL: Record<string, { title: string; color: string }> = {
-  STAR: { title: "明星", color: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300" },
-  CASH_COW: { title: "现金牛", color: "bg-sky-500/15 text-sky-800 dark:text-sky-300" },
-  QUESTION: { title: "问题", color: "bg-amber-500/15 text-amber-900 dark:text-amber-200" },
-  DOG: { title: "瘦狗", color: "bg-red-500/15 text-red-800 dark:text-red-300" },
+  STAR: {
+    title: "高价值·高赢单",
+    color: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
+  },
+  CASH_COW: {
+    title: "高价值·低赢单",
+    color: "bg-sky-500/15 text-sky-800 dark:text-sky-300",
+  },
+  QUESTION: {
+    title: "低价值·高赢单",
+    color: "bg-amber-500/15 text-amber-900 dark:text-amber-200",
+  },
+  DOG: { title: "低价值·低赢单", color: "bg-red-500/15 text-red-800 dark:text-red-300" },
 };
 
 type CompassItemRow = {
@@ -152,9 +161,9 @@ export default async function CompassPage() {
       ) : null}
 
       <div>
-        <h1 className="text-2xl font-semibold">盈利罗盘</h1>
+        <h1 className="text-2xl font-semibold">客户价值罗盘</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          项目象限与对策规则（数据来自当前库；规则可在后台维护或 CSV 导入）。
+          基于「客户价值 × 赢单概率」的象限与对策规则（数据来自当前库；规则可在后台维护或 CSV 导入）。
         </p>
       </div>
 
@@ -164,8 +173,8 @@ export default async function CompassPage() {
             阈值与规则来源（B1）
           </h2>
           <p className="mt-2 text-xs leading-relaxed text-teal-950/90 dark:text-teal-100/90">
-            四象限划分：毛利率 ≥ {quadrantThresholds.marginHighPct}% 视为「高毛利」，增长 ≥
-            {quadrantThresholds.growthHighPct}% 视为「高增长」；象限由二者与{" "}
+            四象限划分：客户价值 ≥ {quadrantThresholds.marginHighPct}% 视为「高价值」，赢单概率 ≥
+            {quadrantThresholds.growthHighPct}% 视为「高赢单」；象限由二者与{" "}
             <code className="rounded bg-teal-100/80 px-1 dark:bg-teal-900/50">
               lib/compass-quadrant.ts
             </code>{" "}
@@ -205,18 +214,18 @@ export default async function CompassPage() {
             >
               管理后台 · 系数与规则
             </Link>{" "}
-            编辑（须管理员：演示模式 x-demo-role: ADMIN，或登录模式管理员账号）。
+            编辑（须 VP：演示模式 x-demo-role: VP，或登录模式 VP 账号）。
           </p>
         </section>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="lg:col-span-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-sm font-medium text-zinc-500">四象限</h2>
+          <h2 className="text-sm font-medium text-zinc-500">四象限（客户价值 × 赢单概率）</h2>
           <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950/50">
             <div className="rounded-lg bg-emerald-500/10 p-4 dark:bg-emerald-500/15">
               <div className="text-xs font-medium text-emerald-800 dark:text-emerald-300">
-                明星 · 高毛利高增
+                高价值 · 高赢单
               </div>
               <div className="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
                 {items
@@ -230,7 +239,7 @@ export default async function CompassPage() {
             </div>
             <div className="rounded-lg bg-sky-500/10 p-4 dark:bg-sky-500/15">
               <div className="text-xs font-medium text-sky-800 dark:text-sky-300">
-                现金牛 · 高毛利低增
+                高价值 · 低赢单
               </div>
               <div className="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
                 {items
@@ -244,7 +253,7 @@ export default async function CompassPage() {
             </div>
             <div className="rounded-lg bg-amber-500/10 p-4 dark:bg-amber-500/15">
               <div className="text-xs font-medium text-amber-900 dark:text-amber-200">
-                问题 · 低毛利高增
+                低价值 · 高赢单
               </div>
               <div className="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
                 {items
@@ -258,7 +267,7 @@ export default async function CompassPage() {
             </div>
             <div className="rounded-lg bg-red-500/10 p-4 dark:bg-red-500/15">
               <div className="text-xs font-medium text-red-800 dark:text-red-300">
-                瘦狗 · 低毛利低增
+                低价值 · 低赢单
               </div>
               <div className="mt-2 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
                 {items
@@ -272,9 +281,9 @@ export default async function CompassPage() {
             </div>
           </div>
           <p className="mt-3 text-xs text-zinc-500">
-            当前划分阈值（可在管理后台「系数与规则」修改）：毛利率 ≥
-            {quadrantThresholds.marginHighPct}% 为「高毛利」，增长 ≥
-            {quadrantThresholds.growthHighPct}% 为「高增长」。四象限由两项 KPI
+            当前划分阈值（可在管理后台「系数与规则」修改）：客户价值 ≥
+            {quadrantThresholds.marginHighPct}% 为「高价值」，赢单概率 ≥
+            {quadrantThresholds.growthHighPct}% 为「高赢单」。四象限由两项 KPI
             按此即时计算。
           </p>
         </section>
@@ -311,8 +320,8 @@ export default async function CompassPage() {
             <tr>
               <th className="px-4 py-3">项目</th>
               <th className="px-4 py-3">客户</th>
-              <th className="px-4 py-3 text-right">毛利率</th>
-              <th className="px-4 py-3 text-right">增长</th>
+              <th className="px-4 py-3 text-right">客户价值</th>
+              <th className="px-4 py-3 text-right">赢单概率</th>
               <th className="px-4 py-3">象限</th>
               <th className="px-4 py-3">策略</th>
               <th className="px-4 py-3">优先级</th>

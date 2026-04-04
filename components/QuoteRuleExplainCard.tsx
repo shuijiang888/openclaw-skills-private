@@ -34,16 +34,16 @@ export function QuoteRuleExplainCard({ quote }: { quote: Q }) {
   return (
     <section className="rounded-xl border border-sky-200/80 bg-sky-50/40 p-4 shadow-sm dark:border-sky-900/40 dark:bg-sky-950/25">
       <h2 className="text-sm font-semibold text-sky-950 dark:text-sky-200">
-        规则说明（B1 · 无模型）
+        Deal Desk 规则说明（B1 · 无模型）
       </h2>
       <p className="mt-1 text-[11px] leading-relaxed text-sky-900/80 dark:text-sky-300/80">
-        下列文案由固定规则与当前单快照生成，便于对齐「为何是这一审批档 / 分流结果 / 系数偏离」；非大模型臆测。
+        下列文案由固定规则与当前单快照生成，便于对齐「为何是这一 Deal Desk 档 / 分流结果 / 系数偏离」；非大模型臆测。
       </p>
 
       <div className="mt-4 space-y-4 text-xs leading-relaxed text-sky-950 dark:text-sky-100">
         <div>
           <h3 className="font-medium text-sky-900 dark:text-sky-200">
-            分层审批（折扣区间）
+            Deal Desk 分层（折扣区间）
           </h3>
           <ul className="mt-2 space-y-1.5 whitespace-pre-line text-sky-900/90 dark:text-sky-200/90">
             {approvalLines.map((line, i) => (

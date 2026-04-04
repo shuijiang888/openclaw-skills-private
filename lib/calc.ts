@@ -95,11 +95,11 @@ export function buildAiSuggestion(input: {
 }): string {
   const m = grossMarginPercent(input.suggestedPrice, input.cost);
   const lines = [
-    `当前建议价对应毛利率约 ${m.toFixed(1)}%。`,
+    `当前建议价对应客户价值率约 ${m.toFixed(1)}%。`,
     input.customerTier === "STRATEGIC"
-      ? "战略客户：可在审批说明中强调长期合作与技术服务。"
-      : "价格敏感客户：建议准备不超过 5% 的议价预案，并同步技术升级叙事。",
-    "如对历史价有上行，请在拜访中说明工艺/材料变更依据。",
+      ? "高价值客户：可在 Deal Desk 说明中强调续费扩容与长期价值。"
+      : "价格敏感客户：建议准备不超过 5% 的让利预案，并同步价值叙事。",
+    "如对历史价有上行，请在销售教练建议中说明订阅范围与服务级别变化依据。",
   ];
   return lines.join("\n");
 }
