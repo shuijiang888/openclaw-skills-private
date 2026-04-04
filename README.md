@@ -76,9 +76,16 @@ npm run dev
   - `deploy/zt007-cloud-demo/publish-to-server.sh`（本地执行，自动打包上传）
   - `deploy/zt007-cloud-demo/apply-on-server.sh`（服务器执行，自动发布到 Nginx）
 
-## 本机大模型（Ollama · 优先 qwen3.5:35b）
+## 报价助手大模型（支持 MiniMax / Ollama）
 
-报价工作台右侧「智能助手」在 **`OLLAMA_ENABLED=1`** 时会**优先**走本机 Ollama（`/api/assistant/quote-parse`），失败则自动回退内置规则引擎，适合试点联调与实战。
+报价工作台右侧「智能助手」支持两类模型通道（`/api/assistant/quote-parse`）：
+- **MiniMax 在线模型**（如 `MiniMax-M2.7`）
+- **本机 Ollama 模型**（如 `qwen3.5:35b`）
+
+选择策略：
+- 同时配置时默认优先 **MiniMax**
+- 未配置或调用失败时自动回退**规则引擎**
+- 可在公网场景开启“**每次调用口令校验**”控制成本
 
 ### 实战检查清单
 
@@ -87,7 +94,21 @@ npm run dev
 3. 前端打开任意项目工作台 → 助手面板点 **「检测连接」**：应显示「服务可达，模型已就绪」
 4. 输入一段中文商机描述 → **「解析语义」**：首次 35B 推理可能需 **数十秒～数分钟**（视 GPU/CPU），默认请求超时 **5 分钟**（`OLLAMA_TIMEOUT_MS`）
 
-### 配置步骤
+### 配置步骤（MiniMax）
+
+在 `profit-web/.env` 中添加：
+
+```bash
+MINIMAX_ENABLED=1
+MINIMAX_API_KEY=你的MinimaxAPIKey
+MINIMAX_BASE_URL=https://api.minimax.io/v1
+MINIMAX_MODEL=MiniMax-M2.7
+# 可选
+MINIMAX_TIMEOUT_MS=90000
+MINIMAX_TEMPERATURE=0.2
+```
+
+### 配置步骤（Ollama）
 
 1. 安装并启动 [Ollama](https://ollama.com/)，拉取模型，例如：
    ```bash
@@ -105,7 +126,26 @@ npm run dev
    ```
 3. **重启** `npm run dev`。助手面板会显示「本机模型已启用」并可 **检测连接**。
 
-未设置 `OLLAMA_ENABLED=1` 时，不访问 Ollama，仅使用规则解析；可随时点击「仅用规则」。
+若同时未设置 `MINIMAX_ENABLED=1` 与 `OLLAMA_ENABLED=1`，系统仅使用规则解析；可随时点击「仅用规则」。
+
+### 公网成本控制：每次调用都要输入口令
+
+在 `profit-web/.env` 中配置（推荐）：
+
+```bash
+# 生产默认开启；可显式控制
+PROFIT_LLM_PASSWORD_REQUIRED=1
+
+# 推荐配置哈希而非明文（二选一）
+PROFIT_LLM_ACCESS_PASSWORD_SHA256=你的口令SHA256HEX
+# 或：
+# PROFIT_LLM_ACCESS_PASSWORD=明文口令
+```
+
+行为说明：
+- 每次点击“解析语义”都会校验口令
+- 口令通过才会调用 MiniMax/Ollama
+- 未通过则不调用大模型（前端提示口令错误）
 
 接口说明：`GET /api/assistant/ollama-status` 供面板自检；`POST /api/assistant/quote-parse` 单次解析最长由 `maxDuration` 与 `OLLAMA_TIMEOUT_MS` 共同约束。
 

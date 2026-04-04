@@ -23,7 +23,7 @@ type Baseline = {
 };
 
 type ParseApiResponse = {
-  source: "ollama" | "rules";
+  source: "ollama" | "minimax" | "rules";
   model?: string;
   fallbackReason?: string;
   summary: string[];
@@ -31,8 +31,15 @@ type ParseApiResponse = {
   patch: CoeffPatch;
 };
 
-type OllamaStatusJson = {
-  ollamaEnabled: boolean;
+type LlmStatusJson = {
+  provider: "none" | "ollama" | "minimax";
+  llmEnabled: boolean;
+  llmPasswordRequired: boolean;
+  llmProviderLabel: string;
+  llmModel: string | null;
+  minimaxConfigured?: boolean;
+  minimaxBaseUrl?: string | null;
+  ollamaEnabled?: boolean;
   model: string | null;
   baseUrl: string | null;
   reachable: boolean;
@@ -83,18 +90,24 @@ export function QuoteAssistantPanel({
   const [parsedHints, setParsedHints] = useState<string[]>([]);
   const [lastPatch, setLastPatch] = useState<CoeffPatch | null>(null);
   const [parsing, setParsing] = useState(false);
-  const [lastSource, setLastSource] = useState<"ollama" | "rules" | null>(
+  const [lastSource, setLastSource] = useState<
+    "ollama" | "minimax" | "rules" | null
+  >(
     null,
   );
   const [fallbackReason, setFallbackReason] = useState<string | null>(null);
-  const [ollamaConfigured, setOllamaConfigured] = useState<boolean | null>(
+  const [llmConfigured, setLlmConfigured] = useState<boolean | null>(
     null,
   );
-  const [ollamaModel, setOllamaModel] = useState<string | null>(null);
+  const [llmModel, setLlmModel] = useState<string | null>(null);
+  const [llmProviderLabel, setLlmProviderLabel] = useState<string>("未启用");
+  const [llmPasswordRequired, setLlmPasswordRequired] = useState(true);
+  const [llmPassword, setLlmPassword] = useState("");
+  const [llmPasswordError, setLlmPasswordError] = useState<string | null>(null);
   const [lastParseRequestId, setLastParseRequestId] = useState<string | null>(
     null,
   );
-  const [ollamaProbe, setOllamaProbe] = useState<OllamaStatusJson | null>(null);
+  const [llmProbe, setLlmProbe] = useState<LlmStatusJson | null>(null);
   const [probeBusy, setProbeBusy] = useState(false);
   /** 与 GET /api/assistant/quote-parse 下发的 Cookie 成对，生产环境 CSRF 必填 */
   const [assistantCsrf, setAssistantCsrf] = useState<string | null>(null);
@@ -102,13 +115,17 @@ export function QuoteAssistantPanel({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const syncAssistantConfig = useCallback((j: {
-    ollamaEnabled?: boolean;
+    llmEnabled?: boolean;
+    llmPasswordRequired?: boolean;
+    llmProviderLabel?: string;
     model?: string | null;
     csrfToken?: string;
     csrfRequired?: boolean;
   }) => {
-    setOllamaConfigured(Boolean(j.ollamaEnabled));
-    setOllamaModel(j.model ?? null);
+    setLlmConfigured(Boolean(j.llmEnabled));
+    setLlmModel(j.model ?? null);
+    setLlmProviderLabel(j.llmProviderLabel ?? "未启用");
+    setLlmPasswordRequired(j.llmPasswordRequired ?? true);
     setAssistantCsrfRequired(Boolean(j.csrfRequired));
     if (typeof j.csrfToken === "string" && j.csrfToken.length > 0) {
       setAssistantCsrf(j.csrfToken);
@@ -117,14 +134,18 @@ export function QuoteAssistantPanel({
     }
   }, []);
 
-  const runOllamaProbe = useCallback(() => {
+  const runLlmProbe = useCallback(() => {
     setProbeBusy(true);
     void fetch("/api/assistant/ollama-status")
-      .then(async (r) => (await r.json()) as OllamaStatusJson)
-      .then(setOllamaProbe)
+      .then(async (r) => (await r.json()) as LlmStatusJson)
+      .then(setLlmProbe)
       .catch(() =>
-        setOllamaProbe({
-          ollamaEnabled: true,
+        setLlmProbe({
+          provider: "none",
+          llmEnabled: false,
+          llmPasswordRequired: true,
+          llmProviderLabel: "不可用",
+          llmModel: null,
           model: null,
           baseUrl: null,
           reachable: false,
@@ -138,20 +159,22 @@ export function QuoteAssistantPanel({
   }, []);
 
   useEffect(() => {
-    if (ollamaConfigured !== true) {
-      setOllamaProbe(null);
+    if (llmConfigured !== true) {
+      setLlmProbe(null);
       return;
     }
-    runOllamaProbe();
-  }, [ollamaConfigured, runOllamaProbe]);
+    runLlmProbe();
+  }, [llmConfigured, runLlmProbe]);
 
   useEffect(() => {
     void fetch("/api/assistant/quote-parse")
       .then((r) => r.json())
       .then(syncAssistantConfig)
       .catch(() => {
-        setOllamaConfigured(false);
-        setOllamaModel(null);
+        setLlmConfigured(false);
+        setLlmModel(null);
+        setLlmProviderLabel("未启用");
+        setLlmPasswordRequired(true);
         setAssistantCsrf(null);
         setAssistantCsrfRequired(false);
       });
@@ -174,6 +197,7 @@ export function QuoteAssistantPanel({
     }
     setParsing(true);
     setFallbackReason(null);
+    setLlmPasswordError(null);
     try {
       const res = await fetch("/api/assistant/quote-parse", {
         method: "POST",
@@ -184,12 +208,20 @@ export function QuoteAssistantPanel({
             ? { [ASSISTANT_CSRF_HEADER]: assistantCsrf }
             : {}),
         },
-        body: JSON.stringify({ text, baseline }),
+        body: JSON.stringify({
+          text,
+          baseline,
+          llmPassword: llmPassword.trim() || undefined,
+        }),
       });
       if (!res.ok) {
         const errJson = (await res.json().catch(() => ({}))) as {
           code?: string;
+          error?: string;
         };
+        if (res.status === 403 && errJson.code === "llm_password_invalid") {
+          setLlmPasswordError(errJson.error ?? "密码错误，未启用大模型。");
+        }
         if (res.status === 403 && errJson.code === "csrf_failed") {
           const r2 = await fetch("/api/assistant/quote-parse");
           if (r2.ok) {
@@ -217,7 +249,7 @@ export function QuoteAssistantPanel({
     } finally {
       setParsing(false);
     }
-  }, [text, baseline, applyLocalRules, assistantCsrf]);
+  }, [text, baseline, applyLocalRules, assistantCsrf, llmPassword]);
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -232,7 +264,7 @@ export function QuoteAssistantPanel({
   };
 
   const assistantRemoteReady =
-    ollamaConfigured !== null &&
+    llmConfigured !== null &&
     (!assistantCsrfRequired || assistantCsrf !== null);
 
   return (
@@ -255,75 +287,94 @@ export function QuoteAssistantPanel({
                 {(playbook.priorities[0]?.detail.length ?? 0) > 72 ? "…" : ""}
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-violet-800/80 dark:text-violet-300/70">
-                用中文描述商机与客户诉求；优先通过本机{" "}
-                <strong>Ollama</strong> 大模型解析系数（需在{" "}
+                用中文描述商机与客户诉求；可通过{" "}
+                <strong>{llmProviderLabel}</strong> 大模型解析系数（未通过密码校验时自动回退规则引擎）（需在{" "}
                 <code className="rounded bg-violet-100 px-0.5 dark:bg-violet-900/50">
                   .env
                 </code>{" "}
                 中开启），失败时自动回退规则引擎。支持粘贴与文本文件导入。
               </p>
-              {ollamaConfigured === true ? (
+              {llmConfigured === true ? (
                 <div className="mt-1.5 space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[10px] font-medium text-emerald-800 dark:text-emerald-300">
-                      本机模型已启用：{ollamaModel ?? "—"}（默认{" "}
-                      <code className="rounded bg-emerald-100/80 px-0.5 dark:bg-emerald-900/40">
-                        qwen3.5:35b
-                      </code>
-                      ，可在 .env 修改）
+                      大模型已启用：{llmModel ?? "—"}（当前提供方：{llmProviderLabel}）
                     </p>
                     <button
                       type="button"
                       disabled={probeBusy}
-                      onClick={() => runOllamaProbe()}
+                      onClick={() => runLlmProbe()}
                       className="rounded border border-emerald-300/80 bg-white px-2 py-0.5 text-[10px] font-medium text-emerald-900 hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-950/50"
                     >
                       {probeBusy ? "检测中…" : "检测连接"}
                     </button>
                   </div>
-                  {ollamaProbe?.ollamaEnabled ? (
-                    ollamaProbe.reachable && ollamaProbe.modelReady ? (
+                  {llmPasswordRequired ? (
+                    <div className="space-y-1">
+                      <label className="block text-[10px] text-violet-900 dark:text-violet-200">
+                        每次调用大模型密码（由系统拥有者控制）
+                      </label>
+                      <input
+                        type="password"
+                        value={llmPassword}
+                        onChange={(e) => setLlmPassword(e.target.value)}
+                        placeholder="输入密码后才会启用大模型"
+                        className="w-full rounded-md border border-violet-300 bg-white px-2 py-1.5 text-xs text-slate-900 dark:border-violet-700 dark:bg-slate-950 dark:text-slate-100"
+                      />
+                      {llmPasswordError ? (
+                        <p className="text-[10px] text-red-700 dark:text-red-300">
+                          {llmPasswordError}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {llmProbe?.llmEnabled ? (
+                    llmProbe.reachable && llmProbe.modelReady ? (
                       <p className="text-[10px] text-emerald-800/90 dark:text-emerald-300/90">
-                        Ollama 服务可达，模型已就绪（{ollamaProbe.latencyMs}
-                        ms）。解析时 35B 首次可能较慢，默认超时 5 分钟。
+                        {llmProviderLabel} 服务可达，模型已就绪（{llmProbe.latencyMs}
+                        ms）。
                       </p>
-                    ) : ollamaProbe.reachable ? (
+                    ) : llmProbe.reachable ? (
                       <p className="text-[10px] text-amber-900 dark:text-amber-200">
-                        已连上 Ollama，但未找到配置模型：{ollamaProbe.error ?? "请 ollama pull"}{" "}
-                        {ollamaProbe.availableModels.length > 0
-                          ? `（已有：${ollamaProbe.availableModels.slice(0, 4).join("、")}…）`
+                        已连上 {llmProviderLabel}，但未找到配置模型：{llmProbe.error ?? "请检查模型配置"}{" "}
+                        {llmProbe.availableModels.length > 0
+                          ? `（可见模型：${llmProbe.availableModels.slice(0, 4).join("、")}…）`
                           : null}
                       </p>
                     ) : (
                       <p className="text-[10px] text-red-700 dark:text-red-300">
-                        无法连接 Ollama：{ollamaProbe.error ?? "请确认本机已启动 ollama serve"}
+                        无法连接 {llmProviderLabel}：{llmProbe.error ?? "请确认网络与 API 配置"}
                       </p>
                     )
-                  ) : ollamaProbe === null ? (
-                    <p className="text-[10px] text-zinc-500">正在检测本机 Ollama…</p>
+                  ) : llmProbe === null ? (
+                    <p className="text-[10px] text-zinc-500">正在检测大模型服务…</p>
                   ) : null}
                 </div>
-              ) : ollamaConfigured === false ? (
+              ) : llmConfigured === false ? (
                 <p className="mt-1.5 text-[10px] text-zinc-600 dark:text-zinc-400">
-                  当前未启用本机模型，解析将仅用规则。设置{" "}
-                  <code className="rounded bg-zinc-200/80 px-0.5 dark:bg-zinc-700">
+                  当前未启用大模型，解析将仅用规则。可设置以下任一配置：
+                  <code className="mx-1 rounded bg-zinc-200/80 px-0.5 dark:bg-zinc-700">
                     OLLAMA_ENABLED=1
-                  </code>{" "}
-                  后重启 dev。
+                  </code>
+                  或
+                  <code className="mx-1 rounded bg-zinc-200/80 px-0.5 dark:bg-zinc-700">
+                    MINIMAX_ENABLED=1
+                  </code>
+                  。
                 </p>
               ) : null}
             </div>
           </div>
           <span
             className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium ${
-              lastSource === "ollama"
+              lastSource === "ollama" || lastSource === "minimax"
                 ? "bg-emerald-600/15 text-emerald-800 dark:text-emerald-300"
                 : lastSource === "rules"
                   ? "bg-amber-500/15 text-amber-900 dark:text-amber-200"
                   : "bg-violet-600/10 text-violet-800 dark:text-violet-200"
             }`}
           >
-            {lastSource === "ollama"
+            {lastSource === "ollama" || lastSource === "minimax"
               ? "大模型"
               : lastSource === "rules"
                 ? "规则"
@@ -338,7 +389,7 @@ export function QuoteAssistantPanel({
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        {ollamaConfigured === null ? (
+        {llmConfigured === null ? (
           <p className="mt-1.5 text-[10px] text-zinc-500">正在连接助手服务…</p>
         ) : assistantCsrfRequired && !assistantCsrf ? (
           <p className="mt-1.5 text-[10px] text-zinc-500">

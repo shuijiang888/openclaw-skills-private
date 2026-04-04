@@ -13,6 +13,10 @@ import {
   checkAgentRateLimit,
 } from "@/lib/agent-rate-limit";
 import { validateQuoteParseBody } from "@/lib/agent-quote-parse-validation";
+import {
+  isLlmPasswordRequired,
+  verifyLlmAccessPassword,
+} from "@/lib/agent-llm-password";
 import { textDigestForAudit } from "@/lib/agent-audit-digest";
 import {
   newRequestId,
@@ -26,6 +30,10 @@ import {
 } from "@/lib/quote-natural-language";
 import { demoRoleFromRequest } from "@/lib/http";
 import { getOllamaConfig, parseQuoteWithOllama } from "@/lib/ollama-quote-assistant";
+import {
+  getMiniMaxConfig,
+  parseQuoteWithMiniMax,
+} from "@/lib/minimax-quote-assistant";
 import { QUOTE_PARSE_PROMPT_VERSION } from "@/lib/prompts/quote-parse-system";
 import { prisma } from "@/lib/prisma";
 import { loadCompassQuadrantThresholdsSafe } from "@/lib/load-compass-quadrant-threshold";
@@ -38,8 +46,9 @@ import {
 export const maxDuration = 300;
 
 export type QuoteParseResponse = {
-  source: "ollama" | "rules";
+  source: "ollama" | "minimax" | "rules";
   model?: string;
+  llmProvider?: "none" | "ollama" | "minimax";
   fallbackReason?: string;
   summary: string[];
   hints: string[];
@@ -49,10 +58,23 @@ export type QuoteParseResponse = {
 /** 供前端展示是否已配置本机 Ollama；生产环境可下发 CSRF token */
 export async function GET() {
   const cfg = getOllamaConfig();
+  const mm = getMiniMaxConfig();
   const csrfOn = isAssistantCsrfEnabled();
+  const provider: "none" | "ollama" | "minimax" = mm
+    ? "minimax"
+    : cfg
+      ? "ollama"
+      : "none";
   const payload: Record<string, unknown> = {
+    provider,
+    llmEnabled: Boolean(cfg || mm),
+    llmProvider: provider,
+    llmProviderLabel: mm ? "MiniMax" : cfg ? "Ollama" : "未启用",
+    llmModel: mm?.model ?? cfg?.model ?? null,
     ollamaEnabled: Boolean(cfg),
-    model: cfg?.model ?? null,
+    minimaxEnabled: Boolean(mm),
+    model: mm?.model ?? cfg?.model ?? null,
+    llmPasswordRequired: isLlmPasswordRequired(),
     csrfRequired: csrfOn,
     promptVersion: QUOTE_PARSE_PROMPT_VERSION,
   };
@@ -130,17 +152,31 @@ export async function POST(req: Request) {
     );
   }
 
-  const { text, baseline } = parsed.value;
+  const { text, baseline, llmPassword } = parsed.value;
   const cfg = getOllamaConfig();
+  const mmCfg = getMiniMaxConfig();
   const actorRole = demoRoleFromRequest(req);
   const textDigest = textDigestForAudit(text);
   const injectionSignals = detectUserPromptInjectionSignals(text);
+  const llmAvailable = Boolean(mmCfg || cfg);
+  const llmPasswordRequired = isLlmPasswordRequired();
+  const llmPasswordOk = verifyLlmAccessPassword(llmPassword);
+  if (llmAvailable && llmPasswordRequired && !llmPasswordOk) {
+    return NextResponse.json(
+      {
+        error: "大模型密码错误或未输入。请先输入密码，再启用大模型解析。",
+        code: "llm_password_invalid",
+        requestId,
+      },
+      { status: 403, headers: rh },
+    );
+  }
 
   let response: QuoteParseResponse;
   let outputTruncated = false;
   let schemaRejected = false;
 
-  if (cfg) {
+  if (mmCfg || cfg) {
     try {
       let compassRuleContext: string | undefined;
       try {
@@ -160,17 +196,25 @@ export async function POST(req: Request) {
         /* 忽略罗盘规则注入失败，仍按原有 LLM 行为解析 */
       }
 
-      const llm = await parseQuoteWithOllama(
-        text,
-        baseline,
-        actorRole,
-        compassRuleContext,
-      );
+      const llm = mmCfg
+        ? await parseQuoteWithMiniMax(
+            text,
+            baseline,
+            actorRole,
+            compassRuleContext,
+          )
+        : await parseQuoteWithOllama(
+            text,
+            baseline,
+            actorRole,
+            compassRuleContext,
+          );
       outputTruncated = llm.outputTruncated;
       schemaRejected = llm.schemaRejected;
       response = {
-        source: "ollama",
+        source: mmCfg ? "minimax" : "ollama",
         model: llm.model,
+        llmProvider: mmCfg ? "minimax" : "ollama",
         summary: llm.summary,
         hints: llm.hints,
         patch: llm.patch,
@@ -180,8 +224,9 @@ export async function POST(req: Request) {
       const rules = parseQuoteNaturalLanguage(text, baseline);
       response = {
         source: "rules",
-        model: cfg.model,
-        fallbackReason: `已连接配置的本机模型「${cfg.model}」，但调用失败（${msg}），已改用规则引擎`,
+        model: mmCfg?.model ?? cfg?.model,
+        llmProvider: mmCfg ? "minimax" : cfg ? "ollama" : "none",
+        fallbackReason: `已连接配置模型「${mmCfg?.model ?? cfg?.model ?? "unknown"}」，但调用失败（${msg}），已改用规则引擎`,
         summary: rules.summary,
         hints: rules.hints,
         patch: rules.patch,
@@ -191,6 +236,8 @@ export async function POST(req: Request) {
     const rules = parseQuoteNaturalLanguage(text, baseline);
     response = {
       source: "rules",
+      llmProvider: "none",
+      fallbackReason: "当前未配置可用大模型，已使用规则引擎。",
       summary: rules.summary,
       hints: rules.hints,
       patch: rules.patch,
@@ -221,6 +268,8 @@ export async function POST(req: Request) {
       outputTruncated,
       schemaRejected,
       patchKeys: Object.keys(response.patch),
+      llmPasswordRequired,
+      llmPasswordVerified: llmPasswordRequired ? llmPasswordOk : null,
       model: response.model ?? null,
       fallbackReason: response.fallbackReason ?? null,
     },

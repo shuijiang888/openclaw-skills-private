@@ -25,6 +25,7 @@ export function mergeBaseline(body: BaselineBody | undefined): Record<string, nu
 export type ValidatedQuoteParseBody = {
   text: string;
   baseline: Record<string, number>;
+  llmPassword?: string;
 };
 
 export function validateQuoteParseBody(
@@ -80,5 +81,13 @@ export function validateQuoteParseBody(
   }
 
   const baseline = mergeBaseline(baselineBody as BaselineBody);
-  return { ok: true, value: { text, baseline } };
+  const llmPasswordRaw = o.llmPassword;
+  if (llmPasswordRaw !== undefined && typeof llmPasswordRaw !== "string") {
+    return { ok: false, error: "llmPassword 须为字符串" };
+  }
+  const llmPassword = String(llmPasswordRaw ?? "").trim();
+  return {
+    ok: true,
+    value: { text, baseline, llmPassword: llmPassword || undefined },
+  };
 }
