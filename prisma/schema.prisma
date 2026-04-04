@@ -34,6 +34,10 @@ model Project {
   nextStepDueAt DateTime?
   /// 作战卡片模板标识，如 COMPETITOR_SWAP / EXEC_VISIT / POC_ESCORT
   battleCard   String?
+  /// 阶段产出勾选（JSON）：用于阶段准入校验
+  stageEvidenceJson String @default("{}")
+  /// 丢单原因（仅 CLOSED_LOST 必填）
+  closeLostReason String @default("")
   /// 最近一次阶段变更时间
   lastStageAt  DateTime @default(now())
   status       String   @default("DRAFT")

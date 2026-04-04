@@ -6,7 +6,12 @@ import { canImportConsoleCsv } from "@/lib/demo-role-modules";
 import { demoRoleFromRequest } from "@/lib/http";
 import { parseProjectCsvImport } from "@/lib/parse-project-csv";
 import { prisma } from "@/lib/prisma";
-import { stageFromProjectStatus } from "@/lib/sales-flow";
+import {
+  emptyStageEvidence,
+  normalizeFlowStage,
+  parseStageEvidence,
+  stageFromProjectStatus,
+} from "@/lib/sales-flow";
 
 export const runtime = "nodejs";
 
@@ -84,6 +89,13 @@ export async function POST(req: Request) {
 
     try {
       await prisma.$transaction(async (tx) => {
+        const normalizedStage = normalizeFlowStage(
+          row.flowStage,
+          stageFromProjectStatus(row.status),
+        );
+        const parsedEvidence = row.stageEvidenceJson
+          ? parseStageEvidence(row.stageEvidenceJson)
+          : emptyStageEvidence();
         const project = await tx.project.create({
           data: {
             name: row.projectName,
@@ -94,12 +106,22 @@ export async function POST(req: Request) {
             isStandard: row.isStandard,
             isSmallOrder: row.isSmallOrder,
             status: row.status,
-            flowStage: stageFromProjectStatus(row.status),
+            flowStage: normalizedStage,
             nextStep:
-              row.status === "CLOSED_LOST"
+              row.nextStep ||
+              (row.status === "CLOSED_LOST"
                 ? "补录丢单复盘：关键决策人与主要流失原因。"
-                : "补充下一步动作：明确负责人、截止时间与验证标准。",
-            nextStepDueAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                : "补充下一步动作：明确负责人、截止时间与验证标准。"),
+            nextStepDueAt: row.nextStepDueAt
+              ? new Date(row.nextStepDueAt)
+              : new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            battleCard: row.battleCard,
+            closeLostReason:
+              row.closeLostReason ||
+              (row.status === "CLOSED_LOST"
+                ? "需补录：预算/竞品/关系等丢单要因"
+                : ""),
+            stageEvidenceJson: JSON.stringify(parsedEvidence),
             lastStageAt: new Date(),
           },
         });

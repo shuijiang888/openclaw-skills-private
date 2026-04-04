@@ -75,6 +75,10 @@ type ProjectDTO = {
     overdueDays: number;
     isOverdue: boolean;
     battleCard: string | null;
+    stageEvidence: Record<string, boolean>;
+    requiredEvidence: { key: string; label: string; done: boolean }[];
+    completion: { done: number; total: number };
+    closeLostReason?: string;
   };
   nextStepDueAt: string | null;
   battleCard: string | null;
@@ -100,6 +104,8 @@ export function Workbench({ projectId }: { projectId: string }) {
   const [nextStepDraft, setNextStepDraft] = useState("");
   const [nextStepDueAt, setNextStepDueAt] = useState("");
   const [battleCard, setBattleCard] = useState("");
+  const [closeLostReason, setCloseLostReason] = useState("");
+  const [missingEvidence, setMissingEvidence] = useState<string[]>([]);
 
   const showRequestAuditTip = useCallback(
     (message: string, res: Response) => {
@@ -156,6 +162,8 @@ export function Workbench({ projectId }: { projectId: string }) {
       j.nextStepDueAt ? new Date(j.nextStepDueAt).toISOString().slice(0, 10) : "",
     );
     setBattleCard(j.battleCard ?? "");
+    setCloseLostReason(j.flow?.closeLostReason ?? "");
+    setMissingEvidence([]);
     setErr(null);
   }, [projectId]);
 
@@ -189,13 +197,22 @@ export function Workbench({ projectId }: { projectId: string }) {
     if (!data) return;
     setBusy(true);
     setErr(null);
+    setMissingEvidence([]);
     try {
       const res = await fetch(`/api/projects/${data.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...demoHeaders() },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("流程更新失败");
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as {
+          detail?: string;
+          error?: string;
+          missingEvidence?: string[];
+        };
+        if (Array.isArray(j.missingEvidence)) setMissingEvidence(j.missingEvidence);
+        throw new Error(j.detail ?? j.error ?? "流程更新失败");
+      }
       const next = (await res.json()) as ProjectDTO;
       setData(next);
       setFlowStage(next.flow?.stage ?? "LEAD_QUALIFIED");
@@ -206,12 +223,36 @@ export function Workbench({ projectId }: { projectId: string }) {
           : "",
       );
       setBattleCard(next.battleCard ?? "");
+      setCloseLostReason(next.flow?.closeLostReason ?? "");
       dispatchProfitDataChanged({ debounceMs: 500 });
-    } catch {
-      setErr("流程更新失败");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "流程更新失败");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function moveToNextStage() {
+    if (!data) return;
+    const idx = FLOW_STAGE_OPTIONS.indexOf(flowStage as (typeof FLOW_STAGE_OPTIONS)[number]);
+    const next = FLOW_STAGE_OPTIONS[idx + 1];
+    if (!next) return;
+    await patchFlow({
+      flowStage: next,
+      nextStep: nextStepDraft,
+      nextStepDueAt: nextStepDueAt ? new Date(nextStepDueAt).toISOString() : null,
+      closeLostReason,
+    });
+  }
+
+  async function markClosedLost() {
+    if (!data) return;
+    await patchFlow({
+      flowStage: "CLOSED_LOST",
+      closeLostReason,
+      nextStep: nextStepDraft,
+      nextStepDueAt: nextStepDueAt ? new Date(nextStepDueAt).toISOString() : null,
+    });
   }
 
   async function submitApproval() {
@@ -512,6 +553,14 @@ export function Workbench({ projectId }: { projectId: string }) {
                   ))}
                 </select>
               </label>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                <p className="font-medium">
+                  阶段门槛完成度：{data.flow.completion.done}/{data.flow.completion.total}
+                </p>
+                <p className="mt-1 text-zinc-500">
+                  只有满足下一阶段必备产出后，才能推进阶段。
+                </p>
+              </div>
               <label className="block text-xs lg:col-span-2">
                 <span className="text-zinc-500">下一步动作</span>
                 <input
@@ -540,6 +589,37 @@ export function Workbench({ projectId }: { projectId: string }) {
                   className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
                 />
               </label>
+            </div>
+            <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-950">
+              <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                下一阶段准入清单
+              </p>
+              {data.flow.requiredEvidence.length === 0 ? (
+                <p className="mt-2 text-xs text-zinc-500">
+                  当前阶段无额外准入项，可直接按流程推进。
+                </p>
+              ) : (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {data.flow.requiredEvidence.map((item) => (
+                    <label
+                      key={item.key}
+                      className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(data.flow.stageEvidence[item.key])}
+                        disabled={busy || locked}
+                        onChange={(e) =>
+                          void patchFlow({
+                            stageEvidence: { [item.key]: e.target.checked },
+                          })
+                        }
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="mt-3 grid gap-3 lg:grid-cols-4">
               <label className="block text-xs lg:col-span-2">
@@ -598,6 +678,42 @@ export function Workbench({ projectId }: { projectId: string }) {
                 )}
               </div>
             </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-4">
+              <label className="block text-xs lg:col-span-3">
+                <span className="text-zinc-500">丢单原因（仅标记丢单时必填）</span>
+                <input
+                  value={closeLostReason}
+                  disabled={busy || locked}
+                  onChange={(e) => setCloseLostReason(e.target.value)}
+                  onBlur={() => void patchFlow({ closeLostReason })}
+                  placeholder="例如：预算冻结 / 决策层变更 / 竞品绑定采购"
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-950"
+                />
+              </label>
+              <div className="flex items-end gap-2">
+                <button
+                  type="button"
+                  disabled={busy || locked}
+                  onClick={() => void moveToNextStage()}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:hover:bg-zinc-800"
+                >
+                  推进到下一阶段
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || locked}
+                  onClick={() => void markClosedLost()}
+                  className="w-full rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/30"
+                >
+                  标记为丢单
+                </button>
+              </div>
+            </div>
+            {missingEvidence.length > 0 ? (
+              <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                未满足准入项：{missingEvidence.join("、")}
+              </p>
+            ) : null}
             {data.flow.isOverdue ? (
               <p className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">
                 当前下一步已超期 {data.flow.overdueDays} 天，请在周会前更新推进动作。

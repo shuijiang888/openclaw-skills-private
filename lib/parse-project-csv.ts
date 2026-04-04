@@ -35,6 +35,12 @@ export type ParsedProjectRow = {
   wsDelivery: number;
   wsTech: number;
   wsPayment: number;
+  flowStage: string | null;
+  nextStep: string;
+  nextStepDueAt: string | null;
+  battleCard: string | null;
+  closeLostReason: string;
+  stageEvidenceJson: string | null;
 };
 
 const DEF = {
@@ -242,6 +248,14 @@ export function parseProjectCsvImport(text: string): {
       return { ok: false, error: `第 ${rowNum} 行：${wsPayment.msg}` };
     }
 
+    const flowStageRaw = get("flowstage").toUpperCase();
+    const flowStage = flowStageRaw || null;
+    const nextStep = get("nextstep");
+    const nextStepDueAt = get("nextstepdueatiso") || null;
+    const battleCard = get("battlecard") || null;
+    const closeLostReason = get("closelostreason") || "";
+    const stageEvidenceJson = get("stageevidencejson") || null;
+
     rows.push({
       customerName,
       projectName,
@@ -269,6 +283,12 @@ export function parseProjectCsvImport(text: string): {
       wsDelivery: wsDelivery.v ?? DEF.wsDelivery,
       wsTech: wsTech.v ?? DEF.wsTech,
       wsPayment: wsPayment.v ?? DEF.wsPayment,
+      flowStage,
+      nextStep,
+      nextStepDueAt,
+      battleCard,
+      closeLostReason,
+      stageEvidenceJson,
     });
   }
 

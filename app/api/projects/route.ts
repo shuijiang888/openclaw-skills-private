@@ -9,6 +9,7 @@ import { appendTimeline } from "@/lib/timeline";
 import { defaultBenchmarkPrices } from "@/lib/benchmarks";
 import { enrichProject } from "@/lib/serialize";
 import {
+  emptyStageEvidence,
   battleCardTemplateById,
   normalizeFlowStage,
   parseBattleCardId,
@@ -94,6 +95,8 @@ export async function POST(req: Request) {
       nextStep,
       nextStepDueAt: validNextStepDueAt,
       battleCard,
+      stageEvidenceJson: JSON.stringify(emptyStageEvidence()),
+      closeLostReason: "",
       lastStageAt: new Date(),
       quote: {
         create: {

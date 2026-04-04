@@ -7,6 +7,7 @@ import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import {
   BATTLE_CARD_TEMPLATES,
   FLOW_STAGE_OPTIONS,
+  emptyStageEvidence,
   flowStageLabel,
 } from "@/lib/sales-flow";
 
@@ -89,6 +90,8 @@ export function NewProjectForm() {
             ? new Date(nextStepDueAt).toISOString()
             : null,
           battleCard: battleCard || null,
+          stageEvidence: emptyStageEvidence(),
+          closeLostReason: "",
         }),
       });
       if (!res.ok) {

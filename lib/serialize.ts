@@ -9,6 +9,11 @@ import {
 import { requiredRoleForDiscount } from "@/lib/approval";
 import { evaluateShunt } from "@/lib/shunt";
 import {
+  type FlowStage,
+  parseStageEvidence,
+  stageCompletion,
+  stageRequirements,
+  STAGE_EVIDENCE_LABEL,
   dueDateLabel,
   flowStageLabel,
   nextStepOverdueDays,
@@ -95,7 +100,16 @@ export function enrichQuote(
 export function enrichProject(
   project: Project & { customer: Customer; quote: Quote | null },
 ) {
-  const normalizedStage = project.flowStage || stageFromProjectStatus(project.status);
+  const normalizedStage = (project.flowStage ||
+    stageFromProjectStatus(project.status)) as FlowStage;
+  const stageEvidence = parseStageEvidence(
+    (project as unknown as { stageEvidenceJson?: string }).stageEvidenceJson,
+  );
+  const requirements = stageRequirements(normalizedStage);
+  const completion = stageCompletion({
+    stage: normalizedStage,
+    evidence: stageEvidence,
+  });
   const overdueDays = nextStepOverdueDays(project.nextStepDueAt);
   const flow = {
     stage: normalizedStage,
@@ -105,6 +119,15 @@ export function enrichProject(
     overdueDays,
     isOverdue: overdueDays > 0,
     battleCard: project.battleCard,
+    stageEvidence,
+    requiredEvidence: requirements.map((key) => ({
+      key,
+      label: STAGE_EVIDENCE_LABEL[key],
+      done: stageEvidence[key],
+    })),
+    completion,
+    closeLostReason: (project as unknown as { closeLostReason?: string })
+      .closeLostReason,
   };
   if (!project.quote) {
     return { ...project, quote: null, flow };

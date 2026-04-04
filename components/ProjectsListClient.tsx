@@ -21,6 +21,7 @@ export type ProjectListRow = {
   dueAtLabel: string;
   isOverdue: boolean;
   overdueDays: number;
+  stageProgressLabel?: string;
 };
 
 type FilterKey = "all" | "pending_any" | "pending_mine";
@@ -122,6 +123,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
               <th className="px-4 py-3 font-medium">项目</th>
               <th className="px-4 py-3 font-medium">客户</th>
               <th className="px-4 py-3 font-medium">流程阶段</th>
+              <th className="px-4 py-3 font-medium">准入进展</th>
               <th className="px-4 py-3 font-medium">下一步动作</th>
               <th className="px-4 py-3 font-medium">状态</th>
               <th className="px-4 py-3 font-medium">待 Deal Desk 角色</th>
@@ -132,7 +134,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={9} className="px-4 py-8 text-center text-zinc-500">
                   {filter === "pending_mine"
                     ? "当前身份下暂无待您处理的 Deal Desk。"
                     : "暂无项目。"}
@@ -173,6 +175,9 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                       <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
                         {p.flowStageLabel}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-zinc-600 dark:text-zinc-400">
+                      {p.stageProgressLabel ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-xs text-zinc-600 dark:text-zinc-400">
                       {p.nextStep ? (

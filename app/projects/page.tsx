@@ -25,6 +25,10 @@ function mapToRows(
         : null,
     pendingRole: p.quote?.pendingRole ?? null,
     flowStageLabel: p.flow.stageLabel,
+    stageProgressLabel:
+      p.flow.completion.total > 0
+        ? `${p.flow.completion.done}/${p.flow.completion.total}`
+        : "—",
     nextStep: p.flow.nextStep,
     dueAtLabel: p.flow.dueAtLabel,
     isOverdue: p.flow.isOverdue,

@@ -9,7 +9,7 @@ import { requiredRoleForDiscount } from "../lib/approval";
 import { defaultBenchmarkPrices } from "../lib/benchmarks";
 import { pilotSeedUsers } from "../lib/seed-pilot";
 import { appendTimeline } from "../lib/timeline";
-import { stageFromProjectStatus } from "../lib/sales-flow";
+import { emptyStageEvidence, stageFromProjectStatus } from "../lib/sales-flow";
 
 const prisma = new PrismaClient();
 
@@ -105,6 +105,39 @@ async function createScenario(
       flowStage,
       nextStep,
       nextStepDueAt,
+      stageEvidenceJson: JSON.stringify({
+        ...emptyStageEvidence(),
+        icpConfirmed: args.status !== "DRAFT",
+        championMapped:
+          args.status === "APPROVED" ||
+          args.status === "PENDING_APPROVAL" ||
+          args.status === "CLOSED_LOST",
+        discoveryNotes:
+          args.status === "APPROVED" ||
+          args.status === "PENDING_APPROVAL" ||
+          args.status === "CLOSED_LOST",
+        painValueHypothesis:
+          args.status === "APPROVED" ||
+          args.status === "PENDING_APPROVAL" ||
+          args.status === "CLOSED_LOST",
+        solutionDraft:
+          args.status === "APPROVED" ||
+          args.status === "PENDING_APPROVAL" ||
+          args.status === "CLOSED_LOST",
+        pocPlan:
+          args.status === "APPROVED" ||
+          args.status === "PENDING_APPROVAL" ||
+          args.status === "CLOSED_LOST",
+        proposalDeck:
+          args.status === "APPROVED" ||
+          args.status === "PENDING_APPROVAL",
+        commercialTerms:
+          args.status === "APPROVED" || args.status === "PENDING_APPROVAL",
+        dealDeskPacket: args.status === "PENDING_APPROVAL",
+        lossReasonCaptured: args.status === "CLOSED_LOST",
+      }),
+      closeLostReason:
+        args.status === "CLOSED_LOST" ? "预算冻结并转投竞品替代方案" : "",
       lastStageAt: new Date(),
       status: args.status,
       quote: {
@@ -142,6 +175,7 @@ async function seedBulk(
     "APPROVED",
     "DRAFT",
     "PENDING_APPROVAL",
+    "CLOSED_LOST",
     "PRICED",
     "APPROVED",
     "PENDING_APPROVAL",
