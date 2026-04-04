@@ -25,6 +25,14 @@ export const SEED_PILOT_ROLE_ORDER: DemoRole[] = [
   "VP",
 ];
 
+export const defaultSeedPilotSlaByStage: Record<SeedPilotActiveStatus, number> = {
+  INVITED: 2,
+  ACTIVATED: 3,
+  FEEDBACK: 7,
+  DONE: 9999,
+  DROPPED: 9999,
+};
+
 export function isSeedPilotActiveStatus(v: string): v is SeedPilotActiveStatus {
   return (SEED_PILOT_ACTIVE_STATUSES as readonly string[]).includes(v);
 }
@@ -65,6 +73,60 @@ export function seedPilotFeedbackSummaryLabel(kind: string): string {
     default:
       return kind;
   }
+}
+
+export function stageSlaDays(stage: SeedPilotActiveStatus): number {
+  return defaultSeedPilotSlaByStage[stage];
+}
+
+export function calcSeedPilotSlaOverdueDays(args: {
+  stage: SeedPilotActiveStatus;
+  invitedAt: Date | null;
+  activatedAt: Date | null;
+  lastActivityAt: Date | null;
+  now?: Date;
+}): number {
+  if (args.stage === "DONE" || args.stage === "DROPPED") return 0;
+  const now = args.now ?? new Date();
+  const base =
+    (args.stage === "INVITED" ? args.invitedAt : null) ??
+    (args.stage === "ACTIVATED" ? args.activatedAt : null) ??
+    args.lastActivityAt ??
+    args.activatedAt ??
+    args.invitedAt;
+  if (!base) return 0;
+  const elapsedDays = Math.floor((now.getTime() - base.getTime()) / (24 * 60 * 60 * 1000));
+  const overdue = elapsedDays - stageSlaDays(args.stage);
+  return overdue > 0 ? overdue : 0;
+}
+
+export function seedPilotSlaLabel(stage: SeedPilotActiveStatus): string {
+  if (stage === "DONE" || stage === "DROPPED") return "已关闭";
+  return `${stageSlaDays(stage)} 天`;
+}
+
+export function computeSeedPilotSlaState(args: {
+  stage: SeedPilotActiveStatus;
+  invitedAt: Date | null;
+  activatedAt: Date | null;
+  lastActivityAt: Date | null;
+  now?: Date;
+}): {
+  stage: SeedPilotActiveStatus;
+  targetDays: number;
+  overdueDays: number;
+  isOverdue: boolean;
+  label: string;
+} {
+  const overdueDays = calcSeedPilotSlaOverdueDays(args);
+  const targetDays = stageSlaDays(args.stage);
+  return {
+    stage: args.stage,
+    targetDays,
+    overdueDays,
+    isOverdue: overdueDays > 0,
+    label: overdueDays > 0 ? `超时 ${overdueDays} 天` : `SLA ${seedPilotSlaLabel(args.stage)}`,
+  };
 }
 
 export function pilotSeedUsers(): PilotSeedUser[] {

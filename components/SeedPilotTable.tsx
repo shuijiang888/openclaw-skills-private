@@ -19,6 +19,7 @@ type SeedPilotRow = {
   ownerRole: string;
   lastActivityAt: string;
   notes: string;
+  slaOverdueDays: number;
 };
 export type SeedPilotSummary = {
   total: number;
@@ -42,6 +43,12 @@ const STAGE_LABEL: Record<Stage, string> = {
 function fmt(dt: string | null): string {
   if (!dt) return "—";
   return new Date(dt).toLocaleDateString("zh-CN");
+}
+
+function overdueTone(days: number): string {
+  if (days <= 0) return "text-emerald-600";
+  if (days <= 3) return "text-amber-600";
+  return "text-red-600";
 }
 
 export function SeedPilotTable({
@@ -184,6 +191,7 @@ export function SeedPilotTable({
               <th className="px-3 py-2 font-medium text-right">问题</th>
               <th className="px-3 py-2 font-medium text-right">待办</th>
               <th className="px-3 py-2 font-medium">邀请/激活/反馈</th>
+              <th className="px-3 py-2 font-medium text-right">SLA</th>
               <th className="px-3 py-2 font-medium">备注</th>
             </tr>
           </thead>
@@ -326,6 +334,15 @@ export function SeedPilotTable({
                   激活 {fmt(r.activatedAt)}
                   <br />
                   反馈 {fmt(r.firstFeedbackAt)}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  {r.slaOverdueDays > 0 ? (
+                    <span className={`font-semibold ${overdueTone(r.slaOverdueDays)}`}>
+                      逾期 {r.slaOverdueDays} 天
+                    </span>
+                  ) : (
+                    <span className="text-emerald-600">正常</span>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   <input

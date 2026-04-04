@@ -8,6 +8,11 @@ import {
   canUpdateSeedPilotProgress,
   canViewSeedPilot,
 } from "@/lib/seed-pilot-permissions";
+import {
+  calcSeedPilotSlaOverdueDays,
+  defaultSeedPilotSlaByStage,
+  seedPilotSlaLabel,
+} from "@/lib/seed-pilot";
 
 const VALID_STAGES: PilotStage[] = [
   "INVITED",
@@ -75,6 +80,14 @@ export async function GET(req: Request) {
       notes: r.notes,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
+      slaDays: defaultSeedPilotSlaByStage[r.pilotStage as PilotStage],
+      slaLabel: seedPilotSlaLabel(r.pilotStage as PilotStage),
+      overdueDays: calcSeedPilotSlaOverdueDays({
+        stage: r.pilotStage as PilotStage,
+        invitedAt: r.invitedAt,
+        activatedAt: r.activatedAt,
+        lastActivityAt: r.lastActivityAt,
+      }),
     })),
   });
 }
