@@ -7,6 +7,7 @@ import {
   canAccessConsoleRules,
   canViewConsoleCustomers,
 } from "@/lib/demo-role-modules";
+import { canViewSeedPilot } from "@/lib/seed-pilot-permissions";
 import { parseDemoRole } from "@/lib/approval";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -39,6 +40,13 @@ export function ConsoleAccessGuard({
     if (
       pathname.startsWith("/console/agent-audit") &&
       !canAccessConsoleAgentAudit(role)
+    ) {
+      router.replace("/console");
+      return;
+    }
+    if (
+      pathname.startsWith("/console/seed-pilot") &&
+      !canViewSeedPilot(role)
     ) {
       router.replace("/console");
     }

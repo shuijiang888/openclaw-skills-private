@@ -13,8 +13,8 @@ export function ConsoleSidebar() {
 
   const foot =
     role === "VP"
-      ? "VP：主数据、系数与规则、CSV 导入及智能体审计。"
-      : "销售经理：控制台摘要、客户主数据只读、Deal Desk 队列；导入与规则维护请 VP。";
+      ? "VP：主数据、系数与规则、种子测试运营、CSV 导入及智能体审计。"
+      : "销售经理：控制台摘要、客户主数据只读、Deal Desk 队列、种子测试状态跟进；Owner/评分请 VP 维护。";
 
   return (
     <aside className="w-48 shrink-0">

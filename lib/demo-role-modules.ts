@@ -28,6 +28,7 @@ export const DEMO_CONSOLE_SIDEBAR_LINKS = [
   { href: "/console", label: "控制台", roles: BACKOFFICE },
   { href: "/console/pipeline", label: "项目与 Deal Desk", roles: BACKOFFICE },
   { href: "/console/customers", label: "主数据 · 客户", roles: BACKOFFICE },
+  { href: "/console/seed-pilot", label: "种子测试", roles: BACKOFFICE },
   { href: "/console/readiness", label: "落地准备", roles: BACKOFFICE },
   {
     href: "/console/rules",
@@ -82,4 +83,8 @@ export function canAccessConsoleRules(role: DemoRole): boolean {
 
 export function canAccessConsoleAgentAudit(role: DemoRole): boolean {
   return role === "VP";
+}
+
+export function canAccessConsoleSeedPilot(role: DemoRole): boolean {
+  return role === "SALES_MANAGER" || role === "VP";
 }

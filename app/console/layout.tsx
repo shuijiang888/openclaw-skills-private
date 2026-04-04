@@ -19,6 +19,9 @@ export default function ConsoleLayout({
             <span className="mt-1 block">
               演示模式：侧栏与写权限随右上角「试点角色」变化。登录模式：角色由会话账号决定，无角色下拉。
             </span>
+            <span className="mt-1 block">
+              新增「种子测试」页：用于跟踪 50 人试点的邀请、激活、反馈与问题闭环。
+            </span>
           </p>
         </div>
         <div className="shrink-0 rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/50">

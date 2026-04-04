@@ -23,6 +23,13 @@ export default async function ConsoleHomePage() {
 
   const [customers, projects, pending, approved, compass, agg] = stats;
   const avg = agg._avg.suggestedPrice ?? 0;
+  const [seedTotal, seedDone, seedFeedback] = await Promise.all([
+    prisma.seedPilotUser.count(),
+    prisma.seedPilotUser.count({ where: { pilotStage: "DONE" } }),
+    prisma.seedPilotUser.count({
+      where: { pilotStage: { in: ["FEEDBACK", "DONE"] } },
+    }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -33,6 +40,11 @@ export default async function ConsoleHomePage() {
           { k: "待 Deal Desk", v: pending, href: "/console/pipeline" },
           { k: "已核准成交", v: approved, href: "/console/pipeline" },
           { k: "罗盘项目", v: compass, href: "/compass" },
+          {
+            k: "种子用户测试进度",
+            v: `${seedDone}/${seedTotal}`,
+            href: "/console/seed-pilot",
+          },
           {
             k: "平均建议价（全库）",
             v: `¥${Math.round(avg).toLocaleString("zh-CN")}`,
@@ -89,6 +101,25 @@ export default async function ConsoleHomePage() {
             ))
           )}
         </ul>
+      </section>
+
+      <section className="rounded-xl border border-violet-200/80 bg-violet-50/40 p-4 shadow-sm dark:border-violet-900/40 dark:bg-violet-950/20">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-violet-900 dark:text-violet-200">
+              种子测试推进
+            </h2>
+            <p className="mt-1 text-xs text-violet-900/80 dark:text-violet-200/80">
+              目标 50 人：当前反馈覆盖 {seedFeedback}/{seedTotal}，可在「种子测试」页跟进激活、反馈与问题闭环。
+            </p>
+          </div>
+          <Link
+            href="/console/seed-pilot"
+            className="rounded-lg bg-violet-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-600 dark:bg-violet-500 dark:text-slate-950 dark:hover:bg-violet-400"
+          >
+            进入种子测试 →
+          </Link>
+        </div>
       </section>
     </div>
   );

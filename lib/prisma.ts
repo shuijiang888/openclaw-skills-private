@@ -8,8 +8,12 @@ const globalForPrisma = globalThis as unknown as {
  * 与当前 schema 是否一致（新增 model 后若未 generate，旧 Client 上无该 delegate，会出现 undefined.findMany）
  */
 function clientHasCurrentSchema(p: PrismaClient): boolean {
-  return typeof (p as unknown as { compassAlertRule?: unknown }).compassAlertRule
-    !== "undefined";
+  return (
+    typeof (p as unknown as { compassAlertRule?: unknown }).compassAlertRule !==
+      "undefined" &&
+    typeof (p as unknown as { seedPilotUser?: unknown }).seedPilotUser !==
+      "undefined"
+  );
 }
 
 function createPrismaClient(): PrismaClient {
@@ -22,7 +26,7 @@ function createPrismaClient(): PrismaClient {
 
   if (!clientHasCurrentSchema(c)) {
     throw new Error(
-      "Prisma Client 与 prisma/schema.prisma 不一致（缺少 CompassAlertRule 等）。请在 profit-web 目录执行 npx prisma generate，然后务必重启 npm run dev。",
+      "Prisma Client 与 prisma/schema.prisma 不一致（缺少 CompassAlertRule / SeedPilotUser 等）。请在 profit-web 目录执行 npx prisma generate，然后务必重启 npm run dev。",
     );
   }
 

@@ -114,3 +114,27 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+/// 种子测试用户池：用于试点邀请、激活与反馈闭环运营
+model SeedPilotUser {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String   @default("")
+  role            String
+  pilotStage      String   @default("INVITED")
+  invitedAt       DateTime
+  activatedAt     DateTime?
+  firstFeedbackAt DateTime?
+  feedbackScore   Int?
+  issueCount      Int      @default(0)
+  todoCount       Int      @default(0)
+  ownerRole       String   @default("SALES_MANAGER")
+  lastActivityAt  DateTime @default(now())
+  notes           String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([pilotStage])
+  @@index([role])
+  @@index([lastActivityAt])
+}

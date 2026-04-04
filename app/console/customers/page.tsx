@@ -16,7 +16,7 @@ export default async function ConsoleCustomersPage() {
       <CustomerCsvImport />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          客户评级影响「人机分流」与话术建议；可在前台「新建报价」时继续新增客户。
+          客户评级影响「智能分流」与销售教练话术建议；可在前台「新建报价」时继续新增客户。
         </p>
         <div className="flex flex-wrap gap-2">
           <CsvExportLink href="/api/export/customers">导出客户 CSV</CsvExportLink>

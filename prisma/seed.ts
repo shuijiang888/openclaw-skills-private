@@ -7,6 +7,7 @@ import {
 } from "../lib/calc";
 import { requiredRoleForDiscount } from "../lib/approval";
 import { defaultBenchmarkPrices } from "../lib/benchmarks";
+import { pilotSeedUsers } from "../lib/seed-pilot";
 import { appendTimeline } from "../lib/timeline";
 
 const prisma = new PrismaClient();
@@ -191,35 +192,32 @@ async function seedBulk(
 }
 
 async function seedUsers() {
-  const userRows = [
-    ...Array.from({ length: 12 }, (_, i) => ({
-      email: `sdr${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
-      role: "SDR",
-      name: `SDR${String(i + 1).padStart(2, "0")}`,
-    })),
-    ...Array.from({ length: 18 }, (_, i) => ({
-      email: `ae${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
-      role: "AE",
-      name: `AE${String(i + 1).padStart(2, "0")}`,
-    })),
-    ...Array.from({ length: 10 }, (_, i) => ({
-      email: `se${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
-      role: "PRE_SALES",
-      name: `SE${String(i + 1).padStart(2, "0")}`,
-    })),
-    ...Array.from({ length: 7 }, (_, i) => ({
-      email: `manager${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
-      role: "SALES_MANAGER",
-      name: `销售经理${String(i + 1).padStart(2, "0")}`,
-    })),
-    ...Array.from({ length: 3 }, (_, i) => ({
-      email: `vp${String(i + 1).padStart(2, "0")}@seed.fxiaoke.local`,
-      role: "VP",
-      name: `VP${String(i + 1).padStart(2, "0")}`,
-    })),
-  ];
+  const userRows = pilotSeedUsers();
+  await prisma.seedPilotUser.deleteMany();
+  for (let i = 0; i < userRows.length; i++) {
+    const row = userRows[i];
+    const stage =
+      i % 10 === 0
+        ? "INVITED"
+        : i % 10 <= 5
+          ? "ACTIVATED"
+          : i % 10 <= 8
+            ? "FEEDBACK"
+            : "DONE";
+    const invitedAt = new Date(Date.now() - (i % 14) * 24 * 60 * 60 * 1000);
+    const activatedAt =
+      i % 6 === 0
+        ? null
+        : new Date(invitedAt.getTime() + (1 + (i % 4)) * 60 * 60 * 1000);
+    const firstFeedbackAt =
+      i % 5 === 0 || !activatedAt
+        ? null
+        : new Date(activatedAt.getTime() + (2 + (i % 3)) * 24 * 60 * 60 * 1000);
+    const feedbackScore = firstFeedbackAt ? 3 + (i % 3) : null;
+    const issueCount = i % 4;
+    const todoCount = i % 3;
+    const ownerRole = i % 10 < 7 ? "SALES_MANAGER" : "VP";
 
-  for (const row of userRows) {
     await prisma.user.upsert({
       where: { email: row.email },
       create: {
@@ -231,6 +229,53 @@ async function seedUsers() {
       update: {
         name: row.name,
         role: row.role,
+      },
+    });
+
+    await prisma.seedPilotUser.upsert({
+      where: { email: row.email },
+      create: {
+        email: row.email,
+        name: row.name,
+        role: row.role,
+        pilotStage: stage,
+        invitedAt,
+        activatedAt,
+        firstFeedbackAt,
+        feedbackScore,
+        issueCount,
+        todoCount,
+        ownerRole,
+        lastActivityAt: activatedAt ?? invitedAt,
+        notes:
+          stage === "DONE"
+            ? "已完成首轮试点与复盘，建议纳入第二批样板案例。"
+            : stage === "FEEDBACK"
+              ? "已激活，待补齐业务反馈问卷。"
+              : stage === "ACTIVATED"
+                ? "完成登录与首单，等待反馈回收。"
+                : "已发邀请，等待激活。",
+      },
+      update: {
+        name: row.name,
+        role: row.role,
+        pilotStage: stage,
+        invitedAt,
+        activatedAt,
+        firstFeedbackAt,
+        feedbackScore,
+        issueCount,
+        todoCount,
+        ownerRole,
+        lastActivityAt: activatedAt ?? invitedAt,
+        notes:
+          stage === "DONE"
+            ? "已完成首轮试点与复盘，建议纳入第二批样板案例。"
+            : stage === "FEEDBACK"
+              ? "已激活，待补齐业务反馈问卷。"
+              : stage === "ACTIVATED"
+                ? "完成登录与首单，等待反馈回收。"
+                : "已发邀请，等待激活。",
       },
     });
   }
