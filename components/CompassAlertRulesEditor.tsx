@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import { demoHeaders } from "@/components/RoleSwitcher";
+import { withClientBasePath } from "@/lib/client-url";
 
 type Rule = {
   id: string;
@@ -17,7 +18,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const r = await fetch("/api/console/compass-alert-rules", {
+    const r = await fetch(withClientBasePath("/api/console/compass-alert-rules"), {
       headers: { ...demoHeaders() },
     });
     if (r.ok) setRules((await r.json()) as Rule[]);
@@ -27,7 +28,9 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
     setBusyId(row.id);
     setMsg(null);
     try {
-      const res = await fetch(`/api/console/compass-alert-rules/${row.id}`, {
+      const res = await fetch(
+        withClientBasePath(`/api/console/compass-alert-rules/${row.id}`),
+        {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -38,7 +41,8 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
           actionLabel: row.actionLabel,
           sortOrder: row.sortOrder,
         }),
-      });
+        },
+      );
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(j.error ?? "保存失败");
@@ -57,7 +61,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
     setBusyId("__new__");
     setMsg(null);
     try {
-      const res = await fetch("/api/console/compass-alert-rules", {
+      const res = await fetch(withClientBasePath("/api/console/compass-alert-rules"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,10 +91,13 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
     setBusyId(id);
     setMsg(null);
     try {
-      const res = await fetch(`/api/console/compass-alert-rules/${id}`, {
+      const res = await fetch(
+        withClientBasePath(`/api/console/compass-alert-rules/${id}`),
+        {
         method: "DELETE",
         headers: { ...demoHeaders() },
-      });
+        },
+      );
       if (!res.ok) throw new Error("删除失败");
       setMsg("已删除");
       dispatchProfitDataChanged();

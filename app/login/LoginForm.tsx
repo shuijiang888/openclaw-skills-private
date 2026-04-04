@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { withClientBasePath } from "@/lib/client-url";
 
 export function LoginForm() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export function LoginForm() {
     setError(null);
     setPending(true);
     try {
-      const r = await fetch("/api/auth/login", {
+      const r = await fetch(withClientBasePath("/api/auth/login"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -36,7 +37,8 @@ export function LoginForm() {
         setError(j.error ?? "登录失败");
         return;
       }
-      router.replace(nextPath.startsWith("/") ? nextPath : "/dashboard");
+      const safeNext = nextPath.startsWith("/") ? nextPath : "/dashboard";
+      router.replace(withClientBasePath(safeNext));
       router.refresh();
     } finally {
       setPending(false);

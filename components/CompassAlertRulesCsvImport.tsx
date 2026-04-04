@@ -6,6 +6,7 @@ import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { parseDemoRole } from "@/lib/approval";
 import { canAccessConsoleRules } from "@/lib/demo-role-modules";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
+import { withClientBasePath } from "@/lib/client-url";
 
 type ApiResponse = {
   created?: number;
@@ -27,14 +28,17 @@ export function CompassAlertRulesCsvImport() {
       setMsg(null);
       try {
         const csvText = await file.text();
-        const res = await fetch("/api/console/import/compass-alert-rules", {
+        const res = await fetch(
+          withClientBasePath("/api/console/import/compass-alert-rules"),
+          {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             ...demoHeaders(),
           },
           body: JSON.stringify({ csvText }),
-        });
+          },
+        );
         const j = (await res.json().catch(() => ({}))) as ApiResponse;
         if (!res.ok) throw new Error(j.error ?? "导入失败");
         setMsg(
@@ -67,7 +71,7 @@ export function CompassAlertRulesCsvImport() {
           批量导入对策矩阵（CSV）
         </h3>
         <a
-          href="/templates/compass-alert-rules-import-template.csv"
+          href={withClientBasePath("/templates/compass-alert-rules-import-template.csv")}
           className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
           download
         >

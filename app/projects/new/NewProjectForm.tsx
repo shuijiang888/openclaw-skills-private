@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { customerTierLabel } from "@/lib/display-labels";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
+import { withClientBasePath } from "@/lib/client-url";
 
 type Customer = { id: string; name: string; tier: string };
 
@@ -27,7 +28,7 @@ export function NewProjectForm() {
   const [period, setPeriod] = useState(1000);
 
   useEffect(() => {
-    void fetch("/api/customers")
+    void fetch(withClientBasePath("/api/customers"))
       .then((r) => r.json())
       .then((rows: Customer[]) => {
         setCustomers(rows);
@@ -39,7 +40,7 @@ export function NewProjectForm() {
   async function ensureCustomer(): Promise<string> {
     if (customerId) return customerId;
     if (!newCustomerName.trim()) throw new Error("请选择或新建客户");
-    const res = await fetch("/api/customers", {
+    const res = await fetch(withClientBasePath("/api/customers"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: newCustomerName.trim(), tier: "NORMAL" }),
@@ -55,7 +56,7 @@ export function NewProjectForm() {
     setLoading(true);
     try {
       const cid = await ensureCustomer();
-      const res = await fetch("/api/projects", {
+      const res = await fetch(withClientBasePath("/api/projects"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

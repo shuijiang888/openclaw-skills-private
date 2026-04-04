@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { demoHeaders } from "@/components/RoleSwitcher";
 import type { DemoRole } from "@/lib/approval";
 import { ASSISTANT_CSRF_HEADER } from "@/lib/agent-csrf-constants";
+import { withClientBasePath } from "@/lib/client-url";
 import { getRolePlaybook } from "@/lib/role-playbook";
 import type { CoeffPatch } from "@/lib/quote-natural-language";
 
@@ -131,7 +132,7 @@ export function ProfitNodeAiCopilot({
   const playbook = useMemo(() => getRolePlaybook(demoRole), [demoRole]);
 
   useEffect(() => {
-    void fetch("/api/assistant/quote-parse")
+    void fetch(withClientBasePath("/api/assistant/quote-parse"))
       .then((r) => r.json())
       .then((j: { csrfToken?: string; csrfRequired?: boolean }) => {
         setAssistantCsrfRequired(Boolean(j.csrfRequired));
@@ -180,7 +181,7 @@ export function ProfitNodeAiCopilot({
       setActiveNode(node.id);
       setLoadingNode(node.id);
       try {
-        const res = await fetch("/api/assistant/quote-parse", {
+        const res = await fetch(withClientBasePath("/api/assistant/quote-parse"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

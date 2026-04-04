@@ -6,6 +6,7 @@ import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import { parseDemoRole } from "@/lib/approval";
 import { canImportConsoleCsv } from "@/lib/demo-role-modules";
+import { withClientBasePath } from "@/lib/client-url";
 
 export function CustomerCsvImport() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function CustomerCsvImport() {
     setMsg(null);
     try {
       const csvText = await file.text();
-      const res = await fetch("/api/console/import/customers", {
+      const res = await fetch(withClientBasePath("/api/console/import/customers"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +82,7 @@ export function CustomerCsvImport() {
           />
         </label>
         <a
-          href="/templates/customers-import-template.csv"
+          href={withClientBasePath("/templates/customers-import-template.csv")}
           className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
           download
         >

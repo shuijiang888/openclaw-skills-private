@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { withClientBasePath } from "@/lib/client-url";
 
 export function CsvExportLink({
   href,
@@ -11,7 +12,7 @@ export function CsvExportLink({
 }) {
   return (
     <a
-      href={href}
+      href={withClientBasePath(href)}
       className={
         className ??
         "rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"

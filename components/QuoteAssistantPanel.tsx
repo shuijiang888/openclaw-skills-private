@@ -12,6 +12,7 @@ import {
   type CoeffPatch,
 } from "@/lib/quote-natural-language";
 import { getRolePlaybook } from "@/lib/role-playbook";
+import { withClientBasePath } from "@/lib/client-url";
 
 type Baseline = {
   coeffCustomer: number;
@@ -136,7 +137,7 @@ export function QuoteAssistantPanel({
 
   const runLlmProbe = useCallback(() => {
     setProbeBusy(true);
-    void fetch("/api/assistant/ollama-status")
+    void fetch(withClientBasePath("/api/assistant/ollama-status"))
       .then(async (r) => (await r.json()) as LlmStatusJson)
       .then(setLlmProbe)
       .catch(() =>
@@ -167,7 +168,7 @@ export function QuoteAssistantPanel({
   }, [llmConfigured, runLlmProbe]);
 
   useEffect(() => {
-    void fetch("/api/assistant/quote-parse")
+    void fetch(withClientBasePath("/api/assistant/quote-parse"))
       .then((r) => r.json())
       .then(syncAssistantConfig)
       .catch(() => {
@@ -199,7 +200,7 @@ export function QuoteAssistantPanel({
     setFallbackReason(null);
     setLlmPasswordError(null);
     try {
-      const res = await fetch("/api/assistant/quote-parse", {
+      const res = await fetch(withClientBasePath("/api/assistant/quote-parse"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -223,7 +224,7 @@ export function QuoteAssistantPanel({
           setLlmPasswordError(errJson.error ?? "密码错误，未启用大模型。");
         }
         if (res.status === 403 && errJson.code === "csrf_failed") {
-          const r2 = await fetch("/api/assistant/quote-parse");
+          const r2 = await fetch(withClientBasePath("/api/assistant/quote-parse"));
           if (r2.ok) {
             const j2 = (await r2.json()) as { csrfToken?: string };
             if (typeof j2.csrfToken === "string") setAssistantCsrf(j2.csrfToken);
@@ -548,7 +549,7 @@ export function QuoteAssistantPanel({
                 审批通过
               </button>
               <a
-                href="/api/export/projects"
+                href={withClientBasePath("/api/export/projects")}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center rounded-lg border border-violet-300 px-2.5 py-1.5 text-[10px] font-medium text-violet-900 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-200 dark:hover:bg-violet-950/50"

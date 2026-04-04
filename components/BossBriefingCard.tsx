@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { BossBriefingDTO } from "@/lib/boss-briefing";
 import { PROFIT_DATA_CHANGED } from "@/lib/profit-data-events";
+import { withClientBasePath } from "@/lib/client-url";
 
 function BriefingInner({ data }: { data: BossBriefingDTO }) {
   const m = data.metrics;
@@ -84,7 +85,7 @@ export function BossBriefingCard({ data: serverData }: { data?: BossBriefingDTO 
   const fetchBriefing = useCallback(() => {
     if (serverData) return;
     setErr(null);
-    void fetch("/api/dashboard/boss-briefing")
+    void fetch(withClientBasePath("/api/dashboard/boss-briefing"))
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json() as Promise<BossBriefingDTO>;

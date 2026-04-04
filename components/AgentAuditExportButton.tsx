@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { demoHeaders } from "@/components/RoleSwitcher";
+import { withClientBasePath } from "@/lib/client-url";
 
 export function AgentAuditExportButton() {
   const [busy, setBusy] = useState(false);
@@ -11,7 +12,7 @@ export function AgentAuditExportButton() {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch("/api/console/agent-audit/export", {
+      const res = await fetch(withClientBasePath("/api/console/agent-audit/export"), {
         headers: { ...demoHeaders() },
       });
       if (res.status === 403) {

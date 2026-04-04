@@ -22,6 +22,7 @@ import {
 } from "@/lib/demo-role-modules";
 import type { CoeffPatch } from "@/lib/quote-natural-language";
 import { parseTimeline } from "@/lib/timeline";
+import { withClientBasePath } from "@/lib/client-url";
 
 type EnrichedQuote = {
   id: string;
@@ -124,7 +125,7 @@ export function Workbench({ projectId }: { projectId: string }) {
   );
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/projects/${projectId}`);
+    const res = await fetch(withClientBasePath(`/api/projects/${projectId}`));
     if (!res.ok) {
       setErr("加载失败");
       return;
@@ -142,7 +143,7 @@ export function Workbench({ projectId }: { projectId: string }) {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch(`/api/quotes/${data.quote.id}`, {
+      const res = await fetch(withClientBasePath(`/api/quotes/${data.quote.id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...demoHeaders() },
         body: JSON.stringify(body),
@@ -164,10 +165,13 @@ export function Workbench({ projectId }: { projectId: string }) {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch(`/api/quotes/${data.quote.id}/submit`, {
+      const res = await fetch(
+        withClientBasePath(`/api/quotes/${data.quote.id}/submit`),
+        {
         method: "POST",
         headers: { ...demoHeaders() },
-      });
+        },
+      );
       if (!res.ok) throw new Error("提交失败");
       setData(await res.json());
       showRequestAuditTip("已提交审批。", res);
@@ -184,10 +188,13 @@ export function Workbench({ projectId }: { projectId: string }) {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch(`/api/quotes/${data.quote.id}/approve`, {
+      const res = await fetch(
+        withClientBasePath(`/api/quotes/${data.quote.id}/approve`),
+        {
         method: "POST",
         headers: { ...demoHeaders() },
-      });
+        },
+      );
       const j = await res.json();
       if (!res.ok) {
         throw new Error(

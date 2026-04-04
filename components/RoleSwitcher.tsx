@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { withClientBasePath } from "@/lib/client-url";
 
 export const DEMO_ROLE_STORAGE_KEY = "profit_demo_role";
 
@@ -55,7 +56,9 @@ export function useDemoRole(): string {
       let cancelled = false;
       (async () => {
         try {
-          const r = await fetch("/api/auth/session", { credentials: "include" });
+          const r = await fetch(withClientBasePath("/api/auth/session"), {
+            credentials: "include",
+          });
           const j = (await r.json()) as { user?: { role?: string } | null };
           if (!cancelled && j.user?.role) setRole(j.user.role);
         } catch {
@@ -101,7 +104,9 @@ export function RoleSwitcher() {
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch("/api/auth/session", { credentials: "include" });
+        const r = await fetch(withClientBasePath("/api/auth/session"), {
+          credentials: "include",
+        });
         const j = (await r.json()) as {
           user?: { email?: string; role?: string } | null;
         };
@@ -132,8 +137,11 @@ export function RoleSwitcher() {
   }, []);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    router.replace("/login");
+    await fetch(withClientBasePath("/api/auth/logout"), {
+      method: "POST",
+      credentials: "include",
+    });
+    router.replace(withClientBasePath("/login"));
     router.refresh();
   }
 

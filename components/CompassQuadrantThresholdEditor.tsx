@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { dispatchProfitDataChanged } from "@/lib/profit-data-events";
 import { demoHeaders } from "@/components/RoleSwitcher";
+import { withClientBasePath } from "@/lib/client-url";
 
 type ThresholdState = {
   marginHighPct: number;
@@ -20,7 +21,7 @@ export function CompassQuadrantThresholdEditor({
   const [busy, setBusy] = useState(false);
 
   const reload = useCallback(async () => {
-    const r = await fetch("/api/console/compass-quadrant-threshold", {
+    const r = await fetch(withClientBasePath("/api/console/compass-quadrant-threshold"), {
       headers: { ...demoHeaders() },
     });
     if (!r.ok) return;
@@ -33,7 +34,7 @@ export function CompassQuadrantThresholdEditor({
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch("/api/console/compass-quadrant-threshold", {
+      const res = await fetch(withClientBasePath("/api/console/compass-quadrant-threshold"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

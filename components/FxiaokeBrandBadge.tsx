@@ -1,5 +1,7 @@
 "use client";
 
+import { withClientBasePath } from "@/lib/client-url";
+
 /**
  * 纷享销客品牌露出：默认读取 public/brands/fxiaoke/logo.svg。
  * 若使用 PNG，将常量改为 "/brands/fxiaoke/logo.png" 并放入对应文件即可。
@@ -35,7 +37,7 @@ export function FxiaokeBrandBadge({
       className={`inline-flex shrink-0 items-center border border-blue-200/90 bg-blue-50/90 shadow-sm transition hover:border-blue-300 hover:bg-blue-100/90 dark:border-blue-900/60 dark:bg-blue-950/50 dark:hover:border-blue-800 dark:hover:bg-blue-950/80 ${pad} ${className}`}
     >
       <img
-        src={FXIAOKE_LOGO_SRC}
+        src={withClientBasePath(FXIAOKE_LOGO_SRC)}
         alt="纷享销客"
         className={`${hClass} w-auto max-w-[min(148px,40vw)] object-contain object-left`}
       />

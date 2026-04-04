@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { PROFIT_DATA_CHANGED } from "@/lib/profit-data-events";
 import { parseDemoRole } from "@/lib/approval";
+import { withClientBasePath } from "@/lib/client-url";
 
 type Row = {
   id: string;
@@ -25,7 +26,9 @@ export function AgentAuditTable() {
       setRows([]);
       return;
     }
-    void fetch("/api/console/agent-audit", { headers: { ...demoHeaders() } })
+    void fetch(withClientBasePath("/api/console/agent-audit"), {
+      headers: { ...demoHeaders() },
+    })
       .then(async (r) => {
         if (!r.ok) {
           const j = (await r.json().catch(() => ({}))) as { error?: string };
