@@ -64,6 +64,12 @@ npm run dev
 - 操作手册概设：`../docs/OPERATION_MANUAL.md`
 - 角色与流程说明：`../docs/DEMO_GUIDE.md`
 - **价值主张 · 落地依赖 · 迭代前瞻（打包）**：`../docs/VALUE_STRATEGY_DEPLOYMENT_ROADMAP.md`（站内全文检索：`/strategy`；部署副本：`content/VALUE_STRATEGY_DEPLOYMENT_ROADMAP.md`，修改上级 docs 后请同步复制）
+- **Owner 单人总控闭环文档包（新增）**：
+  - `content/AGENT_OWNER_PRD_V3.md`
+  - `content/OWNER_AUTONOMOUS_EXECUTION_MODEL.md`
+  - `content/AGENT_STANDALONE_INTEGRATED_ARCHITECTURE.md`
+  - `content/TENCENT_CLOUD_LOW_COST_DEPLOYMENT_RUNBOOK.md`
+  - `content/ROLL_OUT_300_USERS_OPERATION_PLAYBOOK.md`
 
 ## 本机大模型（Ollama · 优先 qwen3.5:35b）
 

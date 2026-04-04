@@ -145,6 +145,10 @@
 | 第二章 落地依赖 | 管理后台 **落地准备** `/console/readiness`（自检清单） |
 | 第三章 迭代前瞻 | **产品路线图** `/roadmap` |
 | §3.5 智能体与智慧大脑 | 设计附件 **`docs/AGENT_AND_INTELLIGENCE_ROADMAP.md`**（站内可同步至 `content/` 后从 `/strategy` 检索） |
+| Owner 端到端执行包 | `content/AGENT_OWNER_PRD_V3.md`、`content/OWNER_AUTONOMOUS_EXECUTION_MODEL.md` |
+| 双模式架构与集成 | `content/AGENT_STANDALONE_INTEGRATED_ARCHITECTURE.md` |
+| 低成本云部署手册 | `content/TENCENT_CLOUD_LOW_COST_DEPLOYMENT_RUNBOOK.md` |
+| 300 人上线作战手册 | `content/ROLL_OUT_300_USERS_OPERATION_PLAYBOOK.md` |
 | 第一章 KPI 感知 | 工作台 **价值指标**（低毛利笔数、可自动通道占比等演示统计） |
 | **全文（可搜索 HTML）** | **战略全文** `/strategy`（Markdown 渲染 + 按章节过滤检索） |
 
