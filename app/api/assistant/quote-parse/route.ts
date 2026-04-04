@@ -56,7 +56,7 @@ export type QuoteParseResponse = {
 };
 
 /** 供前端展示是否已配置本机 Ollama；生产环境可下发 CSRF token */
-export async function GET() {
+export async function GET(req: Request) {
   const cfg = getOllamaConfig();
   const mm = getMiniMaxConfig();
   const csrfOn = isAssistantCsrfEnabled();
@@ -83,9 +83,11 @@ export async function GET() {
     const token = createAssistantCsrfToken();
     payload.csrfToken = token;
     const res = NextResponse.json(payload);
+    const forwardedProto = (req.headers.get("x-forwarded-proto") ?? "").toLowerCase();
+    const isHttps = forwardedProto === "https" || req.url.startsWith("https://");
     res.cookies.set(ASSISTANT_CSRF_COOKIE, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 4,
