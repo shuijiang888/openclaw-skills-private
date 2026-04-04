@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>智探007 Online Demo</title>
+  <style>
+    :root {
+      --bg: #081226;
+      --panel: #111c33;
+      --panel2: #162744;
+      --line: #2a416a;
+      --text: #e8f0ff;
+      --muted: #9fb4d6;
+      --brand: #22d3ee;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #071022, #0b1730 55%, #0d1934);
+    }
+    a { color: inherit; text-decoration: none; }
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 18, 38, 0.9);
+      backdrop-filter: blur(8px);
+    }
+    .wrap { width: min(1200px, 96vw); margin: 0 auto; padding: 14px; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .brand {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--brand);
+      margin-right: 6px;
+    }
+    .nav a {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 11px;
+      color: var(--muted);
+    }
+    .nav a:hover { color: var(--text); border-color: #44629b; }
+    .spacer { flex: 1; }
+    .hint {
+      border: 1px dashed #3a5a92;
+      border-radius: 12px;
+      background: rgba(30, 58, 138, 0.16);
+      padding: 10px 12px;
+      color: #d8e8ff;
+      font-size: 13px;
+    }
+    select, input, textarea {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px;
+      background: #0f182d;
+      color: #d9e7ff;
+    }
+    .grid { display: grid; gap: 12px; }
+    .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      padding: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    .kpi {
+      margin-top: 6px;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .muted { color: var(--muted); }
+    .title { margin: 0 0 10px 0; font-size: 19px; }
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #101b33;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 2px 8px;
+      color: var(--muted);
+    }
+    .ok { color: #bbf7d0; border-color: #166534; background: rgba(22, 101, 52, 0.2); }
+    .warn { color: #fde68a; border-color: #92400e; background: rgba(146, 64, 14, 0.2); }
+    .danger { color: #fecaca; border-color: #991b1b; background: rgba(153, 27, 27, 0.2); }
+    .btn {
+      border: 1px solid #3a5f9d;
+      border-radius: 10px;
+      padding: 8px 12px;
+      background: #1c325d;
+      color: #eaf2ff;
+      cursor: pointer;
+    }
+    .btn:hover { background: #254175; }
+    .btn.ok { background: #145233; border-color: #1f6f43; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .section { padding-top: 6px; }
+    .small { font-size: 12px; }
+    .feed {
+      max-height: 310px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .progress {
+      margin-top: 6px;
+      height: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #0f172a;
+      overflow: hidden;
+    }
+    .progress > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #22d3ee, #3b82f6);
+    }
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      border-top: 1px solid var(--line);
+      background: rgba(8, 18, 38, 0.95);
+      backdrop-filter: blur(8px);
+      justify-content: space-around;
+      padding: 8px;
+    }
+    .mobile-nav a { font-size: 12px; color: var(--muted); }
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 66px;
+      z-index: 50;
+      border: 1px solid #395791;
+      border-radius: 10px;
+      background: #0f1830;
+      color: #dbeafe;
+      padding: 9px 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 0.2s;
+    }
+    .toast.show { opacity: 1; transform: none; }
+    @media (max-width: 1020px) { .g4, .g3, .g2 { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) {
+      .nav a { display: none; }
+      .mobile-nav { display: flex; }
+      body { padding-bottom: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap row nav">
+      <div class="brand">智探007</div>
+      <a href="#overview">总览</a>
+      <a href="#today">今日行动</a>
+      <a href="#tasks">任务悬赏</a>
+      <a href="#honor">荣誉积分</a>
+      <a href="#admin">管理驾驶舱</a>
+      <a href="#arch">架构与上线</a>
+      <div class="spacer"></div>
+      <span class="small muted">角色</span>
+      <select id="role">
+        <option value="sales">sales</option>
+        <option value="manager">manager</option>
+        <option value="ops">ops</option>
+        <option value="admin">admin</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="overview" class="section">
+      <div class="hint">这是系统化在线验收入口：单页面完整闭环，不再是散页拼接。支持手机、Pad、桌面响应式访问。</div>
+      <div class="grid g4" style="margin-top: 12px;">
+        <div class="card"><div class="muted small">North Star</div><div class="kpi">+18.4%</div><div class="small muted">Opportunity Lift</div></div>
+        <div class="card"><div class="muted small">48h 执行率</div><div class="kpi">42%</div><div class="small muted">Action Execution</div></div>
+        <div class="card"><div class="muted small">反馈完成率</div><div class="kpi">63%</div><div class="small muted">Feedback Completion</div></div>
+        <div class="card"><div class="muted small">当前设备</div><div id="device" class="kpi">desktop</div><div class="small muted">auto detected</div></div>
+      </div>
+    </section>
+
+    <section id="today" class="section">
+      <div class="grid g3">
+        <div class="card"><div class="muted small">我的积分</div><div id="score" class="kpi">120</div></div>
+        <div class="card"><div class="muted small">今日完成</div><div id="done" class="kpi">0</div></div>
+        <div class="card"><div class="muted small">当前发布波次</div><div class="kpi">Wave 1</div></div>
+      </div>
+      <div class="card" style="margin-top: 12px;">
+        <h3 class="title">今日行动卡（Top 3）</h3>
+        <div class="item">
+          <div class="row"><b>P0 · CIO 变动（Alpha Medical）</b><span class="badge danger">Urgent</span></div>
+          <div class="small muted">依据：高可信来源 + 窗口期 7 天</div>
+          <div class="small">建议：24小时内触达关系链，使用 A3 话术模板</div>
+          <p><button class="btn ok done-btn" data-p="20">完成该动作 +20</button></p>
+        </div>
+        <div class="item">
+          <div class="row"><b>P1 · ERP 招聘激增（SmartFab）</b><span class="badge warn">Follow-up</span></div>
+          <div class="small muted">依据：近7天新增12个实施岗位</div>
+          <div class="small">建议：下次拜访增加需求探询问题集</div>
+          <p><button class="btn ok done-btn" data-p="15">完成该动作 +15</button></p>
+        </div>
+        <div class="item">
+          <div class="row"><b>P1 · 区域补贴政策更新</b><span class="badge ok">Opportunity</span></div>
+          <div class="small muted">依据：8个目标客户具备政策匹配条件</div>
+          <div class="small">建议：发送政策简报并安排 2 次跟进电话</div>
+          <p><button class="btn ok done-btn" data-p="10">完成该动作 +10</button></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasks" class="section">
+      <div class="grid g2">
+        <div class="card">
+          <h3 class="title">情报悬赏任务池</h3>
+          <div class="item">
+            <div class="row"><b>收集Q2医院CIO变动</b><span class="badge danger">+80</span></div>
+            <div class="small muted">48h 截止，需来源证据截图</div>
+            <p><button class="btn claim-btn">认领</button></p>
+          </div>
+          <div class="item">
+            <div class="row"><b>竞品折扣活动扫描</b><span class="badge warn">+50</span></div>
+            <div class="small muted">3城覆盖，需提供影响账户分析</div>
+            <p><button class="btn claim-btn">认领</button></p>
+          </div>
+          <div class="item">
+            <div class="row"><b>复用性赢单案例沉淀</b><span class="badge ok">+35</span></div>
+            <div class="small muted">按结构化模板提交</div>
+            <p><button class="btn claim-btn">认领</button></p>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="title">提交情报（多模态入口模拟）</h3>
+          <form id="submissionForm">
+            <p><input name="title" placeholder="标题（必填）" style="width:100%"></p>
+            <p><input name="region" placeholder="区域（如：深圳）" style="width:100%"></p>
+            <p>
+              <select name="format" style="width:100%">
+                <option value="text">text</option>
+                <option value="voice">voice</option>
+                <option value="image">image</option>
+                <option value="video">video</option>
+                <option value="link">link</option>
+              </select>
+            </p>
+            <p><textarea name="content" rows="4" placeholder="内容（必填）" style="width:100%"></textarea></p>
+            <p><button class="btn ok" type="submit">提交情报 +8</button></p>
+          </form>
+          <hr style="border:none;border-top:1px solid var(--line);margin:12px 0">
+          <div class="row"><b>最近提交</b><span id="subCount" class="badge">0</span></div>
+          <div id="subList" class="feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="honor" class="section">
+      <div class="grid g2">
+        <div class="card">
+          <h3 class="title">健康PK榜单（专业权威风格）</h3>
+          <div class="item">1) Li — Quality 92 / Co-op 88 / Progress +19%</div>
+          <div class="item">2) Wang — Quality 89 / Co-op 94 / Progress +14%</div>
+          <div class="item">3) Zhao — Quality 87 / Co-op 81 / Progress +22%</div>
+          <div class="small muted">说明：权重优先质量与协作，不鼓励纯刷量。</div>
+        </div>
+        <div class="card">
+          <h3 class="title">积分兑现（线上申请 + 线下核销）</h3>
+          <p class="small muted">核销负责人：江水（18501369099）</p>
+          <div class="row">
+            <select id="redeemItem">
+              <option value="Training Session|100">Training Session | 100</option>
+              <option value="1:1 Coaching|300">1:1 Coaching | 300</option>
+              <option value="Honor Pack|500">Honor Pack | 500</option>
+            </select>
+            <button id="redeemBtn" class="btn">申请兑换</button>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--line);margin:12px 0">
+          <div><b>兑换记录</b></div>
+          <div id="redeemList" class="feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="admin" class="section">
+      <div class="grid g2">
+        <div class="card">
+          <h3 class="title">管理驾驶舱（Gate视角）</h3>
+          <div class="small muted">Wave1 达成进度</div>
+          <div class="progress"><span style="width: 78%;"></span></div>
+          <div class="small muted" style="margin-top:10px;">Wave2 准入进度</div>
+          <div class="progress"><span style="width: 62%;"></span></div>
+          <div class="small muted" style="margin-top:10px;">Wave3 准入进度</div>
+          <div class="progress"><span style="width: 31%;"></span></div>
+        </div>
+        <div class="card">
+          <h3 class="title">风险雷达</h3>
+          <div class="item">信号质量波动 <span class="badge warn">Medium</span></div>
+          <div class="item role-mgr role-ops role-admin">审核队列压力 <span class="badge warn">Medium</span></div>
+          <div class="item role-ops role-admin">核销对账进度 <span class="badge ok">On track</span></div>
+          <div class="item role-admin">跨租户访问告警 <span class="badge ok">None</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="arch" class="section">
+      <div class="card">
+        <h3 class="title">系统架构与上线路径</h3>
+        <div class="item">Runtime: Ingestion → Scoring → Action → Task → Reward → Learning</div>
+        <div class="item">产品策略：Standalone first, then Fxiaoke OpenAPI integration</div>
+        <div class="item">云端：Tencent Cloud CVM + Nginx + 备案通过后启用正式域名/HTTPS</div>
+        <div class="footer">This online package is optimized for acceptance review on IP/mobile/pad.</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav">
+    <a href="#overview">总览</a>
+    <a href="#today">行动</a>
+    <a href="#tasks">任务</a>
+    <a href="#honor">荣誉</a>
+    <a href="#admin">管理</a>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const KEY = "zt007_online_demo_v1";
+    const state = Object.assign(
+      { score: 120, done: 0, subs: [], redemptions: [], role: "sales" },
+      JSON.parse(localStorage.getItem(KEY) || "{}")
+    );
+    const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+    const scoreEl = document.getElementById("score");
+    const doneEl = document.getElementById("done");
+    const subCountEl = document.getElementById("subCount");
+    const subListEl = document.getElementById("subList");
+    const redeemListEl = document.getElementById("redeemList");
+    const roleEl = document.getElementById("role");
+    const deviceEl = document.getElementById("device");
+    const toastEl = document.getElementById("toast");
+
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 1700);
+    }
+
+    function detectDevice() {
+      const w = window.innerWidth;
+      if (w < 760) return "mobile";
+      if (w < 1020) return "pad";
+      return "desktop";
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, (m) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[m]));
+    }
+
+    function syncRole() {
+      const r = state.role;
+      roleEl.value = r;
+      document.querySelectorAll(".role-mgr,.role-ops,.role-admin").forEach((el) => {
+        el.style.display = "none";
+      });
+      if (r === "manager" || r === "ops" || r === "admin") {
+        document.querySelectorAll(".role-mgr").forEach((el) => (el.style.display = "block"));
+      }
+      if (r === "ops" || r === "admin") {
+        document.querySelectorAll(".role-ops").forEach((el) => (el.style.display = "block"));
+      }
+      if (r === "admin") {
+        document.querySelectorAll(".role-admin").forEach((el) => (el.style.display = "block"));
+      }
+    }
+
+    function sync() {
+      scoreEl.textContent = state.score;
+      doneEl.textContent = state.done;
+      deviceEl.textContent = detectDevice();
+      subCountEl.textContent = state.subs.length;
+      subListEl.innerHTML = state.subs.length
+        ? state.subs.slice(-12).reverse().map((x) =>
+            `<div class="item"><b>${esc(x.title)}</b><div class="small muted">${esc(x.region || "region-na")} · ${esc(x.format)} · ${new Date(x.ts).toLocaleString()}</div></div>`
+          ).join("")
+        : '<div class="small muted">暂无提交记录</div>';
+      redeemListEl.innerHTML = state.redemptions.length
+        ? state.redemptions.slice(-12).reverse().map((x) =>
+            `<div class="item"><b>${esc(x.item)}</b><div class="small muted">code: ${esc(x.code)} · cost: ${x.cost}</div></div>`
+          ).join("")
+        : '<div class="small muted">暂无兑换记录</div>';
+      syncRole();
+      save();
+    }
+
+    roleEl.addEventListener("change", () => {
+      state.role = roleEl.value;
+      sync();
+      toast("Role switched to " + state.role);
+    });
+
+    document.querySelectorAll(".done-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.done === "1") return;
+        btn.dataset.done = "1";
+        btn.disabled = true;
+        btn.textContent = "Done";
+        const p = Number(btn.getAttribute("data-p") || "10");
+        state.done += 1;
+        state.score += p;
+        sync();
+        toast("Action completed +" + p);
+      });
+    });
+
+    document.querySelectorAll(".claim-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.done === "1") return;
+        btn.dataset.done = "1";
+        btn.disabled = true;
+        btn.textContent = "Claimed";
+        toast("Task claimed");
+      });
+    });
+
+    document.getElementById("submissionForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const title = String(fd.get("title") || "").trim();
+      const region = String(fd.get("region") || "").trim();
+      const format = String(fd.get("format") || "text");
+      const content = String(fd.get("content") || "").trim();
+      if (!title || !content) {
+        toast("请填写标题和内容");
+        return;
+      }
+      state.subs.push({ title, region, format, content, ts: Date.now() });
+      state.score += 8;
+      e.target.reset();
+      sync();
+      toast("Submission added +8");
+    });
+
+    document.getElementById("redeemBtn").addEventListener("click", () => {
+      const [item, costRaw] = String(document.getElementById("redeemItem").value).split("|");
+      const cost = Number(costRaw || "100");
+      if (state.score < cost) {
+        toast("积分不足");
+        return;
+      }
+      state.score -= cost;
+      const code = "RDM-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+      state.redemptions.push({ item, cost, code, ts: Date.now() });
+      sync();
+      toast("Redeem requested: " + code);
+    });
+
+    window.addEventListener("resize", sync);
+    sync();
+  </script>
+</body>
+</html>

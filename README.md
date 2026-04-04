@@ -71,6 +71,10 @@ npm run dev
   - `content/TENCENT_CLOUD_LOW_COST_DEPLOYMENT_RUNBOOK.md`
   - `content/ROLL_OUT_300_USERS_OPERATION_PLAYBOOK.md`
   - 当前 Owner 决策基线：系统名 **智探007**；上线模式 **先 Standalone，后续对接纷享销客 OpenAPI**；预算档 **低**；荣誉风格 **专业权威**
+- **智探007 在线演示发布包（IP 直连）**：
+  - `deploy/zt007-cloud-demo/README.md`
+  - `deploy/zt007-cloud-demo/publish-to-server.sh`（本地执行，自动打包上传）
+  - `deploy/zt007-cloud-demo/apply-on-server.sh`（服务器执行，自动发布到 Nginx）
 
 ## 本机大模型（Ollama · 优先 qwen3.5:35b）
 
