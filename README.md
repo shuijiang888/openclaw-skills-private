@@ -128,7 +128,7 @@ curl -s http://127.0.0.1:3000/api/health
 
 ### Docker 部署（生产发布）
 
-仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。腾讯云 CVM 一键脚本与**单 80 端口统筹**（`/` 盈利 + `/intel/` 情报）见 **`docs/TENCENT_CVM_DEPLOY.md`**、`deploy/tencent-cvm-profit-docker.sh`、`deploy/nginx-unified-portal.conf`。
+仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。腾讯云 CVM：**极简三步**见 **`docs/DEPLOY_SIMPLEST.md`**（`sudo bash deploy/one-click-setup.sh '邮箱' '密码'`）；详细版见 **`docs/DEPLOY_BEGINNER_STEP_BY_STEP.md`**；技术摘要 **`docs/TENCENT_CVM_DEPLOY.md`**。
 
 #### 方式 A：直接用 Docker 跑（SQLite 挂载）
 ```bash
