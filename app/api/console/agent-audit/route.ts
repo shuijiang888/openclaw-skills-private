@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  if (demoRoleFromRequest(req) !== "ADMIN") {
+  if (demoRoleFromRequest(req) !== "VP") {
     return NextResponse.json({ error: ADMIN_API_FORBIDDEN }, { status: 403 });
   }
 

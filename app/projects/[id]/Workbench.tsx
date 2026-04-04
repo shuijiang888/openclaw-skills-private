@@ -112,7 +112,7 @@ export function Workbench({ projectId }: { projectId: string }) {
             </>
           ) : (
             <span className="text-emerald-900/80 dark:text-emerald-100/80">
-              审计留痕可在切换为「管理员」后从「智能体审计」检索。
+              审计留痕可在切换为「VP」后从「智能体审计」检索。
             </span>
           )}
         </span>,
@@ -167,12 +167,12 @@ export function Workbench({ projectId }: { projectId: string }) {
         method: "POST",
         headers: { ...demoHeaders() },
       });
-      if (!res.ok) throw new Error("提交失败");
+      if (!res.ok) throw new Error("提交 Deal Desk 失败");
       setData(await res.json());
-      showRequestAuditTip("已提交审批。", res);
+      showRequestAuditTip("已提交 Deal Desk。", res);
       dispatchProfitDataChanged();
     } catch {
-      setErr("提交审批失败");
+      setErr("提交 Deal Desk 失败");
     } finally {
       setBusy(false);
     }
@@ -192,14 +192,14 @@ export function Workbench({ projectId }: { projectId: string }) {
         throw new Error(
           typeof j.detail === "string"
             ? j.detail
-            : (j.error as string) ?? "审批失败",
+            : (j.error as string) ?? "Deal Desk 批复失败",
         );
       }
       setData(j);
-      showRequestAuditTip("审批已通过。", res);
+      showRequestAuditTip("Deal Desk 批复已通过。", res);
       dispatchProfitDataChanged();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "审批失败");
+      setErr(e instanceof Error ? e.message : "Deal Desk 批复失败");
     } finally {
       setBusy(false);
     }
@@ -229,8 +229,8 @@ export function Workbench({ projectId }: { projectId: string }) {
     setData({ ...data, quote: next });
     const labelMap: Record<string, string> = {
       coeffCustomer: "客户",
-      coeffIndustry: "行业",
-      coeffRegion: "区域",
+      coeffIndustry: "赢单概率",
+      coeffRegion: "关系推进",
       coeffProduct: "产品",
       coeffLead: "交期",
       coeffQty: "批量",
@@ -248,7 +248,7 @@ export function Workbench({ projectId }: { projectId: string }) {
       refreshBenchmarks: true,
       timelineNote: {
         kind: "assistant",
-        title: "智能助手已调整报价系数",
+        title: "销售教练已调整报价系数",
         detail,
       },
     });
@@ -272,7 +272,7 @@ export function Workbench({ projectId }: { projectId: string }) {
       discountPercentDisplay: qv.computed.discountPercentDisplay,
       winRate: qv.computed.winRate,
       shuntChannel:
-        qv.computed.shunt.channel === "AUTO" ? "自动报价" : "人机协同",
+        qv.computed.shunt.channel === "AUTO" ? "自动报价" : "Deal Desk 协同",
       shuntReasons: qv.computed.shunt.reasons,
       requiredApprovalLabel: qv.computed.requiredApproval.label,
       coeffEntries: (
@@ -367,7 +367,7 @@ export function Workbench({ projectId }: { projectId: string }) {
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-zinc-500">标品 / 小额</dt>
+              <dt className="text-zinc-500">标准订阅包 / 小 ACV</dt>
               <dd className="text-right">
                 {data.isStandard ? "是" : "否"} /{" "}
                 {data.isSmallOrder ? "是" : "否"}
@@ -484,7 +484,7 @@ export function Workbench({ projectId }: { projectId: string }) {
             </div>
           </div>
           <div className="text-sm text-zinc-600 dark:text-zinc-400">
-            建议毛利率{" "}
+            建议客户价值{" "}
             <span className="font-semibold text-zinc-900 dark:text-zinc-50">
               {q.computed.grossMarginAtSuggest}%
             </span>
@@ -627,11 +627,11 @@ export function Workbench({ projectId }: { projectId: string }) {
             <span className="font-medium text-zinc-900 dark:text-zinc-50">
               {q.computed.discountPercentDisplay}%
             </span>
-            ，还价后毛利率{" "}
+            ，还价后客户价值{" "}
             <span className="font-medium">{q.computed.grossMarginAtOffer}%</span>
           </p>
           <p className="mt-2 text-sm">
-            建议审批链：{" "}
+            建议 Deal Desk 链：{" "}
             <span className="font-medium">
               {q.computed.requiredApproval.label}
             </span>
@@ -651,7 +651,7 @@ export function Workbench({ projectId }: { projectId: string }) {
             >
               {q.computed.shunt.channel === "AUTO"
                 ? "自动报价"
-                : "人机协同"}
+                : "Deal Desk 协同"}
             </span>
           </p>
           <ul className="mt-2 list-inside list-disc text-xs text-zinc-600 dark:text-zinc-400">
@@ -672,7 +672,7 @@ export function Workbench({ projectId }: { projectId: string }) {
           </section>
 
           <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium">状态时间线</h2>
+        <h2 className="text-sm font-medium">Deal Desk 时间线</h2>
         <ol className="mt-4 space-y-3 border-l border-zinc-200 pl-4 dark:border-zinc-700">
           {timeline.map((ev) => (
             <li key={ev.at + ev.title} className="relative text-sm">
@@ -687,11 +687,11 @@ export function Workbench({ projectId }: { projectId: string }) {
         </ol>
         {q.pendingRole ? (
           <p className="mt-4 text-sm text-amber-700 dark:text-amber-400">
-            待审批角色：
+            待 Deal Desk 角色：
             <strong>{demoRoleLabelForUi(q.pendingRole)}</strong>
             {canActApprove
-              ? " · 当前身份可点「审批通过」"
-              : " · 请在右上角将「试点角色」切换为不低于该档后再审批（登录模式请换具备权限的账号）"}
+              ? " · 当前身份可点「Deal Desk 批复通过」"
+              : " · 请在右上角将「试点角色」切换为不低于该档后再批复（登录模式请换具备权限的账号）"}
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-3">
@@ -701,7 +701,7 @@ export function Workbench({ projectId }: { projectId: string }) {
             onClick={() => void submitApproval()}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
           >
-            提交审批
+            提交 Deal Desk
           </button>
           <button
             type="button"
@@ -709,7 +709,7 @@ export function Workbench({ projectId }: { projectId: string }) {
             onClick={() => void approve()}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
           >
-            审批通过
+            Deal Desk 批复通过
           </button>
           <button
             type="button"

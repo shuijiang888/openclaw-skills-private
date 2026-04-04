@@ -1,16 +1,16 @@
 export type DemoRole =
+  | "SDR"
+  | "AE"
+  | "PRE_SALES"
   | "SALES_MANAGER"
-  | "SALES_DIRECTOR"
-  | "SALES_VP"
-  | "GM"
-  | "ADMIN";
+  | "VP";
 
 const ROLE_ORDER: Record<DemoRole, number> = {
-  SALES_MANAGER: 1,
-  SALES_DIRECTOR: 2,
-  SALES_VP: 3,
-  GM: 4,
-  ADMIN: 4,
+  SDR: 1,
+  AE: 2,
+  PRE_SALES: 2,
+  SALES_MANAGER: 3,
+  VP: 4,
 };
 
 export function requiredRoleForDiscount(discountRatio: number): {
@@ -18,11 +18,11 @@ export function requiredRoleForDiscount(discountRatio: number): {
   label: string;
 } {
   const d = discountRatio * 100;
-  if (d <= 5) return { role: "SALES_MANAGER", label: "销售经理（≤5% 折扣）" };
-  if (d <= 15)
-    return { role: "SALES_DIRECTOR", label: "销售总监（5%–15%）" };
-  if (d <= 20) return { role: "SALES_VP", label: "销售副总裁（15%–20%）" };
-  return { role: "GM", label: "总经理（>20% 或特批）" };
+  if (d <= 5) return { role: "SDR", label: "Deal Desk：SDR（≤5% 折扣）" };
+  if (d <= 12) return { role: "AE", label: "Deal Desk：AE（>5%–12%）" };
+  if (d <= 20)
+    return { role: "SALES_MANAGER", label: "Deal Desk：销售经理（>12%–20%）" };
+  return { role: "VP", label: "Deal Desk：VP（>20% 或特批）" };
 }
 
 export function canApprove(
@@ -34,16 +34,20 @@ export function canApprove(
 
 /**
  * 将请求头中的角色解析为枚举（演示模式：x-demo-role；登录模式：x-profit-session-role）。
- * 未知或伪造值回落到「销售总监」，与前台 RoleSwitcher 默认一致，避免误放行为 ADMIN。
+ * 未知或伪造值回落到「AE」，与前台 RoleSwitcher 默认一致。
  */
 export function parseDemoRole(
   raw: string | null | undefined,
 ): DemoRole {
   const r = (raw ?? "").trim().toUpperCase();
+  if (r === "SDR") return "SDR";
+  if (r === "AE") return "AE";
+  if (r === "PRE_SALES" || r === "SE" || r === "PRESALES") return "PRE_SALES";
   if (r === "SALES_MANAGER" || r === "MANAGER") return "SALES_MANAGER";
-  if (r === "SALES_DIRECTOR" || r === "DIRECTOR") return "SALES_DIRECTOR";
-  if (r === "SALES_VP" || r === "VP") return "SALES_VP";
-  if (r === "GM" || r === "GENERAL_MANAGER") return "GM";
-  if (r === "ADMIN" || r === "SYSTEM") return "ADMIN";
-  return "SALES_DIRECTOR";
+  if (r === "VP" || r === "SALES_VP") return "VP";
+  // Backward-compatible aliases for legacy demo data.
+  if (r === "SALES_DIRECTOR" || r === "DIRECTOR") return "AE";
+  if (r === "GM" || r === "GENERAL_MANAGER" || r === "ADMIN" || r === "SYSTEM")
+    return "VP";
+  return "AE";
 }

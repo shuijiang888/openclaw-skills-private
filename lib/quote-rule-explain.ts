@@ -7,22 +7,22 @@ import type { ShuntResult } from "@/lib/shunt";
 
 const COEFF_LABELS: Record<string, string> = {
   coeffCustomer: "客户",
-  coeffIndustry: "行业",
-  coeffRegion: "区域",
+  coeffIndustry: "赢单概率",
+  coeffRegion: "关系推进",
   coeffProduct: "产品",
-  coeffLead: "交期",
+  coeffLead: "周期",
   coeffQty: "批量",
 };
 
-/** B1：审批档规则说明（与 `requiredRoleForDiscount` / 后台展示一致） */
+/** B1：Deal Desk 分层规则说明（与 `requiredRoleForDiscount` / 后台展示一致） */
 export function explainApprovalBands(
   discountPercentDisplay: number,
   matchedLabel: string,
 ): string[] {
   const d = discountPercentDisplay;
   const lines: string[] = [
-    `当前展示折扣（相对建议价）约 ${d}%。系统按区间匹配审批责任角色（与「系数与规则」页配置口径一致）。`,
-    `本单建议审批链：${matchedLabel}。`,
+    `当前展示折扣（相对建议价）约 ${d}%。系统按区间匹配 Deal Desk 责任角色（与「系数与规则」页配置口径一致）。`,
+    `本单建议 Deal Desk 链路：${matchedLabel}。`,
     "区间对照：",
   ];
   for (const b of APPROVAL_DISCOUNT_BANDS) {
@@ -36,7 +36,7 @@ export function explainShuntRule(shunt: ShuntResult): string[] {
   const head =
     shunt.channel === "AUTO"
       ? "当前判定为「自动报价通道」（系统规则，仍保留审计与时间线）。"
-      : "当前判定为「人机协同通道」（需具备权限的同事复核后再推进）。";
+      : "当前判定为「Deal Desk 协同通道」（需具备权限的同事复核后再推进）。";
   const body = ["本单命中条件：", ...shunt.reasons.map((r) => `· ${r}`)];
   const tail = [
     "自动通道的**同时满足**条件摘要（与 `lib/shunt.ts` 一致）：",
@@ -85,5 +85,5 @@ export function explainCoefficientsVsDefaults(coeffs: {
 }
 
 export function explainWinRateRule(winRate: number): string {
-  return `综合胜率（规则加权）为 ${winRate}%，由价格竞争力、客情、交付、技术匹配、账期等滑杆共同驱动；与分流、审批链相互独立，仅作商机判断参考。`;
+  return `综合赢单概率（规则加权）为 ${winRate}%，由价格竞争力、客情、交付、技术匹配、账期等滑杆共同驱动；与分流、Deal Desk 链相互独立，仅作商机判断参考。`;
 }

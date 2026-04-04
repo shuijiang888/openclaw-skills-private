@@ -8,12 +8,12 @@ const ARENA_PROTOTYPE =
   "https://019d4e3d-06a8-7e3f-be0c-16fe2b7d6cdf.arena.site/";
 
 const TRUST_SEGMENTS = [
-  "通信设备",
-  "汽车电子",
-  "医疗器械",
-  "新能源装备",
-  "半导体封测",
-  "工业自动化",
+  "ToB 软件",
+  "企业服务",
+  "制造业出海",
+  "连锁零售",
+  "医疗健康",
+  "新能源产业",
 ];
 
 export default async function LandingPage() {
@@ -31,25 +31,25 @@ export default async function LandingPage() {
         <div className="pointer-events-none absolute -right-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-amber-500/10 blur-3xl" />
         <div className="relative z-10 mx-auto max-w-3xl text-center sm:text-left lg:mx-0 lg:max-w-2xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold tracking-wide text-amber-300/95">
-            企业级 · 盈利决策中枢
+            纷享销客生态 · CRM 增利插件
           </div>
           <p className="text-xs font-medium tracking-wide text-slate-400">
-            智能报价 · 分层审批 · 盈利罗盘
+            订阅报价 · Deal Desk · 客户价值罗盘
           </p>
           <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15]">
-            把每一次报价，
-            <span className="text-amber-400">变成可审计的利润决策</span>
+            把每一次 CRM 商机，
+            <span className="text-amber-400">变成可审计的增利决策</span>
           </h1>
           <p className="mt-5 text-base leading-relaxed text-slate-300 sm:text-lg">
-            统一成本口径、系数规则与分层审批，连接一线报价与老板视角的盈利结构。
-            适用于<strong className="font-semibold text-white">先进制造与科技型企业</strong>
-            的定价治理、毛利守护与经营复盘。
+            统一订阅口径、系数规则与 Deal Desk 流程，连接 SDR/AE/售前的一线推进与管理层视角的增长结构。
+            适用于<strong className="font-semibold text-white">纷享销客 CRM 场景</strong>
+            的商机治理、赢单效率与经营复盘。
           </p>
           <ul className="mt-6 grid gap-3 text-left text-sm text-slate-300 sm:grid-cols-3">
             {[
-              { t: "缩短报价响应", s: "标准单可配置自动/快速通道" },
-              { t: "守住毛利底线", s: "低毛利与超额折扣自动升级审批" },
-              { t: "看清利润结构", s: "罗盘象限 + 风险对策矩阵" },
+              { t: "缩短报价响应", s: "标准订阅单可走自动通道" },
+              { t: "守住折扣纪律", s: "超折扣自动进入 Deal Desk" },
+              { t: "看清增长结构", s: "客户价值 × 赢单概率象限" },
             ].map((x) => (
               <li
                 key={x.t}
@@ -124,7 +124,7 @@ export default async function LandingPage() {
             实时经营脉搏
           </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            以下为产品试点版当前库内数据，用于呈现经营脉搏与指标叙事；可逐步替换为真实商机管道。
+            以下为 CRM 插件试点版当前库内数据，用于呈现经营脉搏与指标叙事；可逐步替换为真实商机管道。
           </p>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -132,22 +132,22 @@ export default async function LandingPage() {
             {
               label: "在跑商机",
               value: projectCount,
-              hint: "含草稿 / 测算 / 审批 / 成交各阶段",
+              hint: "含草稿 / 测算 / Deal Desk / 成交各阶段",
             },
             {
               label: "客户主数据",
               value: customerCount,
-              hint: "评级驱动分流与话术策略",
+              hint: "客户分层驱动分流与话术策略",
             },
             {
-              label: "待审批",
+              label: "待 Deal Desk",
               value: pending,
-              hint: "折扣与特价按职级自动路由",
+              hint: "折扣与特价按角色自动路由",
             },
             {
               label: "已核准",
               value: approved,
-              hint: "成交价与毛利留痕可复盘",
+              hint: "成交价与赢单留痕可复盘",
             },
           ].map((m) => (
             <div
@@ -176,7 +176,7 @@ export default async function LandingPage() {
               核心能力矩阵
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              从「算得清」到「批得快」再到「看得见」——对齐销售、管理与老板三类结果。
+              从「算得清」到「批得快」再到「看得见」——对齐 SDR/AE/售前、管理层与 VP 三类结果。
             </p>
           </div>
           <Link
@@ -213,30 +213,30 @@ export default async function LandingPage() {
           按角色开箱即用
         </h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          演示模式下可在导航栏切换「试点角色」，体验分层审批与队列；登录模式下角色由账号决定。
+          演示模式下可在导航栏切换「试点角色」，体验 Deal Desk 分层与队列；登录模式下角色由账号决定。
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
-              title: "销售 / 报价",
-              desc: "建项目、录成本、看系数与对标，一键生成建议价。",
+              title: "SDR / AE",
+              desc: "建商机、录订阅包与系数，一键生成建议价。",
               href: "/projects/new",
-              cta: "新建报价",
+              cta: "新建商机",
             },
             {
-              title: "销售管理",
-              desc: "盯商机管道与待办，进入工作台完成批复。",
+              title: "售前 / 销售经理",
+              desc: "盯商机管道与待办，进入工作台完成 Deal Desk 批复。",
               href: "/projects",
               cta: "项目列表",
             },
             {
-              title: "老板 / 高管",
-              desc: "盈利罗盘与对策矩阵，看结构与风险。",
+              title: "VP / 管理层",
+              desc: "客户价值罗盘与对策矩阵，看结构与风险。",
               href: "/compass",
-              cta: "盈利罗盘",
+              cta: "客户价值罗盘",
             },
             {
-              title: "运营 / 信息化",
+              title: "运营 / RevOps",
               desc: "主数据、全量看板、规则与落地自检。",
               href: "/console",
               cta: "管理后台",
@@ -271,10 +271,10 @@ export default async function LandingPage() {
           <ol className="mt-4 flex flex-wrap gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
             {[
               "需求与产品",
-              "物料清单 / 成本",
+              "订阅包 / 价格带",
               "系数引擎",
-              "智能报价",
-              "分层审批",
+              "销售教练",
+              "Deal Desk",
               "罗盘复盘",
             ].map((step, idx) => (
               <li key={step} className="flex items-center gap-2">
@@ -291,10 +291,10 @@ export default async function LandingPage() {
         </div>
         <blockquote className="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-6 text-sm leading-relaxed text-slate-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100/90 lg:col-span-2">
           <p className="font-semibold text-slate-900 dark:text-white">
-            「报价不是算一个数，而是一次经营承诺。」
+            「商机不是填一个价，而是一次经营承诺。」
           </p>
           <p className="mt-3 text-slate-700 dark:text-slate-300">
-            系统将承诺拆解为成本、系数、审批与成交留痕，让利润不再停留在口头与表格碎片中。
+            系统将承诺拆解为订阅口径、系数、Deal Desk 与成交留痕，让增长不再停留在口头与表格碎片中。
           </p>
           <footer className="mt-4 text-xs font-medium text-amber-800/80 dark:text-amber-400/80">
             — 产品定位陈述 · 试点版
@@ -307,7 +307,7 @@ export default async function LandingPage() {
           准备向管理层汇报或启动试点验证？
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">
-          建议先走一遍「战略全文」与「落地准备」自检，再在试点库中跑通完整审批闭环。
+          建议先走一遍「战略全文」与「落地准备」自检，再在试点库中跑通完整 Deal Desk 闭环。
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link

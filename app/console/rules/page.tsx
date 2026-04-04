@@ -40,7 +40,7 @@ export default async function ConsoleRulesPage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium text-zinc-500">分层审批（折扣区间）</h2>
+        <h2 className="text-sm font-medium text-zinc-500">Deal Desk 分层（折扣区间）</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {APPROVAL_DISCOUNT_BANDS.map((b) => (
             <li
@@ -64,14 +64,14 @@ export default async function ConsoleRulesPage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium text-zinc-500">盈利罗盘 · 四象限划分阈值</h2>
+        <h2 className="text-sm font-medium text-zinc-500">客户价值罗盘 · 四象限划分阈值</h2>
         <p className="mt-1 text-xs text-zinc-500">
           数据表{" "}
           <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">
             CompassQuadrantThreshold
           </code>
           （单例 <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">default</code>
-          ）。未落库时使用代码默认 30% / 20%。
+          ）。未落库时使用代码默认 60% / 60%。
         </p>
         <div className="mt-4">
           <CompassQuadrantThresholdEditor initial={quadrantThresholdInitial} />
@@ -79,9 +79,9 @@ export default async function ConsoleRulesPage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-medium text-zinc-500">盈利罗盘 · 预警对策矩阵</h2>
+        <h2 className="text-sm font-medium text-zinc-500">客户价值罗盘 · 预警对策矩阵</h2>
         <p className="mt-1 text-xs text-zinc-500">
-          与前台「盈利罗盘」侧栏同源；数据表{" "}
+          与前台「客户价值罗盘」侧栏同源；数据表{" "}
           <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">
             CompassAlertRule
           </code>

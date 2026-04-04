@@ -14,35 +14,35 @@ const prisma = new PrismaClient();
 
 const DEFAULT_THRESHOLD = {
   id: "default" as const,
-  marginHighPct: 30,
-  growthHighPct: 20,
+  marginHighPct: 60,
+  growthHighPct: 60,
 };
 
 const DEFAULT_ALERT_RULES = [
-  { conditionLabel: "毛利率 <15%", actionLabel: "成本优化或提价", sortOrder: 0 },
+  { conditionLabel: "客户价值 <60", actionLabel: "补强客户经营计划", sortOrder: 0 },
   {
-    conditionLabel: "单一客户占比 >30%",
-    actionLabel: "客户结构分散",
+    conditionLabel: "赢单概率 <60%",
+    actionLabel: "销售教练介入复盘",
     sortOrder: 1,
   },
   {
-    conditionLabel: "账期 >90 天",
-    actionLabel: "加强回款 / 收紧信用",
+    conditionLabel: "Deal Desk 待办 >20 单",
+    actionLabel: "按优先级分批清队列",
     sortOrder: 2,
   },
   {
-    conditionLabel: "材料成本占比 >60%",
-    actionLabel: "锁价或对冲",
+    conditionLabel: "标准订阅包折扣 >15%",
+    actionLabel: "升级到销售经理/VP Deal Desk",
     sortOrder: 3,
   },
   {
-    conditionLabel: "竞品降价 >10%",
-    actionLabel: "差异化叙事",
+    conditionLabel: "试用转正率 <35%",
+    actionLabel: "优化试用成功标准与跟进节奏",
     sortOrder: 4,
   },
   {
-    conditionLabel: "产能利用率 <70%",
-    actionLabel: "调整排产或外协",
+    conditionLabel: "关键行业商机停滞 >14 天",
+    actionLabel: "发起跨角色协同推进",
     sortOrder: 5,
   },
 ];
@@ -53,9 +53,7 @@ async function main() {
   });
   if (!threshold) {
     await prisma.compassQuadrantThreshold.create({ data: DEFAULT_THRESHOLD });
-    console.log(
-      "[seed:reference] 已创建罗盘四象限默认阈值（高毛利≥30%、高增长≥20%）",
-    );
+    console.log("[seed:reference] 已创建罗盘四象限默认阈值（客户价值≥60、赢单概率≥60）");
   } else {
     console.log(
       "[seed:reference] 罗盘四象限阈值已存在，跳过（保留当前配置）",

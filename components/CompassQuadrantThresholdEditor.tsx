@@ -45,7 +45,7 @@ export function CompassQuadrantThresholdEditor({
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(j.error ?? "保存失败");
       }
-      setMsg("已保存；盈利罗盘四象限与表格将按新阈值即时重算。");
+      setMsg("已保存；客户价值罗盘四象限与表格将按新阈值即时重算。");
       dispatchProfitDataChanged();
       await reload();
     } catch (e) {
@@ -59,7 +59,7 @@ export function CompassQuadrantThresholdEditor({
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-xs">
-          <span className="text-zinc-500">「高毛利」下限（%）</span>
+          <span className="text-zinc-500">「高价值」下限（%）</span>
           <input
             type="number"
             step="0.1"
@@ -70,11 +70,11 @@ export function CompassQuadrantThresholdEditor({
             onChange={(e) => setMarginHighPct(Number(e.target.value))}
           />
           <span className="mt-0.5 block text-[11px] text-zinc-500">
-            毛利率 ≥ 该值视为「高毛利」
+            客户价值 ≥ 该值视为「高价值」
           </span>
         </label>
         <label className="block text-xs">
-          <span className="text-zinc-500">「高增长」下限（%）</span>
+          <span className="text-zinc-500">「高赢单」下限（%）</span>
           <input
             type="number"
             step="0.1"
@@ -85,7 +85,7 @@ export function CompassQuadrantThresholdEditor({
             onChange={(e) => setGrowthHighPct(Number(e.target.value))}
           />
           <span className="mt-0.5 block text-[11px] text-zinc-500">
-            增长率 ≥ 该值视为「高增长」
+            赢单概率 ≥ 该值视为「高赢单」
           </span>
         </label>
       </div>
@@ -101,7 +101,7 @@ export function CompassQuadrantThresholdEditor({
         {busy ? "保存中…" : "保存阈值"}
       </button>
       <p className="text-[11px] leading-relaxed text-zinc-500">
-        前台四象限与表格中的象限标签由「毛利率 + 增长」按上述阈值计算；与罗盘条目上存量的{" "}
+        前台四象限与表格中的象限标签由「客户价值 + 赢单概率」按上述阈值计算；与罗盘条目上存量的{" "}
         <code className="rounded bg-zinc-100 px-0.5 dark:bg-zinc-800">quadrant</code>{" "}
         字段无关，修改阈值后立即生效。
       </p>

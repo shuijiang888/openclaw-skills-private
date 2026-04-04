@@ -16,7 +16,7 @@ export function AgentAuditExportButton() {
       });
       if (res.status === 403) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error ?? "需要管理员身份");
+        throw new Error(j.error ?? "需要 VP 身份");
       }
       if (!res.ok) throw new Error(`导出失败 HTTP ${res.status}`);
       const blob = await res.blob();

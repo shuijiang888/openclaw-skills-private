@@ -30,7 +30,7 @@ export default async function ConsoleHomePage() {
         {[
           { k: "客户主数据", v: customers, href: "/console/customers" },
           { k: "项目总数", v: projects, href: "/console/pipeline" },
-          { k: "待审批", v: pending, href: "/console/pipeline" },
+          { k: "待 Deal Desk", v: pending, href: "/console/pipeline" },
           { k: "已核准成交", v: approved, href: "/console/pipeline" },
           { k: "罗盘项目", v: compass, href: "/compass" },
           {
@@ -52,7 +52,7 @@ export default async function ConsoleHomePage() {
 
       <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-          <h2 className="text-sm font-medium">待审批队列（Top 5）</h2>
+          <h2 className="text-sm font-medium">待 Deal Desk 队列（Top 5）</h2>
           <Link
             href="/console/pipeline"
             className="text-sm text-blue-600 dark:text-blue-400"
@@ -62,7 +62,7 @@ export default async function ConsoleHomePage() {
         </div>
         <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {pendingList.length === 0 ? (
-            <li className="px-4 py-6 text-sm text-zinc-500">当前无待审批项目。</li>
+            <li className="px-4 py-6 text-sm text-zinc-500">当前无待 Deal Desk 项目。</li>
           ) : (
             pendingList.map((p) => (
               <li

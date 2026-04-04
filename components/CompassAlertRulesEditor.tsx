@@ -182,7 +182,7 @@ export function CompassAlertRulesEditor({ initial }: { initial: Rule[] }) {
         {busyId === "__new__" ? "添加中…" : "＋ 新增一条规则 "}
       </button>
       <p className="text-[11px] leading-relaxed text-zinc-500">
-        保存后立即影响「盈利罗盘」对策矩阵与管理台列表；无需重启服务。
+        保存后立即影响「客户价值罗盘」对策矩阵与管理台列表；无需重启服务。
       </p>
     </div>
   );

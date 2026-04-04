@@ -49,7 +49,7 @@ export function ConsoleAccessGuard({
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
         当前账号/角色不包含「管理后台」权限，正在跳转到工作台…
         <p className="mt-2 text-xs opacity-90">
-          切换为「总经理」或「管理员」后可使用后台；经理/总监/VP 请用工作台与项目报价。
+          切换为「销售经理」或「VP」后可使用后台；SDR/AE/售前请用工作台与商机报价。
         </p>
       </div>
     );

@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: Params) {
 
   const timelineJson = appendTimeline(quote.timelineJson, {
     kind: "submit",
-    title: "提交审批",
+    title: "提交 Deal Desk",
     detail: `需 ${reqRole.label}；折扣约 ${(d * 100).toFixed(1)}%`,
   });
 

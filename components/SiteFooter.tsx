@@ -8,7 +8,7 @@ import { canAccessConsole } from "@/lib/demo-role-modules";
 import { APP_VERSION } from "@/lib/app-release";
 
 function roleMaySeeStrategy(role: DemoRole): boolean {
-  return role !== "SALES_MANAGER";
+  return role !== "SDR";
 }
 
 export function SiteFooter() {
@@ -19,11 +19,11 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-            智能盈利管理系统
+            纷享销客 CRM · 盈利管理插件
           </p>
           <p className="mt-1 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            面向制造与科技型企业的报价、审批与盈利结构管理（产品试点版）。生产落地需结合贵司主数据、
-            核算口径与组织授权进行配置。
+            面向纷享销客 CRM 场景的第三方插件（产品试点版）。生产落地需结合贵司主数据、
+            Deal Desk 制度与组织授权进行配置。
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <span className="text-[11px] text-slate-500 dark:text-slate-400">

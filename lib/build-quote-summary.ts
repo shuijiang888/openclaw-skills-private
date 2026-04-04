@@ -34,11 +34,11 @@ export function buildQuoteSummaryText(args: {
     `客户：${args.customerName}（${args.customerTierLabel}）`,
     `状态：${args.projectStatusLabel}｜产品：${args.productName || "—"}`,
     `数量 ${args.quantity}｜交期 ${args.leadDays} 天`,
-    `建议价 ¥${args.suggestedPrice.toLocaleString("zh-CN")}｜建议毛利率 ${args.grossMarginAtSuggest}%`,
+    `建议价 ¥${args.suggestedPrice.toLocaleString("zh-CN")}｜建议客户价值率 ${args.grossMarginAtSuggest}%`,
   ];
   if (args.counterPrice != null) {
     parts.push(
-      `还价 ¥${args.counterPrice.toLocaleString("zh-CN")}｜折扣约 ${args.discountPercentDisplay}%｜还价后毛利 ${args.grossMarginAtOffer}%`,
+      `还价 ¥${args.counterPrice.toLocaleString("zh-CN")}｜折扣约 ${args.discountPercentDisplay}%｜还价后客户价值率 ${args.grossMarginAtOffer}%`,
     );
   }
   parts.push(`综合胜率（规则） ${args.winRate}%`);
@@ -46,7 +46,7 @@ export function buildQuoteSummaryText(args: {
   if (args.shuntReasons.length) {
     parts.push(`分流说明：${args.shuntReasons.join("；")}`);
   }
-  parts.push(`建议审批：${args.requiredApprovalLabel}`);
+  parts.push(`建议 Deal Desk：${args.requiredApprovalLabel}`);
   const coeffLine = args.coeffEntries
     .map(({ key, value }) => `${COEFF_LABEL[key] ?? key} ${value}`)
     .join("；");
@@ -56,7 +56,7 @@ export function buildQuoteSummaryText(args: {
   parts.push(args.aiSuggestion.trim() || "—");
   parts.push("");
   parts.push(
-    `—— 由智能盈利管理系统生成 · ${new Date().toLocaleString("zh-CN")}`,
+    `—— 由纷享销客 CRM 插件生成 · ${new Date().toLocaleString("zh-CN")}`,
   );
   return parts.join("\n");
 }

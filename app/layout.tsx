@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "智能盈利管理系统",
-    template: "%s · 智能盈利管理",
+    default: "纷享销客 CRM 增利插件",
+    template: "%s · CRM 增利插件",
   },
   description:
-    "企业级报价、分层审批与盈利罗盘：让定价可度量、毛利可追踪、决策可留痕。适用于制造与科技型企业的产品试点与立项评估。联合呈现：纷享销客。",
+    "面向纷享销客 CRM 的第三方插件：SaaS 订阅报价、Deal Desk 分层协同与客户价值罗盘，让定价可度量、赢单可追踪、决策可留痕。",
 };
 
 export default function RootLayout({

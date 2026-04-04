@@ -3,7 +3,7 @@
 export const PROJECT_STATUS_LABEL: Record<string, string> = {
   DRAFT: "草稿",
   PRICED: "已测算",
-  PENDING_APPROVAL: "待审批",
+  PENDING_APPROVAL: "待 Deal Desk",
   APPROVED: "已核准",
 };
 
@@ -22,11 +22,11 @@ export function customerTierLabel(tier: string): string {
 }
 
 export const DEMO_ROLE_LABEL: Record<string, string> = {
+  SDR: "SDR",
+  AE: "AE",
+  PRE_SALES: "售前",
   SALES_MANAGER: "销售经理",
-  SALES_DIRECTOR: "销售总监",
-  SALES_VP: "销售副总裁",
-  GM: "总经理",
-  ADMIN: "管理员",
+  VP: "VP",
 };
 
 export function demoRoleLabelForUi(code: string): string {

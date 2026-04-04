@@ -156,7 +156,7 @@ export function StrategyFullDoc({ markdown }: { markdown: string }) {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="例如：价值主张、审批、企业资源计划、路线图…"
+              placeholder="例如：价值主张、Deal Desk、企业资源计划、路线图…"
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>

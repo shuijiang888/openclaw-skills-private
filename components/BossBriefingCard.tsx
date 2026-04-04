@@ -12,9 +12,9 @@ function BriefingInner({ data }: { data: BossBriefingDTO }) {
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {(
           [
-            ["风险池（毛利率<15%）", String(m.lowMarginQuoteCount)],
+            ["风险池（客户价值<15%）", String(m.lowMarginQuoteCount)],
             ["自动通道占比", `${m.autoChannelEligiblePct}%`],
-            ["待审批", String(m.pendingApprovalCount)],
+            ["待 Deal Desk", String(m.pendingApprovalCount)],
             ["TOP1 客户占比", `${m.topCustomerConcentrationPct}%`],
           ] as const
         ).map(([k, v]) => (
@@ -63,7 +63,7 @@ function BriefingInner({ data }: { data: BossBriefingDTO }) {
           href="/compass"
           className="font-medium text-amber-800 underline dark:text-amber-400"
         >
-          盈利罗盘
+          客户价值罗盘
         </Link>
         <span className="tabular-nums text-slate-400">
           生成 {new Date(data.generatedAt).toLocaleString("zh-CN")}
@@ -94,7 +94,10 @@ export function BossBriefingCard({ data: serverData }: { data?: BossBriefingDTO 
   }, [serverData]);
 
   useEffect(() => {
-    fetchBriefing();
+    const timer = window.setTimeout(() => {
+      fetchBriefing();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchBriefing]);
 
   useEffect(() => {

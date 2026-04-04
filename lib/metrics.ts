@@ -4,7 +4,7 @@ import { enrichProject } from "@/lib/serialize";
 export type PortfolioValueMetrics = {
   /** 建议价口径下毛利率 &lt; 15% 的报价单数 */
   lowMarginQuoteCount: number;
-  /** 当前测算满足「自动通道」条件的报价单数 */
+  /** 当前测算满足「快速通道」条件的报价单数 */
   autoChannelEligibleCount: number;
   /** 待审批项目数 */
   pendingApprovalCount: number;

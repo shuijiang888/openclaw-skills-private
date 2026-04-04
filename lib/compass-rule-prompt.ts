@@ -7,7 +7,7 @@ export type CompassAlertRuleForPrompt = {
 };
 
 /**
- * 将「盈利罗盘阈值 + 对策矩阵规则」拼成模型可读的可信上下文。
+ * 将「客户价值罗盘阈值 + 对策矩阵规则」拼成模型可读的可信上下文。
  * 注意：仅用于 prompt 注入；不要让其出现在“不可信输入”标记中。
  */
 export function buildCompassRulesContextForPrompt(
@@ -23,7 +23,7 @@ export function buildCompassRulesContextForPrompt(
   );
 
   return [
-    `【盈利罗盘阈值（可信配置）】高毛利 >= ${thresholds.marginHighPct}%；高增长 >= ${thresholds.growthHighPct}%`,
+    `【客户价值罗盘阈值（可信配置）】客户价值 >= ${thresholds.marginHighPct}%；赢单概率 >= ${thresholds.growthHighPct}%`,
     `【对策矩阵规则（可信配置，按 sortOrder）】`,
     ...(lines.length ? lines : ["- （无可用规则）"]),
   ].join("\n");

@@ -5,7 +5,7 @@ config();
  * 为会话模式创建/更新用户（不触碰业务表）。
  * 用法：
  *   npx tsx prisma/create-user.ts <email> <password> <ROLE>
- * ROLE: SALES_MANAGER | SALES_DIRECTOR | SALES_VP | GM | ADMIN
+ * ROLE: SDR | AE | PRE_SALES | SALES_MANAGER | VP
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -14,20 +14,22 @@ import type { DemoRole } from "../lib/approval";
 const prisma = new PrismaClient();
 
 const ALLOWED = new Set<string>([
+  "SDR",
+  "AE",
+  "PRE_SALES",
   "SALES_MANAGER",
-  "SALES_DIRECTOR",
-  "SALES_VP",
-  "GM",
-  "ADMIN",
+  "VP",
 ]);
 
 function normalizeRoleInput(raw: string): DemoRole | null {
   const r = raw.trim().toUpperCase();
+  if (r === "SE" || r === "PRESALES") return "PRE_SALES";
   if (r === "MANAGER") return "SALES_MANAGER";
-  if (r === "DIRECTOR") return "SALES_DIRECTOR";
-  if (r === "VP") return "SALES_VP";
-  if (r === "GENERAL_MANAGER") return "GM";
-  if (r === "SYSTEM") return "ADMIN";
+  if (r === "DIRECTOR") return "AE";
+  if (r === "SALES_DIRECTOR") return "AE";
+  if (r === "SALES_VP") return "VP";
+  if (r === "GM" || r === "GENERAL_MANAGER" || r === "ADMIN" || r === "SYSTEM")
+    return "VP";
   if (ALLOWED.has(r)) return r as DemoRole;
   return null;
 }
@@ -35,7 +37,7 @@ function normalizeRoleInput(raw: string): DemoRole | null {
 function usage(): never {
   console.error(
     "用法: npx tsx prisma/create-user.ts <email> <password> <ROLE>\n" +
-      "ROLE: SALES_MANAGER | SALES_DIRECTOR | SALES_VP | GM | ADMIN",
+      "ROLE: SDR | AE | PRE_SALES | SALES_MANAGER | VP",
   );
   process.exit(1);
 }

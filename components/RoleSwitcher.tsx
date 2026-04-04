@@ -10,11 +10,11 @@ export const DEMO_ROLE_STORAGE_KEY = "profit_demo_role";
 export const DEMO_ROLE_CHANGE_EVENT = "profit-demo-role-change";
 
 export const ROLE_OPTIONS = [
+  { value: "SDR", label: "SDR" },
+  { value: "AE", label: "AE" },
+  { value: "PRE_SALES", label: "售前" },
   { value: "SALES_MANAGER", label: "销售经理" },
-  { value: "SALES_DIRECTOR", label: "销售总监" },
-  { value: "SALES_VP", label: "销售副总裁" },
-  { value: "GM", label: "总经理" },
-  { value: "ADMIN", label: "管理员" },
+  { value: "VP", label: "VP" },
 ] as const;
 
 /** 与 .env 中 NEXT_PUBLIC_PROFIT_AUTH_MODE=session 一致 */
@@ -23,16 +23,16 @@ export function isClientSessionAuth(): boolean {
 }
 
 const ROLE_LABEL: Record<string, string> = {
+  SDR: "SDR",
+  AE: "AE",
+  PRE_SALES: "售前",
   SALES_MANAGER: "销售经理",
-  SALES_DIRECTOR: "销售总监",
-  SALES_VP: "销售副总裁",
-  GM: "总经理",
-  ADMIN: "管理员",
+  VP: "VP",
 };
 
 export function getDemoRole(): string {
-  if (typeof window === "undefined") return "SALES_DIRECTOR";
-  return sessionStorage.getItem(DEMO_ROLE_STORAGE_KEY) ?? "SALES_DIRECTOR";
+  if (typeof window === "undefined") return "AE";
+  return sessionStorage.getItem(DEMO_ROLE_STORAGE_KEY) ?? "AE";
 }
 
 export function demoHeaders(): HeadersInit {
@@ -45,8 +45,8 @@ export function demoHeaders(): HeadersInit {
 export function useDemoRole(): string {
   const sessionMode = isClientSessionAuth();
   const [role, setRole] = useState<string>(() => {
-    if (typeof window === "undefined") return "SALES_DIRECTOR";
-    if (sessionMode) return "SALES_DIRECTOR";
+    if (typeof window === "undefined") return "AE";
+    if (sessionMode) return "AE";
     return getDemoRole();
   });
 
@@ -110,7 +110,7 @@ export function RoleSwitcher() {
           setSessionInfo({
             status: "in",
             email: j.user.email,
-            role: j.user.role ?? "SALES_DIRECTOR",
+            role: j.user.role ?? "AE",
           });
         } else {
           setSessionInfo({ status: "anon" });
@@ -206,7 +206,7 @@ export function RoleSwitcher() {
         </select>
       </div>
       <span className="hidden max-w-[14rem] text-[10px] leading-snug text-slate-500 lg:inline dark:text-slate-500">
-        演示模式：菜单、审批与助手随所选角色更新；经理无助手，总经理后台无 CSV 导入
+        演示模式：菜单、Deal Desk 与销售教练随角色更新；SDR 无教练，销售经理后台无 CSV 导入
       </span>
     </div>
   );
