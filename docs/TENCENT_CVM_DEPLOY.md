@@ -32,6 +32,25 @@ server {
 
 ---
 
+## ★ 推荐最优方案（单 IP、单 80 端口、门户可跳转两系统）
+
+目标：**同一** `http://119.45.205.137/` 进入门户（`/portal`），两个卡片分别进入盈利与情报，无混合内容、不写死 IP。
+
+| 路径 | 指向 |
+| --- | --- |
+| `/` | Nginx **反代** → 盈利 Next 容器 `127.0.0.1:3000`（含 `/portal`、`/dashboard`） |
+| `/intel/` | Nginx **静态** → `/usr/share/nginx/html/intel/`（情报前端，须 **`basePath: '/intel'`** 构建） |
+
+**盈利侧（本仓库）**：门户默认 **`NEXT_PUBLIC_PORTAL_APP_INTELLIGENCE_URL=/intel/`**（同域相对路径，卡片为站内跳转）。执行 `deploy/tencent-cvm-profit-docker.sh` 即可。
+
+**情报侧**：在情报工程 `next.config` 增加 `basePath: '/intel'`（必要时 `assetPrefix: '/intel'`），`npm run build` / `output: export` 后，将产物拷到 **`/usr/share/nginx/html/intel/`**（根级须有 `index.html`）。
+
+**Nginx**：用仓库内 **`deploy/nginx-unified-portal.conf`** 替换原「整站静态 `location /`」配置（保留 `listen 80 default_server` 的 server 块，避免两个 default_server 冲突——应**禁用旧 conf** 或合并为一份）。
+
+**上线顺序建议**：① 情报构建并拷到 `html/intel/` → ② 起盈利容器 → ③ 换 Nginx 配置并 `reload` → ④ 浏览器验 `http://IP/portal` 与两卡片。
+
+---
+
 ## 一、仓库内「完整」盈利管理系统（本应用）能力
 
 与线上静态页不同，**完整系统**在仓库内支持：
@@ -55,59 +74,22 @@ server {
 
 ---
 
-## 二、从「静态根路径」切换到「完整盈利系统」
+## 二、仅上盈利、暂不同机情报（备选）
 
-当前 `location /` 走静态文件；要上线完整 Next 应用，需让 **`/` 反代到上游**（否则会与静态 `root` 冲突）。
-
-**推荐步骤概要：**
-
-1. 备份现有站点：`/usr/share/nginx/html` 与当前 Nginx `conf.d` 下 active 配置。
-2. 在服务器拉取本仓库、`git pull` 到含 `/portal` 的版本，配置 `deploy/tencent-cvm-profit.env`。
-3. 首次：`npx prisma db push` + `npm run auth:create-user ...`（见下文）。
-4. 执行 `./deploy/tencent-cvm-profit-docker.sh`，确认 `curl -s http://127.0.0.1:3000/api/health` 正常。
-5. **修改 Nginx**：将 `location /` 从静态改为 `proxy_pass http://127.0.0.1:3000;`（并保留 `Host` / `X-Forwarded-*` 头，见下节）。
-6. `nginx -t && systemctl reload nginx`。
-
-**环境变量建议（生产）：**
-
-- `PROFIT_ROOT_REDIRECT=portal`：访问 `/` **302 → `/portal`**（统一门户作首页）。
-- `NEXT_PUBLIC_PORTAL_APP_INTELLIGENCE_URL`：与浏览器可打开的**情报系统完整 URL** 一致（见第四节）。
+若短期只有盈利：Nginx 仅 `location / { proxy_pass http://127.0.0.1:3000; ... }` 即可。门户里情报卡片可临时改为绝对 URL（`NEXT_PUBLIC_PORTAL_APP_INTELLIGENCE_URL`），待情报迁到 `/intel/` 后再改回 `/intel/` 并重建镜像。
 
 ---
 
-## 三、Nginx 反代完整示例（替换原静态 `root`）
+## 三、Nginx 合并配置（与「最优方案」一致）
 
-```nginx
-server {
-    listen 80 default_server;
-    server_name _;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-若需暂时保留部分静态文件，可改用更细 `location` 优先级（例如精确路径 `=` 或前缀），避免与 Next 路由冲突。
+完整片段见 **`deploy/nginx-unified-portal.conf`**（含 `/intel/` 静态 + `/` 反代）。部署前请备份原 `conf.d` 下 default_server。
 
 ---
 
-## 四、与智能情报系统同机统筹
+## 四、与智能情报系统同机统筹（要点）
 
-**已核实（贵方）：**
-
-- 情报侧当前亦为**根路径**静态部署思路；`next.config` **无** `basePath` / `assetPrefix`（与盈利侧一致）。
-- 若情报需挂 **`/intel/`**：须在情报工程内配置 **`basePath: '/intel'`**（必要时 **`assetPrefix`**），并**重建发布**；Nginx 增加 `location /intel/` 指向静态目录或上游。
-
-**根路径冲突说明：**
-
-- `http://119.45.205.137/` **只能有一个**默认内容：要么整站反代盈利，要么整站静态。
-- **推荐合并形态**：Nginx `location /` → 盈利（`127.0.0.1:3000`），`location /intel/` → 情报静态或情报上游；门户内 `NEXT_PUBLIC_PORTAL_APP_INTELLIGENCE_URL=http://119.45.205.137/intel/`（末尾斜杠与情报 `basePath` 对齐），并**重建盈利镜像**。
+- 根路径 **`/`** 只能服务一个应用；最优解是 **盈利占 `/`**，**情报占 `/intel/`**（见上文）。
+- 情报旧包若为根路径构建，需 **加 basePath 重建** 后再放入 `html/intel/`，否则资源路径会错。
 
 ---
 
@@ -143,12 +125,6 @@ chmod +x deploy/tencent-cvm-profit-docker.sh
 
 - [ ] `curl -s http://127.0.0.1:3000/api/health` 正常。
 - [ ] `curl -sI http://127.0.0.1:3000/` 在开启 `PROFIT_ROOT_REDIRECT=portal` 时为 **302** 且 `Location` 含 `/portal`。
-- [ ] 经 Nginx 访问对外 IP 的 `/portal`，两系统入口可点通。
+- [ ] 浏览器访问 `http://119.45.205.137/portal`（或 `/` 自动进门户），两卡片可打开 **工作台** 与 **`/intel/`** 情报首页。
+- [ ] 在 CVM 上 `curl -sI http://127.0.0.1/intel/` 经本机 Nginx 返回 **200**（情报静态已就位）。
 - [ ] SQLite 已挂载，`npm run db:backup` 在运维流程中可执行。
-
----
-
-## 七、给情报侧后续补充（若走 `/intel/`）
-
-- 情报构建产物部署目录路径（例如 `/usr/share/nginx/html/intel/`）。
-- 是否使用 Docker 及容器端口（若由 Nginx `proxy_pass` 而非纯静态）。

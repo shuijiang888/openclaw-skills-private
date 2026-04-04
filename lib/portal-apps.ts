@@ -14,10 +14,17 @@ export type PortalAppDef = {
   accent: PortalAppAccent;
 };
 
+function resolveIntelligenceEntry(): { href: string; external: boolean } {
+  const raw = process.env.NEXT_PUBLIC_PORTAL_APP_INTELLIGENCE_URL?.trim();
+  /** 默认同域子路径：与 Nginx `location /intel/` 一致，免混合内容、不依赖写死 IP */
+  const href = raw || "/intel/";
+  const external = /^https?:\/\//i.test(href);
+  return { href, external };
+}
+
 export function getPortalApps(): PortalAppDef[] {
-  const intelligenceUrl =
-    process.env.NEXT_PUBLIC_PORTAL_APP_INTELLIGENCE_URL?.trim() ||
-    "http://119.45.205.137/";
+  const { href: intelligenceHref, external: intelligenceExternal } =
+    resolveIntelligenceEntry();
 
   return [
     {
@@ -30,9 +37,9 @@ export function getPortalApps(): PortalAppDef[] {
     {
       id: "intelligence",
       title: "智能情报系统",
-      subtitle: "情报汇聚、检索与研判（部署于独立服务）。",
-      href: intelligenceUrl,
-      external: true,
+      subtitle: "情报汇聚、检索与研判（由 Nginx 在 /intel/ 提供静态或反代）。",
+      href: intelligenceHref,
+      external: intelligenceExternal,
       accent: "cyan",
     },
   ];

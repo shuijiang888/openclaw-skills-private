@@ -118,7 +118,9 @@ export function PortalAppsGrid({
         </ul>
 
         <p className="mt-10 text-center text-[11px] text-slate-600">
-          外部系统将在新标签页打开；若遇浏览器拦截混合内容，请将两侧站点统一为 HTTPS。
+          {apps.some((a) => a.external)
+            ? "标记为外部的系统将在新标签页打开；生产建议统一 HTTPS 以免混合内容被拦截。"
+            : "两个入口均为同域路径，由前置 Nginx 将 / 与 /intel/ 分别指向对应站点。"}
         </p>
       </div>
     </div>
