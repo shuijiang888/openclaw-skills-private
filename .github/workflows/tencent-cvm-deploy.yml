@@ -1,0 +1,74 @@
+# 配置好 GitHub Secrets 后，在 Actions 里点「Run workflow」即可自动 SSH 到腾讯云执行 deploy/one-click-setup.sh
+#
+# Secrets（Settings → Secrets and variables → Actions）：
+#   TENCENT_HOST            例 119.45.205.137
+#   TENCENT_USER            例 root
+#   TENCENT_SSH_KEY          私钥全文（含 BEGIN/END 行）
+#   PROFIT_ADMIN_EMAIL
+#   PROFIT_ADMIN_PASSWORD    勿含单引号（与 one-click-setup 一致）
+# 可选：
+#   TENCENT_DEPLOY_PATH      默认 /opt/profit-web
+
+name: Tencent CVM deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "远程分支名"
+        required: true
+        default: "main"
+      confirm:
+        description: "输入 deploy 确认执行"
+        required: true
+        default: ""
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'deploy'
+    steps:
+      - name: Verify secrets
+        env:
+          TENCENT_HOST: ${{ secrets.TENCENT_HOST }}
+          TENCENT_USER: ${{ secrets.TENCENT_USER }}
+          TENCENT_SSH_KEY: ${{ secrets.TENCENT_SSH_KEY }}
+          PROFIT_ADMIN_EMAIL: ${{ secrets.PROFIT_ADMIN_EMAIL }}
+          PROFIT_ADMIN_PASSWORD: ${{ secrets.PROFIT_ADMIN_PASSWORD }}
+        run: |
+          ok=1
+          for n in TENCENT_HOST TENCENT_USER TENCENT_SSH_KEY PROFIT_ADMIN_EMAIL PROFIT_ADMIN_PASSWORD; do
+            eval "v=\$$n"
+            if [ -z "$v" ]; then echo "::error::缺少 Secret: $n"; ok=0; fi
+          done
+          [ "$ok" -eq 1 ]
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.TENCENT_SSH_KEY }}
+
+      - name: Trust host key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "${{ secrets.TENCENT_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Git pull + one-click setup on server
+        env:
+          HOST: ${{ secrets.TENCENT_HOST }}
+          USER: ${{ secrets.TENCENT_USER }}
+          DEPLOY_PATH: ${{ secrets.TENCENT_DEPLOY_PATH }}
+          BRANCH: ${{ github.event.inputs.branch }}
+          EMAIL: ${{ secrets.PROFIT_ADMIN_EMAIL }}
+          PASS: ${{ secrets.PROFIT_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          DP="${DEPLOY_PATH:-/opt/profit-web}"
+          EMAIL_Q=$(printf '%q' "$EMAIL")
+          PASS_Q=$(printf '%q' "$PASS")
+          BR_Q=$(printf '%q' "$BRANCH")
+          DP_Q=$(printf '%q' "$DP")
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+            "${USER}@${HOST}" \
+            "cd ${DP_Q} && git fetch origin ${BR_Q} && git checkout ${BR_Q} && git pull origin ${BR_Q} && sudo bash deploy/one-click-setup.sh ${EMAIL_Q} ${PASS_Q}"
