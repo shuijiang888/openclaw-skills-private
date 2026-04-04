@@ -29,11 +29,19 @@ function isPublicApi(path: string): boolean {
 }
 
 export async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+
+  /** 生产入口统一为门户：设 PROFIT_ROOT_REDIRECT=portal（仅影响路径「/」） */
+  if (
+    process.env.PROFIT_ROOT_REDIRECT?.trim().toLowerCase() === "portal" &&
+    path === "/"
+  ) {
+    return NextResponse.redirect(new URL("/portal", req.nextUrl));
+  }
+
   if (!isSessionAuthMode()) {
     return NextResponse.next();
   }
-
-  const path = req.nextUrl.pathname;
   const secret = process.env.PROFIT_AUTH_SECRET?.trim();
 
   if (path.startsWith("/api/")) {

@@ -33,7 +33,8 @@ npm run dev
 - **演示模式（默认）**：右上角可切换 **试点角色**，由 `x-demo-role` 驱动权限与助手语境。
 - **登录模式（推荐上线）**：设置 `PROFIT_AUTH_MODE=session` 与 `NEXT_PUBLIC_PROFIT_AUTH_MODE=session` 后，右上角为登录/退出；角色由账号绑定，服务端**忽略** `x-demo-role`。
 
-- **门户** `/`：价值主张、角色入口；可跳转 [Arena 线框原型](https://019d4e3d-06a8-7e3f-be0c-16fe2b7d6cdf.arena.site/) 对照信息架构  
+- **统一门户** `/portal`：多系统入口（盈利管理、智能情报等）；生产可设 `PROFIT_ROOT_REDIRECT=portal` 使 `/` 重定向到门户  
+- **产品首页** `/`：价值主张与营销长页（未设根重定向时）  
 - **工作台** `/dashboard`：数据概览  
 - **管理后台** `/console`：客户主数据、项目 pipeline、系数与审批规则  
 
@@ -127,7 +128,7 @@ curl -s http://127.0.0.1:3000/api/health
 
 ### Docker 部署（生产发布）
 
-仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。
+仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。腾讯云 CVM 一键脚本与 Nginx 同机说明见 **`docs/TENCENT_CVM_DEPLOY.md`**、`deploy/tencent-cvm-profit-docker.sh`。
 
 #### 方式 A：直接用 Docker 跑（SQLite 挂载）
 ```bash
