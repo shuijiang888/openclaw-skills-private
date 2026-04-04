@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { demoRoleFromRequest } from "@/lib/http";
+import { getRequestUserContext } from "@/lib/request-user";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   await ensureZtBootstrap();
+  const ctx = getRequestUserContext(req);
   const role = demoRoleFromRequest(req);
   const rows = await prisma.ztActionCard.findMany({
-    where: { assignedRole: role },
+    where: { assignedRole: ctx.userId ? ctx.ztRole : role },
     orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
     take: 10,
   });
-  return NextResponse.json({ role, items: rows });
+  return NextResponse.json({ role: ctx.userId ? ctx.ztRole : role, items: rows });
 }
 
 export async function POST(req: Request) {

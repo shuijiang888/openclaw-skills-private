@@ -111,8 +111,41 @@ model User {
   passwordHash String
   /// 业务角色：SALES_MANAGER | SALES_DIRECTOR | SALES_VP | GM | ADMIN
   role         String   @default("SALES_DIRECTOR")
+  mobile       String   @default("")
+  isActive     Boolean  @default(true)
+  isSuperAdmin Boolean  @default(false)
+  /// 智探007 组织归属（可为空）
+  orgUnitId    String?
+  orgUnit      ZtOrgUnit? @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
+  /// 用户侧交互调用大模型权限（仍受系统总开关约束）
+  ztAllowInteractiveLlm Boolean @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  ztPointWallet          ZtPointWallet?
+  ztPointLedgers         ZtPointLedger[]
+  ztSubmissions          ZtSubmission[]
+  ztRedemptions          ZtRedemption[]
+  ztRankChanges          ZtRankChangeLog[]
+  ztSystemConfigsUpdated ZtSystemConfig[] @relation("ZtConfigUpdatedBy")
+}
+
+/// 智探007 组织单元（可扩展为多租户/多层级组织）
+model ZtOrgUnit {
+  id        String      @id @default(cuid())
+  name      String
+  code      String      @unique
+  parentId  String?
+  parent    ZtOrgUnit?  @relation("ZtOrgUnitTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  ZtOrgUnit[] @relation("ZtOrgUnitTree")
+  sortOrder Int         @default(0)
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  users User[]
+
+  @@index([sortOrder, createdAt])
 }
 
 /// 智探007：多模态信号（MVP 结构化）
@@ -174,46 +207,102 @@ model ZtSubmission {
   signalType   String       @default("tactical")
   region       String       @default("")
   format       String       @default("text")
+  userId       String?
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorName    String       @default("")
   actorRole    String       @default("SALES_DIRECTOR")
   status       String       @default("PENDING")
   pointsGranted Int         @default(0)
   createdAt    DateTime     @default(now())
 
   @@index([actorRole, createdAt])
+  @@index([userId, createdAt])
 }
 
 /// 智探007：角色积分钱包（MVP 按角色汇总）
 model ZtPointWallet {
-  id        String   @id @default(cuid())
-  actorRole String   @unique
-  points    Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  actorRole         String?  @unique
+  userId            String?  @unique
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  points            Int      @default(0)
+  lifetimePoints    Int      @default(0)
+  rank              String   @default("战士")
+  rankLevel         Int      @default(1)
+  lastRankChangedAt DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([points, updatedAt])
 }
 
 /// 智探007：积分流水
 model ZtPointLedger {
-  id        String   @id @default(cuid())
-  actorRole String
-  action    String
-  points    Int
-  refType   String   @default("")
-  refId     String   @default("")
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  actorRole    String
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorName    String   @default("")
+  action       String
+  points       Int
+  balanceAfter Int      @default(0)
+  rankAfter    String   @default("战士")
+  refType      String   @default("")
+  refId        String   @default("")
+  createdAt    DateTime @default(now())
 
   @@index([actorRole, createdAt])
+  @@index([userId, createdAt])
 }
 
 /// 智探007：积分兑换申请（线下核销）
 model ZtRedemption {
-  id         String   @id @default(cuid())
-  actorRole  String
-  item       String
-  pointsCost Int
-  redeemCode String   @unique
-  status     String   @default("REQUESTED")
-  createdAt  DateTime @default(now())
-  verifiedAt DateTime?
+  id            String   @id @default(cuid())
+  actorRole     String
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorName     String   @default("")
+  rankAtRequest String   @default("战士")
+  item          String
+  pointsCost    Int
+  redeemCode    String   @unique
+  status        String   @default("REQUESTED")
+  createdAt     DateTime @default(now())
+  verifiedAt    DateTime?
 
   @@index([actorRole, createdAt])
+  @@index([userId, createdAt])
+}
+
+/// 智探007：军衔变更记录（自动升降级留痕）
+model ZtRankChangeLog {
+  id        String   @id @default(cuid())
+  actorRole String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  oldRank   String
+  newRank   String
+  points    Int
+  reason    String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([actorRole, createdAt])
+  @@index([userId, createdAt])
+}
+
+/// 智探007：系统维护配置（单例 id=default）
+model ZtSystemConfig {
+  id                          String   @id
+  llmEnabled                  Boolean  @default(true)
+  llmProvider                 String   @default("minimax")
+  llmModel                    String   @default("MiniMax-M2.7")
+  llmInteractiveEnabled       Boolean  @default(true)
+  llmPasswordRequired         Boolean  @default(true)
+  llmAutomationBypassPassword Boolean  @default(true)
+  mobileExperienceEnabled     Boolean  @default(true)
+  multiEndpointEnabled        Boolean  @default(true)
+  featuresJson                String   @default("{}")
+  updatedByUserId             String?
+  updatedByUser               User?    @relation("ZtConfigUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  updatedAt                   DateTime @updatedAt
 }

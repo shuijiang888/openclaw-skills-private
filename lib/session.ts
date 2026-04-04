@@ -15,8 +15,17 @@ export async function signSessionToken(user: {
   id: string;
   role: string;
   email: string;
+  name?: string;
+  ztRole?: string;
+  isSuperAdmin?: boolean;
 }): Promise<string> {
-  return new SignJWT({ role: user.role, email: user.email })
+  return new SignJWT({
+    role: user.role,
+    ztRole: user.ztRole ?? user.role,
+    email: user.email,
+    name: user.name ?? "",
+    isSuperAdmin: Boolean(user.isSuperAdmin),
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
     .setIssuedAt()
@@ -27,12 +36,18 @@ export async function signSessionToken(user: {
 export async function verifySessionToken(token: string): Promise<{
   sub: string;
   role: string;
+  ztRole: string;
   email: string;
+  name: string;
+  isSuperAdmin: boolean;
 }> {
   const { payload } = await jwtVerify(token, getSessionSecretBytes());
   return {
     sub: payload.sub as string,
     role: (payload.role as string) ?? "",
+    ztRole: (payload.ztRole as string) ?? (payload.role as string) ?? "",
     email: (payload.email as string) ?? "",
+    name: (payload.name as string) ?? "",
+    isSuperAdmin: Boolean(payload.isSuperAdmin),
   };
 }

@@ -62,6 +62,16 @@ type Redemption = {
 type OverviewResponse = {
   overview: Overview;
   wallet: { actorRole: string; points: number } | null;
+  user: {
+    userId: string | null;
+    ztRole: string;
+    rank: string;
+    points: number;
+    lifetimePoints: number;
+    nextRankAt: number | null;
+    progressToNext: number;
+    lastRankChangedAt: string | null;
+  } | null;
   metrics: {
     signals: number;
     openActionCards: number;
@@ -173,6 +183,7 @@ export function Zt007System() {
     { name: "行动卡闭环（完成即入积分）", status: "已发布", href: "/zt007" },
     { name: "任务悬赏众包", status: "已发布", href: "/zt007" },
     { name: "积分兑换", status: "已发布", href: "/zt007" },
+    { name: "个人工作台", status: "已发布", href: "/zt007/me" },
     { name: "盈利报价工作台", status: "已发布", href: "/dashboard" },
     { name: "后台规则/审计", status: "已发布", href: "/console" },
     { name: "健康检查页", status: "已发布", href: "/health-check" },
@@ -271,6 +282,41 @@ export function Zt007System() {
           </button>
         </div>
       </section>
+
+      {overview?.user ? (
+        <section className="rounded-xl border border-cyan-500/40 bg-cyan-950/20 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-cyan-200">
+              我的军衔工作台
+            </h2>
+            <span className="rounded-full border border-cyan-300/60 px-2 py-0.5 text-xs text-cyan-100">
+              当前军衔：{overview.user.rank}
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-lg border border-cyan-600/40 bg-slate-950/50 p-3">
+              <p className="text-xs text-cyan-300">当前积分</p>
+              <p className="mt-1 text-xl font-bold text-cyan-100">
+                {overview.user.points}
+              </p>
+            </div>
+            <div className="rounded-lg border border-cyan-600/40 bg-slate-950/50 p-3">
+              <p className="text-xs text-cyan-300">累计积分</p>
+              <p className="mt-1 text-xl font-bold text-cyan-100">
+                {overview.user.lifetimePoints}
+              </p>
+            </div>
+            <div className="rounded-lg border border-cyan-600/40 bg-slate-950/50 p-3">
+              <p className="text-xs text-cyan-300">升级还需</p>
+              <p className="mt-1 text-xl font-bold text-cyan-100">
+                {overview.user.nextRankAt
+                  ? overview.user.progressToNext
+                  : "已最高"}
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">

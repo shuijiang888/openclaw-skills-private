@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { applyPointsAndSyncRank } from "@/lib/zt-points";
 
 const ROLE_BASE_POINTS: Record<string, number> = {
   SALES_MANAGER: 120,
@@ -10,11 +11,45 @@ const ROLE_BASE_POINTS: Record<string, number> = {
 };
 
 export async function ensureZt007Seed(prisma: PrismaClient) {
+  await prisma.ztSystemConfig.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      llmEnabled: true,
+      llmProvider: "minimax",
+      llmModel: "MiniMax-M2.7",
+      llmInteractiveEnabled: true,
+      llmPasswordRequired: true,
+      llmAutomationBypassPassword: true,
+      mobileExperienceEnabled: true,
+      multiEndpointEnabled: true,
+    },
+  });
+
   for (const [actorRole, points] of Object.entries(ROLE_BASE_POINTS)) {
     await prisma.ztPointWallet.upsert({
       where: { actorRole },
       update: {},
-      create: { actorRole, points },
+      create: {
+        actorRole,
+        points,
+        lifetimePoints: points,
+        rank: "战士",
+        rankLevel: 1,
+      },
+    });
+  }
+
+  const roleWallets = await prisma.ztPointWallet.findMany({
+    where: { userId: null, actorRole: { not: null } },
+  });
+  for (const row of roleWallets) {
+    await applyPointsAndSyncRank(prisma, {
+      actorRole: row.actorRole,
+      pointsDelta: 0,
+      action: "BOOTSTRAP_SYNC_RANK",
+      reason: "bootstrap sync rank",
     });
   }
 
@@ -109,6 +144,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
     actionCards: await prisma.ztActionCard.count(),
     tasks: await prisma.ztBountyTask.count(),
     signals: await prisma.ztSignal.count(),
+    rankLogs: await prisma.ztRankChangeLog.count(),
   };
 }
 

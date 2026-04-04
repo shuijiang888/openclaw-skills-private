@@ -96,7 +96,13 @@ export function RoleSwitcher() {
   const [sessionInfo, setSessionInfo] = useState<
     | { status: "loading" }
     | { status: "anon" }
-    | { status: "in"; email: string; role: string }
+    | {
+        status: "in";
+        email: string;
+        role: string;
+        ztRole?: string;
+        isSuperAdmin?: boolean;
+      }
   >(() => (sessionMode ? { status: "loading" } : { status: "anon" }));
 
   useEffect(() => {
@@ -108,7 +114,12 @@ export function RoleSwitcher() {
           credentials: "include",
         });
         const j = (await r.json()) as {
-          user?: { email?: string; role?: string } | null;
+          user?: {
+            email?: string;
+            role?: string;
+            ztRole?: string;
+            isSuperAdmin?: boolean;
+          } | null;
         };
         if (cancelled) return;
         if (j.user?.email) {
@@ -116,6 +127,8 @@ export function RoleSwitcher() {
             status: "in",
             email: j.user.email,
             role: j.user.role ?? "SALES_DIRECTOR",
+            ztRole: j.user.ztRole,
+            isSuperAdmin: j.user.isSuperAdmin,
           });
         } else {
           setSessionInfo({ status: "anon" });
@@ -150,6 +163,12 @@ export function RoleSwitcher() {
       sessionInfo.status === "in"
         ? (ROLE_LABEL[sessionInfo.role] ?? sessionInfo.role)
         : (ROLE_LABEL[role] ?? role);
+    const ztLabel =
+      sessionInfo.status === "in" && sessionInfo.ztRole
+        ? sessionInfo.isSuperAdmin
+          ? "超超级管理员"
+          : sessionInfo.ztRole
+        : null;
     if (sessionInfo.status === "loading") {
       return (
         <span className="text-[11px] text-slate-500 dark:text-slate-400">会话…</span>
@@ -175,6 +194,7 @@ export function RoleSwitcher() {
         <div className="flex max-w-[18rem] flex-col items-end gap-1 rounded-lg border border-slate-200 bg-slate-50/90 px-2 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900/80 sm:flex-row sm:items-center">
           <span className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-200">
             {sessionInfo.email} · {label}
+            {ztLabel ? ` · 智探007:${ztLabel}` : ""}
           </span>
           <button
             type="button"

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { demoRoleFromRequest } from "@/lib/http";
+import { getRequestUserContext } from "@/lib/request-user";
+import { applyPointsAndSyncRank } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 export async function GET(req: Request) {
@@ -18,6 +20,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   await ensureZtBootstrap();
   const role = demoRoleFromRequest(req);
+  const uctx = getRequestUserContext(req);
   const body = (await req.json()) as {
     taskId?: string;
     title?: string;
@@ -42,6 +45,8 @@ export async function POST(req: Request) {
         signalType: String(body.signalType ?? "tactical"),
         region: String(body.region ?? ""),
         format: String(body.format ?? "text"),
+        userId: uctx.userId,
+        actorName: uctx.userEmail ?? "",
         actorRole: role,
         status: "APPROVED",
         pointsGranted: 8,
@@ -55,20 +60,14 @@ export async function POST(req: Request) {
       });
     }
 
-    const wallet = await tx.ztPointWallet.upsert({
-      where: { actorRole: role },
-      update: { points: { increment: 8 } },
-      create: { actorRole: role, points: 8 },
-    });
-
-    await tx.ztPointLedger.create({
-      data: {
-        actorRole: role,
-        action: "SUBMISSION_APPROVED",
-        points: 8,
-        refType: "submission",
-        refId: submission.id,
-      },
+    const wallet = await applyPointsAndSyncRank(tx, {
+      userId: uctx.userId,
+      actorRole: role,
+      pointsDelta: 8,
+      action: "SUBMISSION_APPROVED",
+      reason: "情报提交审核通过",
+      refType: "submission",
+      refId: submission.id,
     });
 
     return { submission, wallet };

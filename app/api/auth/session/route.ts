@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { PROFIT_SESSION_COOKIE, verifySessionToken } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +14,33 @@ export async function GET() {
       return NextResponse.json({ user: null });
     }
     const p = await verifySessionToken(token);
+    const dbUser = await prisma.user.findUnique({
+      where: { id: p.sub },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isSuperAdmin: true,
+        isActive: true,
+        ztAllowInteractiveLlm: true,
+        orgUnitId: true,
+        orgUnit: { select: { id: true, name: true, code: true } },
+      },
+    });
+    if (!dbUser || !dbUser.isActive) {
+      return NextResponse.json({ user: null });
+    }
     return NextResponse.json({
-      user: { id: p.sub, email: p.email, role: p.role },
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        role: dbUser.role,
+        ztRole: dbUser.role,
+        isSuperAdmin: dbUser.isSuperAdmin,
+        ztAllowInteractiveLlm: dbUser.ztAllowInteractiveLlm,
+        orgUnitId: dbUser.orgUnitId,
+        orgUnit: dbUser.orgUnit,
+      },
     });
   } catch {
     return NextResponse.json({ user: null });

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { demoRoleFromRequest } from "@/lib/http";
+import { getRequestUserContext } from "@/lib/request-user";
+import { readUserProgress } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   await ensureZtBootstrap();
   const actorRole = demoRoleFromRequest(req);
+  const userCtx = getRequestUserContext(req);
 
   const [
     signals,
@@ -16,13 +19,19 @@ export async function GET(req: Request) {
     submissions,
     wallet,
     redemptions,
+    userProgress,
   ] = await Promise.all([
     prisma.ztSignal.count(),
     prisma.ztActionCard.count({ where: { status: "OPEN" } }),
     prisma.ztBountyTask.count({ where: { status: "OPEN" } }),
     prisma.ztSubmission.count(),
-    prisma.ztPointWallet.findUnique({ where: { actorRole } }),
-    prisma.ztRedemption.count({ where: { actorRole } }),
+    userCtx.userId
+      ? prisma.ztPointWallet.findUnique({ where: { userId: userCtx.userId } })
+      : prisma.ztPointWallet.findUnique({ where: { actorRole } }),
+    userCtx.userId
+      ? prisma.ztRedemption.count({ where: { userId: userCtx.userId } })
+      : prisma.ztRedemption.count({ where: { actorRole } }),
+    readUserProgress(prisma, userCtx.userId),
   ]);
 
   return NextResponse.json({
@@ -40,6 +49,13 @@ export async function GET(req: Request) {
       redemptionCoordinator: "Jiang Shui",
     },
     wallet: wallet ? { actorRole: wallet.actorRole, points: wallet.points } : null,
+    user: userProgress
+      ? {
+          ...userProgress,
+          userId: userCtx.userId,
+          ztRole: userCtx.ztRole,
+        }
+      : null,
     metrics: {
       signals,
       openActionCards,

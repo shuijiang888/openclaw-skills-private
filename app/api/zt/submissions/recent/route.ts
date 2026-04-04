@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { demoRoleFromRequest } from "@/lib/http";
+import { ztRoleFromRequest } from "@/lib/http";
+import { getRequestUserContext } from "@/lib/request-user";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 export async function GET(req: Request) {
   await ensureZtBootstrap();
-  const role = demoRoleFromRequest(req);
+  const ctx = getRequestUserContext(req);
+  const role = ztRoleFromRequest(req);
   const rows = await prisma.ztSubmission.findMany({
-    where:
-      role === "GM" || role === "ADMIN" ? undefined : { actorRole: role },
+    where: ctx.isAdminLike
+      ? undefined
+      : ctx.userId
+        ? { userId: ctx.userId }
+        : { actorRole: role },
     orderBy: { createdAt: "desc" },
     take: 12,
   });

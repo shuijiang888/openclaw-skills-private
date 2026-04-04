@@ -40,9 +40,23 @@ export function parseDemoRole(
   raw: string | null | undefined,
 ): DemoRole {
   const r = (raw ?? "").trim().toUpperCase();
+  if (r === "SUPERADMIN" || r === "SUPER_ADMIN") return "ADMIN";
   if (r === "SALES_MANAGER" || r === "MANAGER") return "SALES_MANAGER";
   if (r === "SALES_DIRECTOR" || r === "DIRECTOR") return "SALES_DIRECTOR";
   if (r === "SALES_VP" || r === "VP") return "SALES_VP";
+  // 智探007 军衔角色映射到盈利系统最小业务权限，避免越权进入管理能力
+  if (
+    r === "GENERAL" ||
+    r === "COMMANDER" ||
+    r === "CORPS_COMMANDER" ||
+    r === "DIVISION_COMMANDER" ||
+    r === "COMPANY_COMMANDER" ||
+    r === "PLATOON_LEADER" ||
+    r === "SQUAD_LEADER" ||
+    r === "SOLDIER"
+  ) {
+    return "SALES_MANAGER";
+  }
   if (r === "GM" || r === "GENERAL_MANAGER") return "GM";
   if (r === "ADMIN" || r === "SYSTEM") return "ADMIN";
   return "SALES_DIRECTOR";

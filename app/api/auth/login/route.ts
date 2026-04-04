@@ -61,6 +61,9 @@ export async function POST(req: Request) {
     id: user.id,
     role: user.role,
     email: user.email,
+    name: user.name,
+    isSuperAdmin: user.isSuperAdmin,
+    ztRole: user.role,
   });
   const jar = await cookies();
   jar.set(PROFIT_SESSION_COOKIE, token, {

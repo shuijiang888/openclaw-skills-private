@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { demoRoleFromRequest } from "@/lib/http";
+import { getRequestUserContext } from "@/lib/request-user";
+import { applyPointsAndSyncRank } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 
 function randomCode() {
@@ -9,6 +11,20 @@ function randomCode() {
 
 export async function GET(req: Request) {
   await ensureZtBootstrap();
+  const ctx = getRequestUserContext(req);
+  if (ctx.userId) {
+    const rows = ctx.isAdminLike
+      ? await prisma.ztRedemption.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 50,
+        })
+      : await prisma.ztRedemption.findMany({
+          where: { userId: ctx.userId },
+          orderBy: { createdAt: "desc" },
+          take: 20,
+        });
+    return NextResponse.json({ items: rows });
+  }
   const role = demoRoleFromRequest(req);
   // keep role-specific history for non-admin/GM views
   const where =
@@ -23,6 +39,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   await ensureZtBootstrap();
+  const ctx = getRequestUserContext(req);
   const role = demoRoleFromRequest(req);
   const body = (await req.json()) as {
     item?: string;
@@ -34,37 +51,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "item required" }, { status: 400 });
   }
 
-  const wallet = await prisma.ztPointWallet.findUnique({
-    where: { actorRole: role },
-  });
+  const wallet = ctx.userId
+    ? await prisma.ztPointWallet.findUnique({ where: { userId: ctx.userId } })
+    : await prisma.ztPointWallet.findUnique({ where: { actorRole: role } });
   const current = wallet?.points ?? 0;
   if (current < pointsCost) {
     return NextResponse.json({ error: "insufficient points" }, { status: 400 });
   }
 
-  const redemption = await prisma.$transaction(async (tx) => {
-    const updated = await tx.ztPointWallet.update({
-      where: { actorRole: role },
-      data: { points: { decrement: pointsCost } },
+  const data = await prisma.$transaction(async (tx) => {
+    const pointsState = await applyPointsAndSyncRank(tx, {
+      userId: ctx.userId,
+      actorRole: role,
+      pointsDelta: -pointsCost,
+      action: "REDEEM_REQUEST",
+      reason: "积分兑换申请",
+      refType: "REDEMPTION",
     });
-    await tx.ztPointLedger.create({
+    const redemption = await tx.ztRedemption.create({
       data: {
-        actorRole: role,
-        action: "REDEEM_REQUEST",
-        points: -pointsCost,
-        refType: "REDEMPTION",
-      },
-    });
-    return tx.ztRedemption.create({
-      data: {
-        actorRole: role,
+        actorRole: ctx.userId ? ctx.ztRole : role,
+        userId: ctx.userId,
+        actorName: ctx.userEmail ?? "",
+        rankAtRequest: pointsState.rankLabel,
         item,
         pointsCost,
         redeemCode: randomCode(),
         status: "REQUESTED",
       },
     });
+    return { redemption, walletPoints: pointsState.wallet.points };
   });
 
-  return NextResponse.json({ redemption, walletPoints: current - pointsCost });
+  return NextResponse.json(data);
 }
