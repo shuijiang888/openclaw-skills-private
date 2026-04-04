@@ -70,6 +70,7 @@ npm run dev
   - `content/AGENT_STANDALONE_INTEGRATED_ARCHITECTURE.md`
   - `content/TENCENT_CLOUD_LOW_COST_DEPLOYMENT_RUNBOOK.md`
   - `content/ROLL_OUT_300_USERS_OPERATION_PLAYBOOK.md`
+  - 当前 Owner 决策基线：系统名 **智探007**；上线模式 **先 Standalone，后续对接纷享销客 OpenAPI**；预算档 **低**；荣誉风格 **专业权威**
 
 ## 本机大模型（Ollama · 优先 qwen3.5:35b）
 

@@ -1,8 +1,9 @@
 # Agent 双模式架构规范（Standalone + CRM Integrated）
 
-**版本**: v1.0  
+**版本**: v1.1  
 **目标**: 同一套系统可独立运行，也可与公司 SaaS CRM 无缝整合。  
 **原则**: Agent Core 不依赖 CRM，CRM 通过 Connector 可插拔接入。
+**当前 Owner 决策**: 先 Standalone 上线，后续优先对接纷享销客 OpenAPI（灰度启用）。
 
 ---
 
@@ -25,7 +26,7 @@ Agent Core（固定）
         |
 Connector Layer（可插拔）
   ├─ None（Standalone）
-  ├─ CRM Connector A
+  ├─ 纷享销客 OpenAPI Connector（优先）
   ├─ CRM Connector B
   └─ Custom OpenAPI Connector
 ```
@@ -43,6 +44,7 @@ Connector Layer（可插拔）
 - 读取 CRM 客户、联系人、商机、组织等主数据。
 - 将 Agent 产出（高价值情报、动作建议、执行结果）回写 CRM。
 - 适合已有成熟 CRM 流程的总部与规模团队。
+- 当前建议优先实施: 纷享销客 OpenAPI 入站只读，稳定后再开出站回写。
 
 ---
 
@@ -117,8 +119,15 @@ Connector Layer（可插拔）
 ## 8. 上线顺序建议
 
 1. 先 Standalone 跑通完整闭环（输入 -> 动作 -> 回填 -> 激励）  
-2. 再接 CRM 只读（入站）  
+2. 再接 CRM 只读（入站，优先纷享销客 OpenAPI）  
 3. 最后开 CRM 回写（出站）并做灰度开关  
+
+### 8.1 纷享销客 OpenAPI 对接最小步骤
+1. 申请并配置纷享销客 OpenAPI 应用凭据（最小权限）。  
+2. 建立客户/联系人/商机三类字段映射（先只读拉取）。  
+3. 开启增量同步任务与失败重试队列。  
+4. 验证主键一致性与去重，再开启回写白名单字段。  
+5. 回写仅从低风险字段开始，逐步扩大覆盖范围。
 
 ---
 
@@ -128,6 +137,15 @@ Connector Layer（可插拔）
 - 接 CRM 后无数据重复与主键冲突。
 - 回写成功率满足上线阈值，失败可追踪可补偿。
 - 权限与审计可通过内部检查。
+
+---
+
+## 10. 修订记录
+
+| 版本 | 日期 | 说明 |
+| --- | --- | --- |
+| v1.0 | 2026-04-03 | 首版 |
+| v1.1 | 2026-04-03 | 明确 Owner 决策：先独立运行，后续优先对接纷享销客 OpenAPI |
 
 ---
 
