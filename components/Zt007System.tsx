@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
+import {
+  ROLE_OPTIONS,
+  demoHeaders,
+  useDemoRole,
+} from "@/components/RoleSwitcher";
 import { withClientBasePath } from "@/lib/client-url";
 
 type Overview = {
@@ -82,6 +86,15 @@ type OverviewResponse = {
 };
 
 const MOBILE_BP = 780;
+const ZT_SECTION_NAV = [
+  { id: "overview", label: "总览" },
+  { id: "action", label: "今日行动" },
+  { id: "bounty", label: "任务悬赏" },
+  { id: "honor", label: "荣誉积分" },
+  { id: "cockpit", label: "管理驾驶舱" },
+  { id: "architecture", label: "架构与上线" },
+  { id: "roles", label: "角色" },
+] as const;
 
 function priorityBadge(priority: string) {
   const p = priority.toUpperCase();
@@ -208,6 +221,16 @@ export function Zt007System() {
     { name: "健康检查页", status: "已发布", href: "/health-check" },
   ] as const;
 
+  const topNav = [
+    { id: "overview", label: "总览" },
+    { id: "today-action", label: "今日行动" },
+    { id: "bounty", label: "任务悬赏" },
+    { id: "honor-points", label: "荣誉积分" },
+    { id: "management-cockpit", label: "管理驾驶舱" },
+    { id: "architecture-release", label: "架构与上线" },
+    { id: "roles", label: "角色" },
+  ] as const;
+
   async function markDone(id: string) {
     try {
       await api<{ ok: boolean }>(`/api/zt/action-cards/${id}/done`, {
@@ -305,6 +328,23 @@ export function Zt007System() {
         </div>
       </section>
 
+      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <h2 className="text-sm font-semibold text-cyan-200">
+          智探007导航（按使用逻辑）
+        </h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {topNav.map((x) => (
+            <a
+              key={x.id}
+              href={`#${x.id}`}
+              className="rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-200 hover:border-cyan-500/60 hover:text-cyan-200"
+            >
+              {x.label}
+            </a>
+          ))}
+        </div>
+      </section>
+
       {overview?.user ? (
         <section className="rounded-xl border border-cyan-500/40 bg-cyan-950/20 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -340,10 +380,13 @@ export function Zt007System() {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+      <section
+        id="management-cockpit"
+        className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-cyan-200">
-            已发布能力矩阵（团队可直接使用）
+            管理驾驶舱（今天已交付模块入口）
           </h2>
           <Link
             href={withClientBasePath("/health-check")}
@@ -374,28 +417,31 @@ export function Zt007System() {
 
       {loading || !overview ? (
         <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-6 text-sm text-slate-300">
-          Loading system modules...
+          正在加载智探007系统模块...
         </div>
       ) : (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <CardKpi
-              label="North Star Lift"
-              value={`${overview.overview.opportunityLiftPct}%`}
-            />
-            <CardKpi
-              label="48h Execution"
-              value={`${overview.overview.actionExecution48hPct}%`}
-            />
-            <CardKpi label="Wallet Points" value={`${overview.wallet?.points ?? 0}`} />
-            <CardKpi label="Client Device" value={device} />
+          <section id="overview" className="space-y-3">
+            <h2 className="text-lg font-semibold text-cyan-200">总览</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <CardKpi
+                label="机会提升（North Star）"
+                value={`${overview.overview.opportunityLiftPct}%`}
+              />
+              <CardKpi
+                label="48小时执行率"
+                value={`${overview.overview.actionExecution48hPct}%`}
+              />
+              <CardKpi label="当前积分" value={`${overview.wallet?.points ?? 0}`} />
+              <CardKpi label="终端形态" value={device} />
+            </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-5">
+          <section id="today-action" className="grid gap-4 lg:grid-cols-5">
             <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-3">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-cyan-200">
-                  Today Action Cards
+                  今日行动
                 </h2>
                 <span className="text-xs text-slate-400">
                   done {doneCount}/{cards.length}
@@ -434,7 +480,7 @@ export function Zt007System() {
 
             <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-2">
               <h2 className="mb-3 text-lg font-semibold text-cyan-200">
-                Mission Control
+                运行看板
               </h2>
               <ul className="space-y-2 text-sm text-slate-300">
                 <li>Wave: {overview.overview.rolloutWave}</li>
@@ -458,10 +504,10 @@ export function Zt007System() {
             </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-5">
+          <section id="bounty" className="grid gap-4 lg:grid-cols-5">
             <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-3">
               <h2 className="mb-3 text-lg font-semibold text-cyan-200">
-                Bounty Tasks + Submission
+                任务悬赏与情报提交
               </h2>
               <div className="space-y-2">
                 {tasks.map((t) => (
@@ -554,14 +600,14 @@ export function Zt007System() {
                   type="submit"
                   className="rounded-md border border-cyan-500/30 bg-cyan-500/15 px-3 py-1.5 text-sm text-cyan-200"
                 >
-                  Submit +8
+                  提交情报 +8
                 </button>
               </form>
             </div>
 
             <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-2">
               <h2 className="mb-3 text-lg font-semibold text-cyan-200">
-                Recent submissions
+                最近提交
               </h2>
               <div className="max-h-80 space-y-2 overflow-auto pr-1">
                 {subs.map((s) => (
@@ -583,10 +629,10 @@ export function Zt007System() {
             </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-5">
+          <section id="honor-points" className="grid gap-4 lg:grid-cols-5">
             <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-3">
               <h2 className="mb-3 text-lg font-semibold text-cyan-200">
-                Honor & Redemption
+                荣誉积分与兑换
               </h2>
               <form className="grid gap-2 sm:grid-cols-3" onSubmit={createRedemption}>
                 <select
@@ -618,7 +664,7 @@ export function Zt007System() {
                   type="submit"
                   className="rounded-md border border-emerald-500/30 bg-emerald-500/15 px-3 py-1.5 text-sm text-emerald-200"
                 >
-                  Create redemption
+                  发起兑换申请
                 </button>
               </form>
 
@@ -642,17 +688,50 @@ export function Zt007System() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-2">
+            <div
+              id="architecture-release"
+              className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-2"
+            >
               <h2 className="mb-3 text-lg font-semibold text-cyan-200">
-                Systemized Structure
+                架构与上线
               </h2>
               <ol className="list-decimal space-y-1 pl-4 text-sm text-slate-300">
-                <li>single entry + unified data loop</li>
-                <li>mobile/tablet responsive layout</li>
-                <li>role-based operational visibility</li>
-                <li>persistent API-backed records</li>
-                <li>standalone-first, CRM-ready architecture</li>
+                <li>单入口 + API闭环数据流</li>
+                <li>移动端/Pad/桌面统一适配</li>
+                <li>角色驱动可见范围与动作权限</li>
+                <li>后台可维护：系统开关 + 用户组织</li>
+                <li>当前上线模式：Standalone（可扩展CRM）</li>
               </ol>
+              <div className="mt-3 space-y-1 text-xs text-slate-400">
+                <p>上线检查：建议每日先跑健康检查页，再执行业务验收。</p>
+                <Link
+                  href={withClientBasePath("/health-check")}
+                  className="text-cyan-300 underline"
+                >
+                  打开健康检查页
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <section id="roles" className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+            <h2 className="text-lg font-semibold text-cyan-200">角色</h2>
+            <p className="mt-1 text-sm text-slate-300">
+              当前角色：{roleLabel}（右上角可切换）。切换后会影响行动卡、提交、积分与可见数据范围。
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {ROLE_OPTIONS.map((x) => (
+                <span
+                  key={x.value}
+                  className={`rounded-full border px-2 py-0.5 text-xs ${
+                    role === x.value
+                      ? "border-cyan-400/70 text-cyan-200"
+                      : "border-slate-600 text-slate-300"
+                  }`}
+                >
+                  {x.label}
+                </span>
+              ))}
             </div>
           </section>
         </>
