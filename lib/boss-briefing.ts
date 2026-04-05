@@ -64,8 +64,11 @@ export function buildBossBriefingFromProjects(
     if (!p.quote || !("computed" in p.quote)) continue;
     const q = p.quote;
     if (q.computed.shunt.channel === "COLLAB") collabChannelCount += 1;
-    winSum += q.computed.winRate;
-    winN += 1;
+    const winRate = Number(q.computed.winRate);
+    if (Number.isFinite(winRate)) {
+      winSum += winRate;
+      winN += 1;
+    }
   }
 
   const avgWinRate = winN > 0 ? Math.round((winSum / winN) * 10) / 10 : 0;

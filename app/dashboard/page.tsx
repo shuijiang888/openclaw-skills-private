@@ -2,7 +2,6 @@ import Link from "next/link";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { PageContainer } from "@/components/PageContainer";
 import { RoleHomePanel } from "@/components/RoleHomePanel";
-import { buildBossBriefingFromProjects } from "@/lib/boss-briefing";
 import { computePortfolioMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
 
@@ -54,8 +53,6 @@ export default async function DashboardPage({
 
   const vm = computePortfolioMetrics(allProjectsWithCustomer);
 
-  const bossBriefing = buildBossBriefingFromProjects(allProjectsWithCustomer);
-
   const autoPct =
     vm.projectCount > 0
       ? Math.round((vm.autoChannelEligibleCount / vm.projectCount) * 1000) / 10
@@ -82,7 +79,7 @@ export default async function DashboardPage({
         </p>
       </div>
 
-      <BossBriefingCard data={bossBriefing} />
+      <BossBriefingCard />
 
       <section className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/95 via-white to-slate-50/90 p-5 shadow-sm dark:border-amber-900/30 dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-950">
         <div className="flex flex-wrap items-center justify-between gap-2">

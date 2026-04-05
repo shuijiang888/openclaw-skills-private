@@ -4,11 +4,15 @@ export function totalCost(parts: {
   overhead: number;
   period: number;
 }): number {
+  const toFinite = (v: number): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
   return (
-    Number(parts.material) +
-    Number(parts.labor) +
-    Number(parts.overhead) +
-    Number(parts.period)
+    toFinite(parts.material) +
+    toFinite(parts.labor) +
+    toFinite(parts.overhead) +
+    toFinite(parts.period)
   );
 }
 
@@ -24,13 +28,17 @@ export function coefficientProduct(c: {
   coeffLead: number;
   coeffQty: number;
 }): number {
+  const toFinite = (v: number): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
   return (
-    c.coeffCustomer *
-    c.coeffIndustry *
-    c.coeffRegion *
-    c.coeffProduct *
-    c.coeffLead *
-    c.coeffQty
+    toFinite(c.coeffCustomer) *
+    toFinite(c.coeffIndustry) *
+    toFinite(c.coeffRegion) *
+    toFinite(c.coeffProduct) *
+    toFinite(c.coeffLead) *
+    toFinite(c.coeffQty)
   );
 }
 
@@ -55,13 +63,21 @@ export function discountPercent(
   suggested: number,
   offered: number | null | undefined,
 ): number {
-  if (!offered || suggested <= 0) return 0;
-  return Math.max(0, 1 - offered / suggested);
+  const suggestedNum = Number(suggested);
+  const offeredNum = Number(offered);
+  if (!Number.isFinite(suggestedNum) || suggestedNum <= 0) return 0;
+  if (!Number.isFinite(offeredNum) || offeredNum <= 0) return 0;
+  const ratio = 1 - offeredNum / suggestedNum;
+  return Number.isFinite(ratio) ? Math.max(0, ratio) : 0;
 }
 
 export function grossMarginPercent(price: number, cost: number): number {
-  if (price <= 0) return 0;
-  return Math.round(((price - cost) / price) * 1000) / 10;
+  const priceNum = Number(price);
+  const costNum = Number(cost);
+  if (!Number.isFinite(priceNum) || priceNum <= 0) return 0;
+  if (!Number.isFinite(costNum)) return 0;
+  const margin = ((priceNum - costNum) / priceNum) * 100;
+  return Number.isFinite(margin) ? Math.round(margin * 10) / 10 : 0;
 }
 
 const WIN_WEIGHTS = {
@@ -79,12 +95,17 @@ export function winRatePercent(scores: {
   wsTech: number;
   wsPayment: number;
 }): number {
+  const toFinite = (v: number): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
   const v =
-    scores.wsPrice * WIN_WEIGHTS.price +
-    scores.wsRelation * WIN_WEIGHTS.relation +
-    scores.wsDelivery * WIN_WEIGHTS.delivery +
-    scores.wsTech * WIN_WEIGHTS.tech +
-    scores.wsPayment * WIN_WEIGHTS.payment;
+    toFinite(scores.wsPrice) * WIN_WEIGHTS.price +
+    toFinite(scores.wsRelation) * WIN_WEIGHTS.relation +
+    toFinite(scores.wsDelivery) * WIN_WEIGHTS.delivery +
+    toFinite(scores.wsTech) * WIN_WEIGHTS.tech +
+    toFinite(scores.wsPayment) * WIN_WEIGHTS.payment;
+  if (!Number.isFinite(v)) return 0;
   return Math.min(100, Math.max(0, Math.round(v * 10) / 10));
 }
 
