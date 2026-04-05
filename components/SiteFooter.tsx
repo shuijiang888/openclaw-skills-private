@@ -54,6 +54,24 @@ export function SiteFooter() {
                 智探007总览
               </Link>
               <Link
+                href="/zt007/action"
+                className="hover:text-cyan-700 dark:hover:text-cyan-400"
+              >
+                行动中心
+              </Link>
+              <Link
+                href="/zt007/bounty"
+                className="hover:text-cyan-700 dark:hover:text-cyan-400"
+              >
+                悬赏任务
+              </Link>
+              <Link
+                href="/zt007/honor"
+                className="hover:text-cyan-700 dark:hover:text-cyan-400"
+              >
+                荣誉积分
+              </Link>
+              <Link
                 href="/personal"
                 className="hover:text-cyan-700 dark:hover:text-cyan-400"
               >

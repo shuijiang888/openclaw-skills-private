@@ -22,6 +22,9 @@ export function Nav() {
   const ztLinks = [
     { href: "/", label: "门户" },
     { href: "/zt007", label: "智探007总览" },
+    { href: "/zt007/action", label: "行动中心" },
+    { href: "/zt007/bounty", label: "悬赏任务" },
+    { href: "/zt007/honor", label: "荣誉积分" },
     { href: "/personal", label: "我的战情台" },
     ...(canAccessConsole(role)
       ? [

@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ROLE_OPTIONS,
-  demoHeaders,
-  useDemoRole,
-} from "@/components/RoleSwitcher";
+import { ZT_ROLE_OPTIONS, demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import { withClientBasePath } from "@/lib/client-url";
 
 type Overview = {
@@ -86,15 +82,6 @@ type OverviewResponse = {
 };
 
 const MOBILE_BP = 780;
-const ZT_SECTION_NAV = [
-  { id: "overview", label: "总览" },
-  { id: "action", label: "今日行动" },
-  { id: "bounty", label: "任务悬赏" },
-  { id: "honor", label: "荣誉积分" },
-  { id: "cockpit", label: "管理驾驶舱" },
-  { id: "architecture", label: "架构与上线" },
-  { id: "roles", label: "角色" },
-] as const;
 
 function priorityBadge(priority: string) {
   const p = priority.toUpperCase();
@@ -244,14 +231,12 @@ export function Zt007System() {
 
   const publishedCapabilities = [
     { name: "情报提交与审核入账", status: "已发布", href: "/zt007" },
-    { name: "行动卡闭环（完成即入积分）", status: "已发布", href: "/zt007" },
-    { name: "任务悬赏众包", status: "已发布", href: "/zt007" },
-    { name: "积分兑换", status: "已发布", href: "/zt007" },
+    { name: "行动卡闭环（完成即入积分）", status: "已发布", href: "/zt007/action" },
+    { name: "任务悬赏众包", status: "已发布", href: "/zt007/bounty" },
+    { name: "积分兑换", status: "已发布", href: "/zt007/honor" },
     { name: "个人工作台", status: "已发布", href: "/personal" },
     { name: "智探007系统维护", status: "已发布", href: "/console/system" },
     { name: "智探007用户组织", status: "已发布", href: "/console/users" },
-    { name: "盈利报价工作台", status: "已发布", href: "/dashboard" },
-    { name: "后台规则/审计", status: "已发布", href: "/console" },
     { name: "健康检查页", status: "已发布", href: "/health-check" },
   ] as const;
 
@@ -758,7 +743,7 @@ export function Zt007System() {
               当前角色：{roleLabel}（右上角可切换）。切换后会影响行动卡、提交、积分与可见数据范围。
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {ROLE_OPTIONS.map((x) => (
+              {ZT_ROLE_OPTIONS.map((x) => (
                 <span
                   key={x.value}
                   className={`rounded-full border px-2 py-0.5 text-xs ${

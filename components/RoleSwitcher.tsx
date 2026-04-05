@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { withClientBasePath } from "@/lib/client-url";
 
 export const DEMO_ROLE_STORAGE_KEY = "profit_demo_role";
@@ -26,6 +26,27 @@ export const ROLE_OPTIONS = [
   { value: "GENERAL", label: "将军（智探007）" },
   { value: "SUPERADMIN", label: "超超级管理员（智探007）" },
 ] as const;
+
+export const PROFIT_ROLE_OPTIONS = ROLE_OPTIONS.filter((x) =>
+  ["SALES_MANAGER", "SALES_DIRECTOR", "SALES_VP", "GM", "ADMIN"].includes(
+    x.value,
+  ),
+);
+
+export const ZT_ROLE_OPTIONS = ROLE_OPTIONS.filter((x) =>
+  [
+    "SOLDIER",
+    "ADMIN",
+    "SQUAD_LEADER",
+    "PLATOON_LEADER",
+    "COMPANY_COMMANDER",
+    "DIVISION_COMMANDER",
+    "CORPS_COMMANDER",
+    "COMMANDER",
+    "GENERAL",
+    "SUPERADMIN",
+  ].includes(x.value),
+);
 
 /** 与 .env 中 NEXT_PUBLIC_PROFIT_AUTH_MODE=session 一致 */
 export function isClientSessionAuth(): boolean {
@@ -109,8 +130,17 @@ export function useDemoRole(): string {
 
 export function RoleSwitcher() {
   const router = useRouter();
+  const pathname = usePathname();
   const role = useDemoRole();
   const sessionMode = isClientSessionAuth();
+  const isZtContext =
+    pathname.startsWith("/zt007") ||
+    pathname.startsWith("/personal") ||
+    pathname.startsWith("/console/system") ||
+    pathname.startsWith("/console/users") ||
+    pathname.startsWith("/console/zt-system") ||
+    pathname.startsWith("/console/zt-users");
+  const visibleOptions = isZtContext ? ZT_ROLE_OPTIONS : PROFIT_ROLE_OPTIONS;
   const [sessionInfo, setSessionInfo] = useState<
     | { status: "loading" }
     | { status: "anon" }
@@ -237,14 +267,18 @@ export function RoleSwitcher() {
         </span>
         <select
           className="max-w-[7.5rem] cursor-pointer border-0 bg-transparent text-xs font-medium text-slate-800 focus:ring-0 dark:text-slate-200 sm:max-w-none"
-          value={role}
+          value={
+            visibleOptions.some((x) => x.value === role)
+              ? role
+              : visibleOptions[0].value
+          }
           aria-label="试点角色（演示模式）"
           onChange={(e) => {
             const v = e.target.value;
             setRoleStore(v);
           }}
         >
-          {ROLE_OPTIONS.map((o) => (
+          {visibleOptions.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
