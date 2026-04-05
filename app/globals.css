@@ -10,7 +10,7 @@
   --surface-2: #f8fafc;
   --surface-glass: rgba(255, 255, 255, 0.78);
   --line-soft: #dbe4f0;
-  --text-muted: #475569;
+  --text-muted: #334155;
   --shadow-soft:
     0 10px 30px -16px rgba(15, 23, 42, 0.35),
     0 6px 16px -12px rgba(30, 41, 59, 0.32);
@@ -51,9 +51,9 @@
 
 body {
   background:
-    radial-gradient(1200px 520px at -8% -6%, rgba(56, 189, 248, 0.14), transparent 68%),
-    radial-gradient(980px 420px at 110% 0%, rgba(59, 130, 246, 0.1), transparent 70%),
-    linear-gradient(168deg, #ecf2ff 0%, #eef4fb 45%, #e4ebf7 100%);
+    radial-gradient(1200px 520px at -8% -6%, rgba(56, 189, 248, 0.16), transparent 68%),
+    radial-gradient(980px 420px at 110% 0%, rgba(59, 130, 246, 0.12), transparent 70%),
+    linear-gradient(168deg, #e5edf9 0%, #e8eff8 45%, #dbe5f3 100%);
   background-attachment: fixed;
   color: var(--foreground);
   font-family:
@@ -84,7 +84,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.35;
+  opacity: 0.22;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   z-index: 0;
 }
@@ -184,6 +184,46 @@ svg {
   border: 1px solid var(--line-soft);
   background: linear-gradient(165deg, var(--surface) 0%, var(--surface-2) 100%);
   box-shadow: var(--shadow-soft);
+}
+
+/* Shared card surfaces used across ZT pages */
+.surface-card {
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+}
+
+.card-elevated {
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-lift);
+}
+
+@media (prefers-color-scheme: dark) {
+  .surface-card {
+    border-color: rgba(71, 85, 105, 0.62);
+    background: rgba(2, 6, 23, 0.58);
+  }
+
+  .card-elevated {
+    border-color: rgba(71, 85, 105, 0.72);
+    background: rgba(2, 6, 23, 0.72);
+  }
+}
+
+@keyframes rise-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.motion-rise-up {
+  animation: rise-up 220ms ease-out;
 }
 
 .subtle-grid-bg {

@@ -16,10 +16,11 @@ type ActionCard = {
 
 function priorityBadge(priority: string) {
   const p = priority.toUpperCase();
-  if (p === "P0") return "bg-rose-500/15 text-rose-200 border-rose-500/40";
+  if (p === "P0")
+    return "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200";
   if (p === "P1")
-    return "bg-amber-500/15 text-amber-200 border-amber-500/40";
-  return "bg-emerald-500/15 text-emerald-200 border-emerald-500/40";
+    return "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200";
+  return "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200";
 }
 
 export function ZtActionCenterClient() {
@@ -84,48 +85,53 @@ export function ZtActionCenterClient() {
     <div className="space-y-4">
       <div className="surface-card rounded-2xl p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-cyan-200">行动中心</h2>
-          <span className="text-xs text-slate-400">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-cyan-200">行动中心</h2>
+          <span className="text-xs text-slate-600 dark:text-slate-400">
             done {doneCount}/{items.length}
           </span>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
           这里是可操作页面：点击完成后将直接写入积分和军衔流水。
         </p>
       </div>
 
       {message ? (
-        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-950/30 dark:text-emerald-200">
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-lg border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+        <div className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-500/40 dark:bg-rose-950/30 dark:text-rose-200">
           {error}
         </div>
       ) : null}
 
       <div className="space-y-2">
+        {items.length === 0 ? (
+          <div className="surface-card rounded-xl p-4 text-sm text-slate-600 dark:text-slate-300">
+            暂无行动卡，请先执行「一键初始化数据」或等待系统分配。
+          </div>
+        ) : null}
         {items.map((c) => (
           <div
             key={c.id}
             className="surface-card rounded-xl p-3.5"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-medium text-slate-100">{c.title}</p>
+              <p className="font-medium text-slate-900 dark:text-slate-100">{c.title}</p>
               <span
                 className={`rounded-full border px-2 py-0.5 text-[11px] ${priorityBadge(c.priority)}`}
               >
                 {c.priority}
               </span>
             </div>
-            <p className="mt-1 text-xs text-slate-400">{c.reason}</p>
-            <p className="mt-1 text-xs text-slate-300">{c.suggestion}</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{c.reason}</p>
+            <p className="mt-1 text-xs text-slate-700 dark:text-slate-300">{c.suggestion}</p>
             <button
               type="button"
               disabled={c.status === "DONE" || busy === c.id}
               onClick={() => void markDone(c.id)}
-              className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1.5 text-xs text-emerald-200 disabled:opacity-40"
+              className="mt-2 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-200 dark:hover:bg-emerald-500/25"
             >
               {c.status === "DONE"
                 ? "DONE"
