@@ -49,16 +49,6 @@ export const DEMO_CONSOLE_SIDEBAR_LINKS = [
 export const DEMO_ZT_CONSOLE_SIDEBAR_LINKS = [
   { href: "/console/system", label: "系统维护", roles: BACKOFFICE },
   { href: "/console/users", label: "用户组织", roles: BACKOFFICE },
-  {
-    href: "/console/zt-system",
-    label: "系统维护（别名）",
-    roles: BACKOFFICE,
-  },
-  {
-    href: "/console/zt-users",
-    label: "用户组织（别名）",
-    roles: BACKOFFICE,
-  },
 ] as const;
 
 export function filterNavLinksForRole(role: DemoRole) {
