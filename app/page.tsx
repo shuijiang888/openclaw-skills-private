@@ -15,11 +15,11 @@ type PortalCard = {
 
 const portalCards: PortalCard[] = [
   {
-    title: "首页门户",
-    subtitle: "Home Portal",
-    description: "统一入口与任务导航，支持多系统快速切换与状态总览。",
-    href: "/",
-    cta: "当前页",
+    title: "健康检查",
+    subtitle: "Health Check",
+    description: "全体 Agent 共享能力入口：统一检查接口状态、关键依赖与可用性。",
+    href: "/health-check",
+    cta: "进入健康检查",
   },
   {
     title: "智能盈利管理系统",
