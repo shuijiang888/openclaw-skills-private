@@ -223,6 +223,10 @@ export function Zt007System() {
     pointsCost: 100,
   });
   const [bootstrapping, setBootstrapping] = useState(false);
+  const canBootstrap = useMemo(
+    () => ["ADMIN", "SUPERADMIN", "GENERAL"].includes(role),
+    [role],
+  );
 
   const doneCount = useMemo(
     () => cards.filter((c) => c.status === "DONE").length,
@@ -300,12 +304,22 @@ export function Zt007System() {
   }
 
   async function bootstrapSystemData() {
+    if (!canBootstrap) {
+      setError("当前角色无权执行初始化，请切换为管理员/超超级管理员/将军。");
+      return;
+    }
     setBootstrapping(true);
     try {
       await api<{ ok: boolean }>("/api/zt/bootstrap", { method: "POST" });
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "bootstrap failed");
+      const msg =
+        err instanceof Error ? err.message : "bootstrap failed";
+      setError(
+        /forbidden/i.test(msg)
+          ? "初始化被拒绝：当前角色权限不足（需管理员/超超级管理员/将军）。"
+          : msg,
+      );
     } finally {
       setBootstrapping(false);
     }
@@ -338,11 +352,20 @@ export function Zt007System() {
           </button>
           <button
             type="button"
-            disabled={bootstrapping}
+            disabled={bootstrapping || !canBootstrap}
             className="rounded-lg border border-cyan-400/60 bg-cyan-500/20 px-3 py-1.5 text-sm text-cyan-100 hover:bg-cyan-500/30 disabled:opacity-60"
             onClick={() => void bootstrapSystemData()}
+            title={
+              canBootstrap
+                ? "初始化智探007演示数据"
+                : "当前角色无权限初始化数据"
+            }
           >
-            {bootstrapping ? "初始化中…" : "一键初始化数据"}
+            {bootstrapping
+              ? "初始化中…"
+              : canBootstrap
+                ? "一键初始化数据"
+                : "一键初始化数据（仅管理员）"}
           </button>
         </div>
       </section>
