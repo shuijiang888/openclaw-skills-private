@@ -9,13 +9,16 @@ export default async function ProjectDetailPage({ params }: Params) {
   const { id } = await params;
   return (
     <PageContainer className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">智能报价工作台</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <section className="rounded-2xl border border-slate-200/90 bg-white/90 p-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
+        <p className="text-[11px] font-semibold tracking-wide text-amber-800 dark:text-amber-400">
+          盈利管理系统 · 二级页面
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold">智能报价工作台</h1>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           系数测算、对标、分流与审批；右侧为「报价智能助手」，支持自然语言与文档导入（演示模式下角色见右上角「试点角色」）。
           工作台内新增「关键节点 AI 共驾」，覆盖客户需求、BOM、成本引擎、智能报价与分层审批。
         </p>
-      </div>
+      </section>
       <Workbench projectId={id} />
     </PageContainer>
   );
