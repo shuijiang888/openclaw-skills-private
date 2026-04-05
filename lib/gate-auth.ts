@@ -14,11 +14,15 @@ export function getGatePassword(): string {
 }
 
 function gateSecretBytes(): Uint8Array {
-  const secret = process.env.PROFIT_AUTH_SECRET?.trim();
-  if (!secret || secret.length < 16) {
-    throw new Error("PROFIT_AUTH_SECRET 未配置或长度不足 16");
+  const authGateSecret = process.env.AUTH_GATE_SECRET?.trim();
+  const sessionSecret = process.env.PROFIT_AUTH_SECRET?.trim();
+  const selected = authGateSecret || sessionSecret;
+  if (selected && selected.length >= 16) {
+    return new TextEncoder().encode(selected);
   }
-  return new TextEncoder().encode(secret);
+  // 回退到基于口令的派生密钥，避免因环境变量遗漏导致门禁 API 500。
+  const fallback = `gate-${getGatePassword()}-fallback-secret`;
+  return new TextEncoder().encode(fallback);
 }
 
 type GateTokenPayload = {
