@@ -141,6 +141,10 @@ export function RoleSwitcher() {
     pathname.startsWith("/console/system") ||
     pathname.startsWith("/console/users") ||
     pathname.startsWith("/console/zt-system") ||
+    pathname.startsWith("/console/zt-users") ||
+    pathname.startsWith("/console/system") ||
+    pathname.startsWith("/console/users") ||
+    pathname.startsWith("/console/zt-system") ||
     pathname.startsWith("/console/zt-users");
   const visibleOptions = isZtContext ? ZT_ROLE_OPTIONS : PROFIT_ROLE_OPTIONS;
   const [sessionInfo, setSessionInfo] = useState<
