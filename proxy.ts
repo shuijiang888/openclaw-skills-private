@@ -42,6 +42,7 @@ function isGateProtectedPath(path: string): boolean {
 
 function isPublicApi(path: string): boolean {
   return (
+    path.startsWith("/api/auth/verify") ||
     path.startsWith("/api/auth/login") ||
     path.startsWith("/api/auth/session") ||
     path.startsWith("/api/auth/change-password") ||
