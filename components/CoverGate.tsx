@@ -15,6 +15,8 @@ export function CoverGate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lockedForSec, setLockedForSec] = useState<number | null>(null);
+  const verifyApi = withClientBasePath("/api/auth/verify");
+  const bgImage = withClientBasePath("/images/platform-bg.jpg");
 
   const times = useMemo(
     () => [
@@ -32,7 +34,7 @@ export function CoverGate() {
     setError(null);
     setLockedForSec(null);
     try {
-      const res = await fetch("/api/auth/verify", {
+      const res = await fetch(verifyApi, {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
@@ -49,7 +51,7 @@ export function CoverGate() {
         }
         return;
       }
-      window.location.reload();
+      window.location.assign(withClientBasePath("/"));
     } catch {
       setError("网络异常，请重试");
     } finally {
@@ -59,17 +61,17 @@ export function CoverGate() {
 
   return (
     <div
-      className="relative min-h-[calc(100vh-8rem)] overflow-hidden rounded-3xl border border-slate-700/50 bg-gradient-to-br from-[#0a0f1a] via-[#0e1729] to-[#1a1a2e] p-4 text-slate-100 shadow-2xl sm:p-8"
+      className="fixed inset-0 z-[90] overflow-hidden bg-gradient-to-br from-[#0a0f1a] via-[#0e1729] to-[#1a1a2e] p-4 text-slate-100 sm:p-8"
       style={{
         backgroundImage:
-          "linear-gradient(130deg, rgba(10,15,26,0.94), rgba(26,26,46,0.92)), url('/images/platform-bg.jpg')",
+          `linear-gradient(130deg, rgba(10,15,26,0.94), rgba(26,26,46,0.92)), url('${bgImage}')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_0%,rgba(245,158,11,0.2),transparent)]" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col gap-10 overflow-y-auto">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-amber-200/90">
@@ -92,6 +94,9 @@ export function CoverGate() {
 
         <section className="mx-auto w-full max-w-xl rounded-2xl border border-white/20 bg-white/10 p-5 shadow-xl backdrop-blur-md sm:p-6">
           <h2 className="text-sm font-semibold text-amber-100">🔐 请输入访问密码</h2>
+          <p className="mt-1 text-xs text-slate-300">
+            验证通过后将进入多Agent工作台门户（4个系统模块卡片）。
+          </p>
           <div className="mt-4 space-y-3">
             <input
               type="password"
@@ -99,7 +104,7 @@ export function CoverGate() {
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={6}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void submit();
               }}
