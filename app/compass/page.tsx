@@ -197,7 +197,7 @@ export default async function CompassPage() {
       </div>
 
       {/* ==================== 四象限散点图可视化 ==================== */}
-      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
         <section className="card-hover rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">项目四象限分布 · 散点图</h2>

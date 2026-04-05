@@ -407,21 +407,23 @@ export default function AboutPage() {
         </p>
       </div>
 
-      {/* Tab 导航 */}
-      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-              activeTab === tab.key
-                ? "bg-white text-amber-700 shadow-sm dark:bg-slate-800 dark:text-amber-400"
-                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Tab 导航 - 移动端可横向滚动 */}
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-1 rounded-xl border border-slate-200 bg-slate-100/80 p-1 sm:min-w-0 dark:border-slate-800 dark:bg-slate-900">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                activeTab === tab.key
+                  ? "bg-white text-amber-700 shadow-sm dark:bg-slate-800 dark:text-amber-400"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab 内容 */}

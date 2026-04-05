@@ -114,7 +114,8 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-slate-50 dark:border-zinc-800 dark:from-zinc-950/50 dark:to-slate-950/50">
             <tr>
               <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">项目</th>
@@ -206,6 +207,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
