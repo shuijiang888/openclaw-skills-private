@@ -60,7 +60,7 @@
 
 ## 四、自动发布说明（0 手工）
 
-当前链路已打通：`git push root@119.45.205.137:/root/profit-web.git <branch>:main`
+当前链路已打通：`git push root@119.45.205.137:/opt/git/profit-web.git <branch>:main`
 
 远端自动执行：
 
