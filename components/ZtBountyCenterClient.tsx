@@ -6,14 +6,27 @@ import { withClientBasePath } from "@/lib/client-url";
 
 type BountyTask = {
   id: string;
+  intelDefId?: string | null;
   title: string;
   description: string;
   rewardPoints: number;
   status: string;
 };
 
+type IntelDef = {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  requiredFields: string[];
+  allowedSignalTypes: string[];
+  allowedFormats: string[];
+  defaultRewardPoints: number;
+};
+
 export function ZtBountyCenterClient() {
   const [tasks, setTasks] = useState<BountyTask[]>([]);
+  const [intelDefs, setIntelDefs] = useState<IntelDef[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [lastFeedback, setLastFeedback] = useState<{
@@ -24,6 +37,7 @@ export function ZtBountyCenterClient() {
   } | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
+    intelDefId: "",
     title: "",
     region: "",
     format: "text",
@@ -31,6 +45,8 @@ export function ZtBountyCenterClient() {
     content: "",
     taskId: "",
   });
+  const selectedIntelDef =
+    intelDefs.find((x) => x.id === form.intelDefId) ?? null;
 
   async function load() {
     const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
@@ -44,6 +60,29 @@ export function ZtBountyCenterClient() {
     };
     if (!res.ok) throw new Error(payload.message ?? "加载悬赏任务失败");
     setTasks(payload.items ?? []);
+
+    const defsRes = await fetch(withClientBasePath("/api/zt/intel-definitions"), {
+      cache: "no-store",
+      credentials: "include",
+      headers: { ...demoHeaders() },
+    });
+    const defsPayload = (await defsRes.json().catch(() => ({}))) as {
+      items?: IntelDef[];
+      message?: string;
+      error?: string;
+    };
+    if (!defsRes.ok) {
+      throw new Error(defsPayload.message ?? defsPayload.error ?? "加载情报定义失败");
+    }
+    const defs = defsPayload.items ?? [];
+    setIntelDefs(defs);
+    setForm((prev) => {
+      const currentValid = defs.some((x) => x.id === prev.intelDefId);
+      return {
+        ...prev,
+        intelDefId: currentValid ? prev.intelDefId : defs[0]?.id ?? "",
+      };
+    });
   }
 
   useEffect(() => {
@@ -52,6 +91,10 @@ export function ZtBountyCenterClient() {
 
   async function submitSignal(e: FormEvent) {
     e.preventDefault();
+    if (!form.intelDefId) {
+      setError("请先选择商业情报定义。");
+      return;
+    }
     setBusy(true);
     setError("");
     setMessage("");
@@ -90,6 +133,7 @@ export function ZtBountyCenterClient() {
         });
       }
       setForm({
+        intelDefId: intelDefs[0]?.id ?? "",
         title: "",
         region: "",
         format: "text",
@@ -133,6 +177,21 @@ export function ZtBountyCenterClient() {
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-2">
         <h2 className="text-lg font-semibold text-cyan-200">提交情报</h2>
         <form className="mt-3 space-y-2" onSubmit={submitSignal}>
+          <select
+            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            value={form.intelDefId}
+            onChange={(e) => setForm((p) => ({ ...p, intelDefId: e.target.value }))}
+            required
+          >
+            {intelDefs.length === 0 ? (
+              <option value="">暂无可用商情定义（请后台先配置）</option>
+            ) : null}
+            {intelDefs.map((d) => (
+              <option key={d.id} value={d.id}>
+                [{d.category}] {d.name}
+              </option>
+            ))}
+          </select>
           <input
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             placeholder="标题"
@@ -144,11 +203,52 @@ export function ZtBountyCenterClient() {
             placeholder="区域"
             value={form.region}
             onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
+            required={
+              selectedIntelDef?.requiredFields?.includes("region") ?? false
+            }
           />
           <select
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            value={form.signalType}
+            onChange={(e) => setForm((p) => ({ ...p, signalType: e.target.value }))}
+          >
+            {(selectedIntelDef?.allowedSignalTypes?.length
+              ? selectedIntelDef.allowedSignalTypes
+              : ["strategic", "tactical", "knowledge"]
+            ).map((x) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </select>
+          <select
+            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            value={form.format}
+            onChange={(e) => setForm((p) => ({ ...p, format: e.target.value }))}
+          >
+            {(selectedIntelDef?.allowedFormats?.length
+              ? selectedIntelDef.allowedFormats
+              : ["text", "image", "video", "voice", "link"]
+            ).map((x) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </select>
+          <select
+            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             value={form.taskId}
-            onChange={(e) => setForm((p) => ({ ...p, taskId: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => {
+                const nextTaskId = e.target.value;
+                const task = tasks.find((t) => t.id === nextTaskId);
+                return {
+                  ...p,
+                  taskId: nextTaskId,
+                  intelDefId: task?.intelDefId ?? p.intelDefId,
+                };
+              })
+            }
           >
             <option value="">关联任务（可选）</option>
             {tasks.map((t) => (
@@ -162,13 +262,24 @@ export function ZtBountyCenterClient() {
             placeholder="内容"
             value={form.content}
             onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
+            required
           />
+          {selectedIntelDef ? (
+            <p className="text-[11px] text-slate-400">
+              当前商情定义：{selectedIntelDef.name}（必填：
+              {selectedIntelDef.requiredFields.join("、") || "title/content"}）
+            </p>
+          ) : null}
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || !form.intelDefId}
             className="rounded-md border border-cyan-500/30 bg-cyan-500/15 px-3 py-1.5 text-sm text-cyan-200 disabled:opacity-60"
           >
-            {busy ? "提交中..." : "提交情报 +8"}
+            {busy
+              ? "提交中..."
+              : !form.intelDefId
+                ? "请先配置商情定义"
+                : "提交情报 +8"}
           </button>
         </form>
         {message ? (

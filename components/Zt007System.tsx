@@ -31,6 +31,7 @@ type ActionCard = {
 
 type BountyTask = {
   id: string;
+  intelDefId?: string | null;
   title: string;
   description: string;
   taskType: string;
@@ -41,6 +42,7 @@ type BountyTask = {
 type Submission = {
   id: string;
   title: string;
+  intelDefId?: string | null;
   signalType: string;
   region: string;
   format: string;
@@ -57,6 +59,17 @@ type Redemption = {
   redeemCode: string;
   status: string;
   createdAt: string;
+};
+
+type IntelDef = {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  requiredFields: string[];
+  allowedSignalTypes: string[];
+  allowedFormats: string[];
+  defaultRewardPoints: number;
 };
 
 type OverviewResponse = {
@@ -131,6 +144,7 @@ export function Zt007System() {
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [cards, setCards] = useState<ActionCard[]>([]);
   const [tasks, setTasks] = useState<BountyTask[]>([]);
+  const [intelDefs, setIntelDefs] = useState<IntelDef[]>([]);
   const [subs, setSubs] = useState<Submission[]>([]);
   const [reds, setReds] = useState<Redemption[]>([]);
   const [device, setDevice] = useState<"mobile" | "tablet/desktop">(
@@ -152,10 +166,11 @@ export function Zt007System() {
     setLoading(true);
     setError(null);
     try {
-      const [ov, ac, bt, sr, rr] = await Promise.allSettled([
+      const [ov, ac, bt, idf, sr, rr] = await Promise.allSettled([
         api<OverviewResponse>("/api/zt/overview"),
         api<{ items: ActionCard[] }>("/api/zt/action-cards"),
         api<{ items: BountyTask[] }>("/api/zt/bounty-tasks"),
+        api<{ items: IntelDef[] }>("/api/zt/intel-definitions"),
         api<{ items: Submission[] }>("/api/zt/submissions/recent"),
         api<{ items: Redemption[] }>("/api/zt/redemptions"),
       ]);
@@ -178,6 +193,19 @@ export function Zt007System() {
         setTasks([]);
         failures.push("任务悬赏");
       }
+      if (idf.status === "fulfilled") {
+        setIntelDefs(idf.value.items);
+        setSubmissionForm((prev) => {
+          const currentValid = idf.value.items.some((x) => x.id === prev.intelDefId);
+          return {
+            ...prev,
+            intelDefId: currentValid ? prev.intelDefId : (idf.value.items[0]?.id ?? ""),
+          };
+        });
+      } else {
+        setIntelDefs([]);
+        failures.push("商业情报定义");
+      }
       if (sr.status === "fulfilled") {
         setSubs(sr.value.items);
       } else {
@@ -198,6 +226,7 @@ export function Zt007System() {
       setOverview(null);
       setCards([]);
       setTasks([]);
+      setIntelDefs([]);
       setSubs([]);
       setReds([]);
     } finally {
@@ -210,6 +239,7 @@ export function Zt007System() {
   }, [loadAll, role]);
 
   const [submissionForm, setSubmissionForm] = useState({
+    intelDefId: "",
     title: "",
     region: "",
     format: "text",
@@ -231,6 +261,12 @@ export function Zt007System() {
   const doneCount = useMemo(
     () => cards.filter((c) => c.status === "DONE").length,
     [cards],
+  );
+  const selectedIntelDef = useMemo(
+    () =>
+      intelDefs.find((x) => x.id === submissionForm.intelDefId) ??
+      null,
+    [intelDefs, submissionForm.intelDefId],
   );
 
   const publishedCapabilities = [
@@ -268,6 +304,10 @@ export function Zt007System() {
 
   async function submitSignal(e: FormEvent) {
     e.preventDefault();
+    if (!submissionForm.intelDefId) {
+      setError("请先选择商业情报定义。");
+      return;
+    }
     try {
       await api<{ ok: boolean }>("/api/zt/submissions", {
         method: "POST",
@@ -277,6 +317,7 @@ export function Zt007System() {
         }),
       });
       setSubmissionForm({
+        intelDefId: intelDefs[0]?.id ?? "",
         title: "",
         region: "",
         format: "text",
@@ -567,13 +608,38 @@ export function Zt007System() {
                         +{t.rewardPoints}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">{t.description}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {t.intelDefId
+                        ? (() => {
+                            const def = intelDefs.find((x) => x.id === t.intelDefId);
+                            return def ? `[${def.category}] ${def.name} · ` : "";
+                          })()
+                        : ""}
+                      {t.description}
+                    </p>
                   </div>
                 ))}
               </div>
 
               <form className="mt-4 space-y-2" onSubmit={submitSignal}>
                 <div className="grid gap-2 sm:grid-cols-2">
+                  <select
+                    className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={submissionForm.intelDefId}
+                    onChange={(e) =>
+                      setSubmissionForm((p) => ({ ...p, intelDefId: e.target.value }))
+                    }
+                    required
+                  >
+                    {intelDefs.length === 0 ? (
+                      <option value="">暂无可用商情定义（请后台先配置）</option>
+                    ) : null}
+                    {intelDefs.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        [{d.category}] {d.name}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                     placeholder="signal title"
@@ -589,8 +655,20 @@ export function Zt007System() {
                     onChange={(e) =>
                       setSubmissionForm((p) => ({ ...p, region: e.target.value }))
                     }
+                    required={selectedIntelDef?.requiredFields.includes("region") ?? false}
                   />
                 </div>
+                {submissionForm.intelDefId ? (
+                  <p className="text-[11px] text-cyan-300/90">
+                    当前定义：
+                    {intelDefs.find((x) => x.id === submissionForm.intelDefId)?.name ??
+                      "未匹配"}
+                    {" · 必填字段："}
+                    {(intelDefs.find((x) => x.id === submissionForm.intelDefId)
+                      ?.requiredFields ?? []
+                    ).join("、") || "title、content"}
+                  </p>
+                ) : null}
                 <div className="grid gap-2 sm:grid-cols-3">
                   <select
                     className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -602,9 +680,14 @@ export function Zt007System() {
                       }))
                     }
                   >
-                    <option value="strategic">strategic</option>
-                    <option value="tactical">tactical</option>
-                    <option value="knowledge">knowledge</option>
+                    {(selectedIntelDef?.allowedSignalTypes?.length
+                      ? selectedIntelDef.allowedSignalTypes
+                      : ["strategic", "tactical", "knowledge"]
+                    ).map((x) => (
+                      <option key={x} value={x}>
+                        {x}
+                      </option>
+                    ))}
                   </select>
                   <select
                     className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -613,17 +696,28 @@ export function Zt007System() {
                       setSubmissionForm((p) => ({ ...p, format: e.target.value }))
                     }
                   >
-                    <option value="text">text</option>
-                    <option value="voice">voice</option>
-                    <option value="image">image</option>
-                    <option value="video">video</option>
-                    <option value="link">link</option>
+                    {(selectedIntelDef?.allowedFormats?.length
+                      ? selectedIntelDef.allowedFormats
+                      : ["text", "voice", "image", "video", "link"]
+                    ).map((x) => (
+                      <option key={x} value={x}>
+                        {x}
+                      </option>
+                    ))}
                   </select>
                   <select
                     className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                     value={submissionForm.taskId}
                     onChange={(e) =>
-                      setSubmissionForm((p) => ({ ...p, taskId: e.target.value }))
+                      setSubmissionForm((p) => {
+                        const nextTaskId = e.target.value;
+                        const task = tasks.find((t) => t.id === nextTaskId);
+                        return {
+                          ...p,
+                          taskId: nextTaskId,
+                          intelDefId: task?.intelDefId ?? p.intelDefId,
+                        };
+                      })
                     }
                   >
                     <option value="">task(optional)</option>
@@ -644,9 +738,10 @@ export function Zt007System() {
                 />
                 <button
                   type="submit"
+                  disabled={!submissionForm.intelDefId}
                   className="rounded-md border border-cyan-500/30 bg-cyan-500/15 px-3 py-1.5 text-sm text-cyan-200"
                 >
-                  提交情报 +8
+                  {!submissionForm.intelDefId ? "请先配置商情定义" : "提交情报 +8"}
                 </button>
               </form>
             </div>
@@ -663,6 +758,12 @@ export function Zt007System() {
                   >
                     <p className="font-medium text-slate-100">{s.title}</p>
                     <p className="mt-1 text-xs text-slate-400">
+                      {s.intelDefId
+                        ? (() => {
+                            const def = intelDefs.find((x) => x.id === s.intelDefId);
+                            return def ? `[${def.category}] ${def.name} · ` : "";
+                          })()
+                        : ""}
                       {s.signalType ? `${s.signalType} · ` : ""}
                       {s.region || "region-na"} · {s.format} · {s.actorRole}
                     </p>

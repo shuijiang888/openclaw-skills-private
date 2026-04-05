@@ -5,6 +5,7 @@ import { getRequestUserContext } from "@/lib/request-user";
 import { applyPointsAndSyncRank } from "@/lib/zt-points";
 import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
+import { pickRequiredFieldMisses } from "@/lib/zt-intel-definitions";
 
 export async function GET(req: Request) {
   try {
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
     const uctx = getRequestUserContext(req);
     const body = (await req.json()) as {
       taskId?: string;
+      intelDefId?: string;
       title?: string;
       content?: string;
       region?: string;
@@ -51,15 +53,92 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "title/content required" }, { status: 400 });
     }
 
+    const intelDefId = String(body.intelDefId ?? "").trim();
+    if (!intelDefId) {
+      return NextResponse.json(
+        { error: "intelDefId required (请先选择商业情报定义)" },
+        { status: 400 },
+      );
+    }
+    const intelDef = await prisma.ztIntelDefinition.findFirst({
+      where: { id: intelDefId, isActive: true },
+    });
+    if (!intelDef) {
+      return NextResponse.json(
+        { error: "invalid intelDefId (情报定义不存在或未启用)" },
+        { status: 400 },
+      );
+    }
+
+    const signalType = String(body.signalType ?? "tactical").trim();
+    const format = String(body.format ?? "text").trim();
+    const allowedSignalTypes = (() => {
+      try {
+        const parsed = JSON.parse(intelDef.allowedSignalTypesJson) as unknown;
+        return Array.isArray(parsed)
+          ? parsed.map((x) => String(x).trim()).filter(Boolean)
+          : [];
+      } catch {
+        return [];
+      }
+    })();
+    const allowedFormats = (() => {
+      try {
+        const parsed = JSON.parse(intelDef.allowedFormatsJson) as unknown;
+        return Array.isArray(parsed)
+          ? parsed.map((x) => String(x).trim()).filter(Boolean)
+          : [];
+      } catch {
+        return [];
+      }
+    })();
+    if (allowedSignalTypes.length > 0 && !allowedSignalTypes.includes(signalType)) {
+      return NextResponse.json(
+        { error: `signalType not allowed, expected: ${allowedSignalTypes.join("/")}` },
+        { status: 400 },
+      );
+    }
+    if (allowedFormats.length > 0 && !allowedFormats.includes(format)) {
+      return NextResponse.json(
+        { error: `format not allowed, expected: ${allowedFormats.join("/")}` },
+        { status: 400 },
+      );
+    }
+
+    const requiredFields = (() => {
+      try {
+        const parsed = JSON.parse(intelDef.requiredFieldsJson) as unknown;
+        return Array.isArray(parsed)
+          ? parsed.map((x) => String(x).trim()).filter(Boolean)
+          : [];
+      } catch {
+        return [];
+      }
+    })();
+    const missingRequired = pickRequiredFieldMisses(requiredFields, {
+      title,
+      content,
+      region: String(body.region ?? ""),
+      signalType,
+      format,
+    });
+    if (missingRequired.length > 0) {
+      return NextResponse.json(
+        { error: `missing required fields: ${missingRequired.join(",")}` },
+        { status: 400 },
+      );
+    }
+
     const created = await prisma.$transaction(async (tx) => {
       const submission = await tx.ztSubmission.create({
         data: {
           taskId: body.taskId ? String(body.taskId) : null,
+          intelDefId: intelDef.id,
           title,
           content,
-          signalType: String(body.signalType ?? "tactical"),
+          signalType,
           region: String(body.region ?? ""),
-          format: String(body.format ?? "text"),
+          format,
           userId: uctx.userId,
           actorName: uctx.userEmail ?? "",
           actorRole: role,
