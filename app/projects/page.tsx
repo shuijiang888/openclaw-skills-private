@@ -40,24 +40,43 @@ function mapToRows(
 }
 
 export default async function ProjectsPage() {
-  const raw = await prisma.project.findMany({
-    orderBy: { updatedAt: "desc" },
-    include: { customer: true, quote: true },
-  });
-  const projects = raw.map(enrichProject);
-  const rows = mapToRows(projects);
+  try {
+    const raw = await prisma.project.findMany({
+      orderBy: { updatedAt: "desc" },
+      include: { customer: true, quote: true },
+    });
+    const projects = raw.map(enrichProject);
+    const rows = mapToRows(projects);
 
-  return (
-    <PageContainer>
-      <Suspense
-        fallback={
-          <div className="animate-pulse py-12 text-center text-sm text-zinc-500">
-            加载列表…
-          </div>
-        }
-      >
-        <ProjectsListClient rows={rows} />
-      </Suspense>
-    </PageContainer>
-  );
+    return (
+      <PageContainer>
+        <Suspense
+          fallback={
+            <div className="animate-pulse py-12 text-center text-sm text-zinc-500">
+              加载列表…
+            </div>
+          }
+        >
+          <ProjectsListClient rows={rows} />
+        </Suspense>
+      </PageContainer>
+    );
+  } catch {
+    return (
+      <PageContainer className="space-y-4">
+        <div className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-100">
+          项目列表数据暂时不可用，系统已降级显示。你仍可访问其它页面进行验收测试。
+        </div>
+        <Suspense
+          fallback={
+            <div className="animate-pulse py-12 text-center text-sm text-zinc-500">
+              加载列表…
+            </div>
+          }
+        >
+          <ProjectsListClient rows={[]} />
+        </Suspense>
+      </PageContainer>
+    );
+  }
 }
