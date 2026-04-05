@@ -46,6 +46,21 @@ export const DEMO_CONSOLE_SIDEBAR_LINKS = [
   },
 ] as const;
 
+export const DEMO_ZT_CONSOLE_SIDEBAR_LINKS = [
+  { href: "/console/system", label: "系统维护", roles: BACKOFFICE },
+  { href: "/console/users", label: "用户组织", roles: BACKOFFICE },
+  {
+    href: "/console/zt-system",
+    label: "系统维护（别名）",
+    roles: BACKOFFICE,
+  },
+  {
+    href: "/console/zt-users",
+    label: "用户组织（别名）",
+    roles: BACKOFFICE,
+  },
+] as const;
+
 export function filterNavLinksForRole(role: DemoRole) {
   return DEMO_NAV_LINKS.filter((l) =>
     (l.roles as readonly DemoRole[]).includes(role),
@@ -54,6 +69,12 @@ export function filterNavLinksForRole(role: DemoRole) {
 
 export function filterConsoleSidebarForRole(role: DemoRole) {
   return DEMO_CONSOLE_SIDEBAR_LINKS.filter((l) =>
+    (l.roles as readonly DemoRole[]).includes(role),
+  );
+}
+
+export function filterZtConsoleSidebarForRole(role: DemoRole) {
+  return DEMO_ZT_CONSOLE_SIDEBAR_LINKS.filter((l) =>
     (l.roles as readonly DemoRole[]).includes(role),
   );
 }
