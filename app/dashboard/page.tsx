@@ -14,6 +14,7 @@ export default async function DashboardPage({
   searchParams?: Promise<{ demo?: string }>;
 }) {
   const demo = (await searchParams)?.demo;
+  try {
 
   const [projectCount, customerCount, compassCount, pending, allProjects, recent] =
     await Promise.all([
@@ -60,8 +61,8 @@ export default async function DashboardPage({
       ? Math.round((vm.autoChannelEligibleCount / vm.projectCount) * 1000) / 10
       : 0;
 
-  return (
-    <PageContainer className="space-y-8">
+    return (
+      <PageContainer className="space-y-8">
       {demo === "forbidden-console" ? (
         <div className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-100">
           已拦下对「管理后台」的访问：当前为业务线角色时，顶部导航不显示后台入口。
@@ -248,6 +249,56 @@ export default async function DashboardPage({
         ；角色与流程说明 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">docs/DEMO_GUIDE.md</code>
         。
       </p>
-    </PageContainer>
-  );
+      </PageContainer>
+    );
+  } catch {
+    return (
+      <PageContainer className="space-y-6">
+        {demo === "forbidden-console" ? (
+          <div className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-100">
+            已拦下对「管理后台」的访问：当前为业务线角色时，顶部导航不显示后台入口。
+            演示模式请将右上角「试点角色」切换为「总经理」或「管理员」；登录模式请使用具备后台权限的账号。
+          </div>
+        ) : null}
+        <RoleHomePanel />
+        <div className="rounded-2xl border border-amber-300/80 bg-amber-50/90 p-5 text-sm text-amber-900 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+          工作台当前数据存在异常，系统已自动降级展示。你可继续使用项目、报价与审批功能。
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "项目", value: "—" },
+            { label: "客户", value: "—" },
+            { label: "罗盘项目", value: "—" },
+            { label: "待审批", value: "—" },
+          ].map((c) => (
+            <div
+              key={c.label}
+              className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                {c.label}
+              </div>
+              <div className="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
+                {c.value}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/projects"
+            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 dark:bg-violet-600 dark:hover:bg-violet-500"
+          >
+            进入项目列表 →
+          </Link>
+          <Link
+            href="/projects/new"
+            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 dark:bg-violet-600 dark:hover:bg-violet-500"
+          >
+            新建报价 →
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
 }
