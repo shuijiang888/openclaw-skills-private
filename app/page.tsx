@@ -15,34 +15,33 @@ type PortalCard = {
 
 const portalCards: PortalCard[] = [
   {
-    title: "智探007",
-    subtitle: "Intelligence-to-Action OS",
-    description:
-      "情报采集、行动卡、任务悬赏、积分激励与管理驾驶舱一体化系统。点击即可进入完整功能页。",
-    href: "/zt007",
-    cta: "进入智探007",
+    title: "首页门户",
+    subtitle: "Home Portal",
+    description: "统一入口与任务导航，支持多系统快速切换与状态总览。",
+    href: "/",
+    cta: "当前页",
+  },
+  {
+    title: "智能盈利管理系统",
+    subtitle: "Profit Management",
+    description: "报价、审批、项目与盈利罗盘的一体化经营管理入口。",
+    href: "/profit/dashboard",
+    cta: "进入盈利系统",
     highlight: true,
   },
   {
-    title: "盈利决策工作台",
-    subtitle: "报价 / 审批 / 罗盘",
-    description: "从项目报价到审批流转再到盈利复盘，形成经营闭环。",
-    href: "/dashboard",
-    cta: "进入工作台",
+    title: "智探007",
+    subtitle: "Intelligence-to-Action OS",
+    description: "情报采集、行动卡、任务悬赏、积分激励与管理驾驶舱一体化系统。",
+    href: "/zt007",
+    cta: "进入智探007",
   },
   {
-    title: "运营管理后台",
-    subtitle: "规则 / 审计 / 准备度",
-    description: "集中管理规则、查看审计与落地自检，支持规模化运营。",
-    href: "/console",
-    cta: "进入后台",
-  },
-  {
-    title: "健康检查页",
-    subtitle: "发布验收 / 日常巡检",
-    description: "自动检查核心页面和 API 可用性，快速判断系统是否可交付给团队。",
-    href: "/health-check",
-    cta: "打开健康检查",
+    title: "CRM连接型管理",
+    subtitle: "CRM Connector",
+    description: "CRM 协同能力预留模块，待后续对接后启用。",
+    href: "/crm",
+    cta: "即将上线",
   },
 ];
 
@@ -64,11 +63,11 @@ export default async function LandingPage() {
             Unified Entry Portal
           </p>
           <h1 className="mt-4 text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
-            智探007 系统门户
+            AI价值服务作战平台
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            在一个页面直观查看所有系统入口，手机、Pad、PC 自适应访问。
-            当前已接入智探007完整系统，可直接一键进入业务功能。
+            统一门户集中管理盈利系统、智探007与后续 CRM 连接能力，
+            支持多端访问与清晰分层导航。
           </p>
           <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-300">
             {["Mobile Ready", "Pad Ready", "Desktop Ready", "Role-aware"].map(
@@ -90,10 +89,10 @@ export default async function LandingPage() {
           系统入口卡片
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          点击任意卡片可进入对应系统，推荐从「智探007」开始体验完整闭环。
+          点击对应卡片进入独立系统模块；各模块相互隔离，避免内容串台。
         </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {portalCards.map((card) => (
             <article
               key={card.title}

@@ -84,29 +84,48 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
     });
   }
 
-  if ((await prisma.ztBountyTask.count()) === 0) {
+  if ((await prisma.ztBountyTask.count()) < 5) {
     await prisma.ztBountyTask.createMany({
       data: [
         {
-          title: "Collect CIO changes in Q2",
-          description: "Submit source links + screenshots + date evidence",
+          title: "华南制造业 CIO 人事变动线索征集",
+          description: "聚焦广州/深圳制造企业，提交来源链接、截图与变动时间。",
           taskType: "strategic",
           rewardPoints: 80,
           status: "OPEN",
+          deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         },
         {
-          title: "Scan competitor discount campaigns",
-          description: "Three-city campaign intelligence with account impact",
+          title: "华东竞品降价策略监测",
+          description: "收集上海/苏州/杭州重点客户相关竞品折扣、促销与投标动作。",
           taskType: "tactical",
-          rewardPoints: 50,
+          rewardPoints: 60,
           status: "OPEN",
+          deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
         },
         {
-          title: "Publish one reusable win-case script",
-          description: "Structured template with breakthrough point and wording",
-          taskType: "knowledge",
-          rewardPoints: 35,
+          title: "新能源车厂供应链风险情报",
+          description: "追踪交付延期、核心器件短缺、质量事故等风险点并标注影响客户。",
+          taskType: "risk",
+          rewardPoints: 70,
           status: "OPEN",
+          deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10),
+        },
+        {
+          title: "医疗行业标杆案例话术沉淀",
+          description: "提交可复用赢单话术模板，需包含场景、突破点、提问脚本。",
+          taskType: "knowledge",
+          rewardPoints: 40,
+          status: "OPEN",
+          deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+        },
+        {
+          title: "西南区域重点客户预算窗口预判",
+          description: "围绕成都/重庆目标客户，提交预算释放周期与决策链线索。",
+          taskType: "forecast",
+          rewardPoints: 55,
+          status: "OPEN",
+          deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 6),
         },
       ],
     });

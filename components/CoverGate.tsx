@@ -32,7 +32,7 @@ export function CoverGate() {
     setError(null);
     setLockedForSec(null);
     try {
-      const res = await fetch(withClientBasePath("/api/auth/verify"), {
+      const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
