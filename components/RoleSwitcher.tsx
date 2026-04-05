@@ -294,7 +294,7 @@ export function RoleSwitcher() {
         </select>
       </div>
       <span className="hidden max-w-[14rem] text-[10px] leading-snug text-slate-500 lg:inline dark:text-slate-500">
-        演示模式：菜单、审批与助手随所选角色更新；经理无助手，总经理后台无 CSV 导入
+        演示模式：菜单、审批与助手随所选角色更新
       </span>
     </div>
   );

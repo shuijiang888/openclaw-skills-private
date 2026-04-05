@@ -89,15 +89,33 @@ function TabExpert() {
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-900 px-6 py-8 text-white">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-4xl font-black text-white shadow-lg">
-              陈
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900 px-6 py-12 text-white sm:py-16">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_75%_-10%,rgba(251,191,36,0.15),transparent)]" />
+          <div className="pointer-events-none absolute -right-20 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="relative flex flex-col items-center gap-8 sm:flex-row sm:items-center">
+            {/* 巨幅真实照片 */}
+            <div className="relative shrink-0">
+              <div className="h-44 w-44 overflow-hidden rounded-2xl shadow-2xl shadow-amber-500/30 ring-4 ring-white/20 sm:h-56 sm:w-44">
+                <img
+                  src="/images/experts/chenwei_portrait1.jpeg"
+                  alt="陈玮 Kevin"
+                  className="h-full w-full object-cover object-top"
+                />
+              </div>
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-1 text-[10px] font-bold text-white shadow-lg">
+                华为系专家
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">陈玮 Kevin</h2>
-              <p className="mt-1 text-amber-300 font-semibold">战略 & 市场 & 销售专家</p>
-              <p className="mt-0.5 text-sm text-slate-300">萃升咨询营销研究院负责人</p>
+            <div className="text-center sm:text-left">
+              <p className="text-xs font-semibold uppercase tracking-widest text-amber-300/80">Special Expert</p>
+              <h2 className="mt-1 text-3xl font-black sm:text-4xl">陈玮 Kevin</h2>
+              <p className="mt-2 text-lg font-semibold text-amber-300">战略 & 市场 & 销售专家</p>
+              <p className="mt-1 text-sm text-slate-300">萃升咨询营销研究院负责人</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
+                {["30+亿美金产品线", "15年500强", "50+上市公司", "20+行业"].map(tag => (
+                  <span key={tag} className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur">{tag}</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -389,21 +407,23 @@ export default function AboutPage() {
         </p>
       </div>
 
-      {/* Tab 导航 */}
-      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800 dark:bg-slate-900">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-              activeTab === tab.key
-                ? "bg-white text-amber-700 shadow-sm dark:bg-slate-800 dark:text-amber-400"
-                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Tab 导航 - 移动端可横向滚动 */}
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-1 rounded-xl border border-slate-200 bg-slate-100/80 p-1 sm:min-w-0 dark:border-slate-800 dark:bg-slate-900">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                activeTab === tab.key
+                  ? "bg-white text-amber-700 shadow-sm dark:bg-slate-800 dark:text-amber-400"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab 内容 */}
