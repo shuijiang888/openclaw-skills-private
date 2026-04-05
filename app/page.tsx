@@ -37,9 +37,9 @@ const portalCards: PortalCard[] = [
     cta: "进入智探007",
   },
   {
-    title: "CRM连接型管理",
-    subtitle: "CRM Connector",
-    description: "CRM 协同能力预留模块，待后续对接后启用。",
+    title: "SKILL大市场（高价值、好生态、等你来）",
+    subtitle: "SKILL Marketplace",
+    description: "高价值能力与生态协同预留模块，后续将逐步开放入驻与连接。",
     href: "/crm",
     cta: "即将上线",
   },
