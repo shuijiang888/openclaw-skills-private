@@ -16,6 +16,12 @@ export function ZtBountyCenterClient() {
   const [tasks, setTasks] = useState<BountyTask[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [lastFeedback, setLastFeedback] = useState<{
+    pointsDelta: number;
+    currentPoints: number;
+    rank: string;
+    ledgerId: string;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -65,9 +71,24 @@ export function ZtBountyCenterClient() {
       const payload = (await res.json().catch(() => ({}))) as {
         error?: string;
         message?: string;
+        feedback?: {
+          pointsDelta: number;
+          currentPoints: number;
+          rank: string;
+          rankChanged: boolean;
+          ledgerId: string;
+        };
       };
       if (!res.ok) throw new Error(payload.message ?? payload.error ?? "提交失败");
       setMessage("情报提交成功，系统已自动计分。");
+      if (payload.feedback) {
+        setLastFeedback({
+          pointsDelta: payload.feedback.pointsDelta,
+          currentPoints: payload.feedback.currentPoints,
+          rank: payload.feedback.rank,
+          ledgerId: payload.feedback.ledgerId,
+        });
+      }
       setForm({
         title: "",
         region: "",
@@ -152,6 +173,11 @@ export function ZtBountyCenterClient() {
         </form>
         {message ? (
           <p className="mt-2 text-xs text-emerald-300">{message}</p>
+        ) : null}
+        {lastFeedback ? (
+          <div className="mt-2 rounded-md border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-200">
+            +{lastFeedback.pointsDelta} 分 · 当前 {lastFeedback.currentPoints} 分 · 军衔 {lastFeedback.rank} · 流水 {lastFeedback.ledgerId}
+          </div>
         ) : null}
         {error ? <p className="mt-2 text-xs text-rose-300">{error}</p> : null}
       </div>

@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
       const wallet = await applyPointsAndSyncRank(tx, {
         userId: uctx.userId,
-        actorRole: role,
+        actorRole: uctx.ztRole,
         pointsDelta: 8,
         action: "SUBMISSION_APPROVED",
         reason: "情报提交审核通过",

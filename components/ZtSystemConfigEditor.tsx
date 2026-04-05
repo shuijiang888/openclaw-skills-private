@@ -18,14 +18,32 @@ type ZtSystemConfig = {
   updatedAt?: string;
 };
 
+type ZtFeatureFlags = {
+  adminSeeAllActionCards?: boolean;
+  demoWorkspaceEnabled?: boolean;
+  strictRoleWalletMapping?: boolean;
+  showSubmissionPointFeedback?: boolean;
+};
+
 export function ZtSystemConfigEditor({
   initial,
 }: {
   initial?: ZtSystemConfig | null;
 }) {
   const [data, setData] = useState<ZtSystemConfig | null>(initial ?? null);
+  const [flags, setFlags] = useState<ZtFeatureFlags>({});
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string>("");
+
+  useEffect(() => {
+    if (!data) return;
+    try {
+      const parsed = JSON.parse(data.featuresJson || "{}") as ZtFeatureFlags;
+      setFlags(parsed);
+    } catch {
+      setFlags({});
+    }
+  }, [data]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +75,10 @@ export function ZtSystemConfigEditor({
           "content-type": "application/json",
           ...demoHeaders(),
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          featuresJson: JSON.stringify(flags),
+        }),
       });
       const j = (await r.json()) as ZtSystemConfig | { error?: string };
       if (!r.ok) throw new Error((j as { error?: string }).error ?? "保存失败");
@@ -114,6 +135,42 @@ export function ZtSystemConfigEditor({
           checked={data.multiEndpointEnabled}
           onChange={(v) => setData({ ...data, multiEndpointEnabled: v })}
         />
+      </div>
+
+      <div className="mt-4 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+        <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+          功能开关（featuresJson）
+        </p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <Toggle
+            label="管理员可见全部行动卡"
+            checked={Boolean(flags.adminSeeAllActionCards)}
+            onChange={(v) =>
+              setFlags((prev) => ({ ...prev, adminSeeAllActionCards: v }))
+            }
+          />
+          <Toggle
+            label="演示模式个人工作台"
+            checked={Boolean(flags.demoWorkspaceEnabled)}
+            onChange={(v) =>
+              setFlags((prev) => ({ ...prev, demoWorkspaceEnabled: v }))
+            }
+          />
+          <Toggle
+            label="严格角色积分映射"
+            checked={Boolean(flags.strictRoleWalletMapping)}
+            onChange={(v) =>
+              setFlags((prev) => ({ ...prev, strictRoleWalletMapping: v }))
+            }
+          />
+          <Toggle
+            label="显示提交积分反馈"
+            checked={Boolean(flags.showSubmissionPointFeedback)}
+            onChange={(v) =>
+              setFlags((prev) => ({ ...prev, showSubmissionPointFeedback: v }))
+            }
+          />
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">

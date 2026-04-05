@@ -55,6 +55,18 @@ const CHECKS: CheckItem[] = [
     path: "/api/zt/submissions/recent",
     expected: [200],
   },
+  {
+    key: "api-zt-me",
+    label: "智探007个人工作台API（demo兼容）",
+    path: "/api/zt/me",
+    expected: [200],
+  },
+  {
+    key: "api-zt-console-redemptions",
+    label: "智探007兑换审核API（管理员）",
+    path: "/api/console/zt/redemptions",
+    expected: [200],
+  },
 ];
 
 async function runOne(check: CheckItem): Promise<CheckResult> {

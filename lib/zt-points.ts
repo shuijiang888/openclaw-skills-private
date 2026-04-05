@@ -1,6 +1,5 @@
 import type { PrismaClient, Prisma } from "@prisma/client";
-import { parseDemoRole } from "@/lib/approval";
-import { rankByPoints } from "@/lib/zt-ranks";
+import { rankByPoints, parseZtUserRole } from "@/lib/zt-ranks";
 
 type Ctx = {
   userId: string | null;
@@ -9,7 +8,7 @@ type Ctx = {
 };
 
 export function deriveActorRoleForZt(userRole: string): string {
-  return parseDemoRole(userRole);
+  return parseZtUserRole(userRole);
 }
 
 async function currentContext(
@@ -21,7 +20,7 @@ async function currentContext(
     return {
       userId: null,
       actorName: "访客",
-      actorRole: parseDemoRole(input?.actorRole),
+      actorRole: parseZtUserRole(input?.actorRole),
     };
   }
   const u = await tx.user.findUnique({
@@ -32,7 +31,7 @@ async function currentContext(
     return {
       userId: null,
       actorName: "访客",
-      actorRole: parseDemoRole(input?.actorRole),
+      actorRole: parseZtUserRole(input?.actorRole),
     };
   }
   return {
@@ -143,7 +142,7 @@ export async function applyPointsAndSyncRank(
     },
   });
 
-  await tx.ztPointLedger.create({
+  const ledger = await tx.ztPointLedger.create({
     data: {
       actorRole: ctx.actorRole,
       userId: ctx.userId,
@@ -171,7 +170,12 @@ export async function applyPointsAndSyncRank(
     });
   }
 
-  return { wallet: updated, rankLabel: rank.label, rankChanged };
+  return {
+    wallet: updated,
+    rankLabel: rank.label,
+    rankChanged,
+    ledgerId: ledger.id,
+  };
 }
 
 export async function readUserProgress(

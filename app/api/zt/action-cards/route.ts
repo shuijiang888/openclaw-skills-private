@@ -13,14 +13,15 @@ export async function GET(req: Request) {
     const ctx = getRequestUserContext(req);
     const role = ztRoleFromRequest(req);
     const roleCandidates = actorRoleCandidatesForZt(role);
+    const isAdminLikeRole =
+      role === "ADMIN" || role === "SUPERADMIN" || role === "GENERAL";
+    const assigneeRoles = ctx.userId
+      ? actorRoleCandidatesForZt(ctx.ztRole)
+      : isAdminLikeRole
+        ? undefined
+        : roleCandidates;
     const rows = await prisma.ztActionCard.findMany({
-      where: {
-        assignedRole: {
-          in: ctx.userId
-            ? actorRoleCandidatesForZt(ctx.ztRole)
-            : roleCandidates,
-        },
-      },
+      where: assigneeRoles ? { assignedRole: { in: assigneeRoles } } : undefined,
       orderBy: [{ priority: "asc" }, { createdAt: "desc" }],
       take: 10,
     });

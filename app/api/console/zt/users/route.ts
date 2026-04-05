@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getRequestUserContext } from "@/lib/request-user";
 import { parseZtUserRole } from "@/lib/zt-ranks";
+import { getZtSystemConfig } from "@/lib/zt-system-config";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +114,7 @@ export async function PATCH(req: Request) {
   if (!ctx.isAdminLike) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
+  const config = await getZtSystemConfig();
   const body = (await req.json().catch(() => null)) as
     | {
         userId?: string;
@@ -158,6 +160,12 @@ export async function PATCH(req: Request) {
   if (typeof body.name === "string") data.name = body.name.trim();
   if (typeof body.isActive === "boolean") data.isActive = body.isActive;
   if (typeof body.ztAllowInteractiveLlm === "boolean") {
+    if (!config.llmInteractiveEnabled && body.ztAllowInteractiveLlm) {
+      return NextResponse.json(
+        { error: "system setting currently disables interactive LLM" },
+        { status: 400 },
+      );
+    }
     data.ztAllowInteractiveLlm = body.ztAllowInteractiveLlm;
   }
   if (typeof body.isSuperAdmin === "boolean" && ctx.isSuperAdmin) {
