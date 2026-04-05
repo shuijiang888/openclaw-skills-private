@@ -53,7 +53,7 @@ export const ROLE_PLAYBOOK: Record<DemoRole, RolePlaybook> = {
   SALES_DIRECTOR: {
     label: "销售总监",
     dashboardIntro:
-      "管控多条商机与折扣带：用工作台扫风险池，用智能助手批量对齐话术与系数策略。",
+      "管控多条商机与折扣带：用工作台扫风险池，用智能助手批量对齐话术与系数策略。AI助手可帮您快速判断报价是否合理。",
     priorities: [
       { title: "审批队列与折扣结构", detail: "重点看跨团队的异常折扣与低毛利项目。" },
       { title: "助手辅助一致性", detail: "用自然语言统一「标品/定制/加急」叙事，减少个人发挥。" },
@@ -75,7 +75,7 @@ export const ROLE_PLAYBOOK: Record<DemoRole, RolePlaybook> = {
   SALES_VP: {
     label: "销售副总裁",
     dashboardIntro:
-      "投资组合视角：识别结构性低毛利、自动化通道潜力与大客户依赖，配合战略叙事做取舍。",
+      "投资组合视角：识别结构性低毛利、自动化通道潜力与大客户依赖。AI助手可从组合管理角度给出决策建议。",
     priorities: [
       { title: "结构与依赖", detail: "罗盘与简报里的大客户集中度、毛利分布。" },
       { title: "政策例外", detail: "超出总监带的折扣需有清晰的战略理由与回收路径。" },
@@ -97,7 +97,7 @@ export const ROLE_PLAYBOOK: Record<DemoRole, RolePlaybook> = {
   GM: {
     label: "总经理",
     dashboardIntro:
-      "经营结果责任人：从工作台与控制台把握审批、主数据与客户健康度；特批必须可追踪。",
+      "经营结果责任人：从工作台与控制台把握审批、主数据与客户健康度。AI助手可快速提供经营决策支持。",
     priorities: [
       { title: "终审与资本效率", detail: "高折扣、长账期、低毛利需有对应回报假设。" },
       { title: "主数据只读检阅", detail: "后台客户清单可查看；批量导入由管理员执行。" },

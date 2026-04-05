@@ -89,15 +89,29 @@ function TabExpert() {
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-900 px-6 py-8 text-white">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-4xl font-black text-white shadow-lg">
-              陈
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900 px-6 py-12 text-white sm:py-16">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_75%_-10%,rgba(251,191,36,0.15),transparent)]" />
+          <div className="pointer-events-none absolute -right-20 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="relative flex flex-col items-center gap-8 sm:flex-row sm:items-center">
+            {/* 巨幅头像区域 */}
+            <div className="relative shrink-0">
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 shadow-2xl shadow-amber-500/30 ring-4 ring-white/20 sm:h-48 sm:w-48">
+                <span className="text-7xl font-black text-white sm:text-8xl" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>陈</span>
+              </div>
+              <div className="absolute -bottom-1 -right-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-lg">
+                华为系专家
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">陈玮 Kevin</h2>
-              <p className="mt-1 text-amber-300 font-semibold">战略 & 市场 & 销售专家</p>
-              <p className="mt-0.5 text-sm text-slate-300">萃升咨询营销研究院负责人</p>
+            <div className="text-center sm:text-left">
+              <p className="text-xs font-semibold uppercase tracking-widest text-amber-300/80">Special Expert</p>
+              <h2 className="mt-1 text-3xl font-black sm:text-4xl">陈玮 Kevin</h2>
+              <p className="mt-2 text-lg font-semibold text-amber-300">战略 & 市场 & 销售专家</p>
+              <p className="mt-1 text-sm text-slate-300">萃升咨询营销研究院负责人</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
+                {["30+亿美金产品线", "15年500强", "50+上市公司", "20+行业"].map(tag => (
+                  <span key={tag} className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur">{tag}</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>

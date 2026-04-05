@@ -612,14 +612,15 @@ export function Workbench({ projectId }: { projectId: string }) {
               </div>
             </section>
 
-            <section className="card-hover rounded-xl border border-sky-200/60 bg-gradient-to-br from-white to-sky-50/30 p-4 shadow-sm dark:border-sky-800/40 dark:from-zinc-900 dark:to-sky-950/10">
-              <h2 className="flex items-center gap-2 text-sm font-semibold text-sky-700 dark:text-sky-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-sky-600 text-xs font-bold text-white shadow-sm">⑤</span>
+            <section className="animate-tech-glow card-hover rounded-xl border-2 border-sky-300/80 bg-gradient-to-br from-sky-50/50 via-white to-indigo-50/30 p-5 shadow-lg dark:border-sky-700/60 dark:from-sky-950/20 dark:via-zinc-900 dark:to-indigo-950/10">
+              <h2 className="flex items-center gap-2 text-base font-bold text-sky-800 dark:text-sky-300">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 text-xs font-bold text-white shadow-md">⑤</span>
                 胜率预测模型
+                <span className="ml-auto rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-bold text-sky-700 dark:bg-sky-900 dark:text-sky-300">核心指标</span>
               </h2>
-              <div className="mt-3 flex items-start gap-4">
+              <div className="mt-4 flex items-start gap-5">
                 <div className="shrink-0">
-                  <GaugeChart value={q.computed.winRate} label="综合胜率" size={140} />
+                  <GaugeChart value={q.computed.winRate} label="综合胜率" size={160} />
                 </div>
                 <div className="flex-1 space-y-2">
                   {winScores.map((s) => (

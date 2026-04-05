@@ -188,10 +188,11 @@ export default async function CompassPage() {
         </div>
       ) : null}
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">盈利管理分析罗盘</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          项目评估与对策矩阵——基于毛利率 × 增长率双维度分析（数据来自当前库）
+      <div className="animate-fade-in-up rounded-2xl border border-amber-200/60 bg-gradient-to-r from-slate-900 via-slate-800 to-amber-900 px-6 py-6 text-white shadow-lg">
+        <p className="text-xs font-semibold uppercase tracking-widest text-amber-300/80">Profit Compass</p>
+        <h1 className="mt-1 text-2xl font-black tracking-tight">盈利管理分析罗盘</h1>
+        <p className="mt-2 text-sm text-slate-300">
+          项目评估与对策矩阵 — 基于毛利率 × 增长率双维度实时分析 · 共 {items.length} 个项目
         </p>
       </div>
 
