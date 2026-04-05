@@ -5,6 +5,9 @@ import { DataSyncListener } from "@/components/DataSyncListener";
 import { Nav } from "@/components/Nav";
 import { PortalHomeButton } from "@/components/PortalHomeButton";
 import { SiteFooter } from "@/components/SiteFooter";
+import { cookies } from "next/headers";
+import { PLATFORM_AUTH_COOKIE } from "@/lib/session-cookie";
+import { verifyGateAuthToken } from "@/lib/gate-auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,11 +28,13 @@ export const metadata: Metadata = {
     "企业级报价、分层审批与盈利罗盘：让定价可度量、毛利可追踪、决策可留痕。适用于制造与科技型企业的产品试点与立项评估。联合呈现：纷享销客。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const token = (await cookies()).get(PLATFORM_AUTH_COOKIE)?.value;
+  const gatePassed = await verifyGateAuthToken(token);
   return (
     <html
       lang="zh-CN"
@@ -37,10 +42,12 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col text-slate-900 dark:text-slate-50">
         <DataSyncListener />
-        <Nav />
-        <main className="w-full flex-1 px-4 py-8 sm:py-10">{children}</main>
-        <PortalHomeButton />
-        <SiteFooter />
+        {gatePassed ? <Nav /> : null}
+        <main className={gatePassed ? "w-full flex-1 px-4 py-8 sm:py-10" : "w-full flex-1"}>
+          {children}
+        </main>
+        {gatePassed ? <PortalHomeButton /> : null}
+        {gatePassed ? <SiteFooter /> : null}
       </body>
     </html>
   );

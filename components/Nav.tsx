@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { BrandMark } from "./BrandMark";
 import { FxiaokeBrandBadge } from "./FxiaokeBrandBadge";
 import { RoleSwitcher, useDemoRole } from "./RoleSwitcher";
@@ -11,6 +12,7 @@ import { usePathname } from "next/navigation";
 export function Nav() {
   const role = parseDemoRole(useDemoRole());
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isZtContext =
     pathname.startsWith("/zt007") ||
     pathname.startsWith("/personal") ||
@@ -34,6 +36,10 @@ export function Nav() {
       : []),
   ];
   const links = isZtContext ? ztLinks : filterNavLinksForRole(role);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
@@ -86,19 +92,36 @@ export function Nav() {
             {isZtContext ? "进入智探007" : "进入系统"}
           </Link>
           <RoleSwitcher />
+          <button
+            type="button"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-main-nav"
+            onClick={() => setMobileOpen((prev) => !prev)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <span aria-hidden>{mobileOpen ? "✕" : "☰"}</span>
+            {mobileOpen ? "收起导航" : "展开导航"}
+          </button>
         </div>
       </div>
-      <nav className="flex flex-wrap gap-1 border-t border-slate-100 px-4 py-2 text-[13px] font-medium text-slate-600 lg:hidden dark:border-slate-800 dark:text-slate-400">
-        {links.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="rounded-md px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            {l.label}
-          </Link>
-        ))}
-      </nav>
+      {mobileOpen ? (
+        <nav
+          id="mobile-main-nav"
+          className="border-t border-slate-100 px-4 py-3 lg:hidden dark:border-slate-800"
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="inline-flex min-h-11 items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      ) : null}
     </header>
   );
 }
