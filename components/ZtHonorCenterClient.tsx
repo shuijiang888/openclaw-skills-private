@@ -29,6 +29,7 @@ export function ZtHonorCenterClient() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reviewBusyId, setReviewBusyId] = useState("");
   const [form, setForm] = useState({ item: "Training Session", pointsCost: 100 });
 
   async function load() {
@@ -87,6 +88,36 @@ export function ZtHonorCenterClient() {
       setError(err instanceof Error ? err.message : "兑换失败");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function reviewRedemption(id: string, decision: "APPROVED" | "REJECTED") {
+    setReviewBusyId(id);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch(withClientBasePath("/api/zt/redemptions"), {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          ...demoHeaders(),
+        },
+        body: JSON.stringify({ id, decision }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) throw new Error(payload.message ?? payload.error ?? "审核失败");
+      setMessage(
+        decision === "APPROVED" ? "兑换申请已通过并进入发放流程。" : "兑换申请已驳回。",
+      );
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "审核失败");
+    } finally {
+      setReviewBusyId("");
     }
   }
 
@@ -175,6 +206,26 @@ export function ZtHonorCenterClient() {
             <p className="mt-1 text-xs text-slate-400">
               cost {r.pointsCost} · code {r.redeemCode}
             </p>
+            {r.status === "REQUESTED" ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={Boolean(reviewBusyId)}
+                  onClick={() => void reviewRedemption(r.id, "APPROVED")}
+                  className="rounded-md border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-200 disabled:opacity-50"
+                >
+                  {reviewBusyId === r.id ? "处理中..." : "审核通过"}
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(reviewBusyId)}
+                  onClick={() => void reviewRedemption(r.id, "REJECTED")}
+                  className="rounded-md border border-rose-500/30 bg-rose-500/15 px-2.5 py-1 text-xs text-rose-200 disabled:opacity-50"
+                >
+                  {reviewBusyId === r.id ? "处理中..." : "驳回"}
+                </button>
+              </div>
+            ) : null}
           </div>
         ))}
       </section>

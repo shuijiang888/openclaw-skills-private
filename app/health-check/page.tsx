@@ -14,6 +14,13 @@ export default function HealthCheckPage() {
           一页检查核心页面与 API 状态，便于你和团队快速判断系统是否可用。
         </p>
       </div>
+      <div className="rounded-2xl border border-cyan-200/80 bg-cyan-50/70 p-4 text-xs text-cyan-900 shadow-sm dark:border-cyan-900/50 dark:bg-cyan-950/20 dark:text-cyan-100">
+        <p className="font-semibold">发布前建议执行</p>
+        <ul className="mt-2 list-disc space-y-1 pl-4">
+          <li>npm run release:preflight</li>
+          <li>npm run zt:acceptance（门禁→行动→悬赏→积分→个人工作台）</li>
+        </ul>
+      </div>
       <HealthCheckDashboard />
     </PageContainer>
   );

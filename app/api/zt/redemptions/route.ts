@@ -52,6 +52,40 @@ export async function GET(req: Request) {
   }
 }
 
+export async function PATCH(req: Request) {
+  await ensureZtBootstrap();
+  const ctx = getRequestUserContext(req);
+  if (!ctx.isAdminLike) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+  const body = (await req.json().catch(() => null)) as
+    | {
+        redemptionId?: string;
+        status?: string;
+      }
+    | null;
+  const redemptionId = String(body?.redemptionId ?? "").trim();
+  const status = String(body?.status ?? "")
+    .trim()
+    .toUpperCase();
+  const allowed = new Set(["REVIEWING", "ISSUED", "COMPLETED", "REJECTED"]);
+  if (!redemptionId || !allowed.has(status)) {
+    return NextResponse.json(
+      { error: "redemptionId/status invalid" },
+      { status: 400 },
+    );
+  }
+  const updated = await prisma.ztRedemption.update({
+    where: { id: redemptionId },
+    data: {
+      status,
+      verifiedAt:
+        status === "ISSUED" || status === "COMPLETED" ? new Date() : null,
+    },
+  });
+  return NextResponse.json({ ok: true, item: updated });
+}
+
 export async function POST(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
