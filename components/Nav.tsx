@@ -49,9 +49,9 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-5 lg:gap-8">
-          <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 lg:flex-nowrap">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-4 lg:flex-nowrap lg:gap-6">
+          <div className="flex min-w-0 shrink-0 items-center gap-3 sm:gap-4">
             <Link href="/" className="flex min-w-0 items-center gap-3">
               <BrandMark />
               <div className="min-w-0">
@@ -78,7 +78,7 @@ export function Nav() {
               </div>
             ) : null}
           </div>
-          <nav className="hidden flex-wrap gap-1 text-[13px] font-medium text-slate-600 lg:flex dark:text-slate-400">
+          <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap text-[13px] font-medium text-slate-600 lg:flex dark:text-slate-400">
             {links.map((l) => (
               (() => {
                 const active = isLinkActive(pathname, l.href);
@@ -86,7 +86,7 @@ export function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`rounded-md px-2.5 py-1.5 transition ${
+                className={`shrink-0 rounded-md px-2.5 py-1.5 transition ${
                   active
                     ? "bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-200"
                     : "hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
@@ -99,7 +99,7 @@ export function Nav() {
             ))}
           </nav>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
           <Link
             href={isZtContext ? "/zt007" : "/dashboard"}
             className="hidden rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:inline-flex dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
