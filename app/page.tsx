@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CoverGate } from "@/components/CoverGate";
 
 type PortalCard = {
   title: string;
@@ -44,7 +45,8 @@ const portalCards: PortalCard[] = [
 
 export default function LandingPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-8 pb-10 sm:space-y-10 sm:pb-14">
+    <CoverGate>
+      <div className="mx-auto max-w-6xl space-y-8 pb-10 sm:space-y-10 sm:pb-14">
       <section className="relative overflow-hidden rounded-3xl border border-slate-700/40 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-5 py-10 text-white shadow-xl shadow-slate-900/20 sm:px-8 sm:py-12 lg:px-10">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_60%_-10%,rgba(56,189,248,0.18),transparent)]" />
         <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl" />
@@ -122,6 +124,7 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
-    </div>
+      </div>
+    </CoverGate>
   );
 }

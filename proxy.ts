@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { PROFIT_SESSION_COOKIE } from "@/lib/session-cookie";
+import {
+  PROFIT_SESSION_COOKIE,
+  PLATFORM_AUTH_COOKIE,
+} from "@/lib/session-cookie";
+import { verifyGateToken } from "@/lib/gate-auth";
 
 function isSessionAuthMode(): boolean {
   const v =
@@ -16,6 +20,23 @@ function isPublicPage(path: string): boolean {
     path.startsWith("/about") ||
     path.startsWith("/strategy") ||
     path.startsWith("/roadmap")
+  );
+}
+
+function isGateProtectedPath(path: string): boolean {
+  return (
+    path.startsWith("/profit") ||
+    path.startsWith("/dashboard") ||
+    path.startsWith("/projects") ||
+    path.startsWith("/zt007") ||
+    path.startsWith("/personal") ||
+    path.startsWith("/console") ||
+    path.startsWith("/compass") ||
+    path.startsWith("/health-check") ||
+    path.startsWith("/strategy") ||
+    path.startsWith("/roadmap") ||
+    path.startsWith("/about") ||
+    path.startsWith("/api/")
   );
 }
 
@@ -86,11 +107,32 @@ function appendSessionHeaders(req: NextRequest, payload: SessionPayload) {
 }
 
 export async function proxy(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+
+  if (isGateProtectedPath(path)) {
+    const gateToken = req.cookies.get(PLATFORM_AUTH_COOKIE)?.value;
+    const gateOk = gateToken ? await verifyGateToken(gateToken).then(() => true).catch(() => false) : false;
+    if (!gateOk) {
+      if (path.startsWith("/api/auth/verify")) {
+        return NextResponse.next();
+      }
+      if (path.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "请先通过封面密码验证" },
+          { status: 401 },
+        );
+      }
+      const url = req.nextUrl.clone();
+      url.pathname = "/";
+      url.searchParams.set("gate", "1");
+      return NextResponse.redirect(url);
+    }
+  }
+
   if (!isSessionAuthMode()) {
     return NextResponse.next();
   }
 
-  const path = req.nextUrl.pathname;
   const secret = process.env.PROFIT_AUTH_SECRET?.trim();
   if (!secret || secret.length < 16) {
     if (path.startsWith("/api/")) {
