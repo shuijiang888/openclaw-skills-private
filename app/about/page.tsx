@@ -93,12 +93,16 @@ function TabExpert() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_75%_-10%,rgba(251,191,36,0.15),transparent)]" />
           <div className="pointer-events-none absolute -right-20 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-amber-500/10 blur-3xl" />
           <div className="relative flex flex-col items-center gap-8 sm:flex-row sm:items-center">
-            {/* 巨幅头像区域 */}
+            {/* 巨幅真实照片 */}
             <div className="relative shrink-0">
-              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 shadow-2xl shadow-amber-500/30 ring-4 ring-white/20 sm:h-48 sm:w-48">
-                <span className="text-7xl font-black text-white sm:text-8xl" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>陈</span>
+              <div className="h-44 w-44 overflow-hidden rounded-2xl shadow-2xl shadow-amber-500/30 ring-4 ring-white/20 sm:h-56 sm:w-44">
+                <img
+                  src="/images/experts/chenwei_portrait1.jpeg"
+                  alt="陈玮 Kevin"
+                  className="h-full w-full object-cover object-top"
+                />
               </div>
-              <div className="absolute -bottom-1 -right-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-lg">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-1 text-[10px] font-bold text-white shadow-lg">
                 华为系专家
               </div>
             </div>
