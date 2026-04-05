@@ -1,4 +1,4 @@
-import type { Customer, Project, Quote } from "@prisma/client";
+import type { Project, Quote } from "@prisma/client";
 import { enrichProject } from "@/lib/serialize";
 
 export type PortfolioValueMetrics = {
@@ -15,7 +15,7 @@ export type PortfolioValueMetrics = {
 };
 
 export function computePortfolioMetrics(
-  rows: (Project & { customer: Customer; quote: Quote | null })[],
+  rows: (Project & { customer: { tier: string }; quote: Quote | null })[],
 ): PortfolioValueMetrics {
   let lowMarginQuoteCount = 0;
   let autoChannelEligibleCount = 0;

@@ -15,26 +15,45 @@ export default async function DashboardPage({
 }) {
   const demo = (await searchParams)?.demo;
 
-  const [projectCount, customerCount, compassCount, pending, allProjects] =
+  const [projectCount, customerCount, compassCount, pending, allProjects, recent] =
     await Promise.all([
       prisma.project.count(),
       prisma.customer.count(),
       prisma.compassItem.count(),
       prisma.project.count({ where: { status: "PENDING_APPROVAL" } }),
       prisma.project.findMany({
-        include: { customer: true, quote: true },
+        include: { quote: true },
+      }),
+      prisma.project.findMany({
+        take: 5,
+        orderBy: { updatedAt: "desc" },
+        include: { quote: true },
       }),
     ]);
 
-  const vm = computePortfolioMetrics(allProjects);
+  const customerIds = Array.from(
+    new Set([...allProjects, ...recent].map((p) => p.customerId)),
+  );
+  const customers =
+    customerIds.length > 0
+      ? await prisma.customer.findMany({
+          where: { id: { in: customerIds } },
+          select: { id: true, name: true, tier: true },
+        })
+      : [];
+  const customerMap = new Map(customers.map((c) => [c.id, c]));
+  const allProjectsWithCustomer = allProjects.map((p) => ({
+    ...p,
+    customer: customerMap.get(p.customerId) ?? {
+      id: p.customerId,
+      name: "未知客户",
+      tier: "NORMAL",
+    },
+  }));
 
-  const recent = await prisma.project.findMany({
-    take: 5,
-    orderBy: { updatedAt: "desc" },
-    include: { customer: true, quote: true },
-  });
+  const vm = computePortfolioMetrics(allProjectsWithCustomer);
 
-  const bossBriefing = buildBossBriefingFromProjects(allProjects);
+  const bossBriefing = buildBossBriefingFromProjects(allProjectsWithCustomer);
 
   const autoPct =
     vm.projectCount > 0
@@ -205,7 +224,7 @@ export default async function DashboardPage({
                     {p.name}
                   </Link>
                   <div className="text-xs text-slate-500">
-                    {p.customer.name} · {p.status}
+                    {customerMap.get(p.customerId)?.name ?? "未知客户"} · {p.status}
                     {p.quote
                       ? ` · 建议价 ¥${p.quote.suggestedPrice.toLocaleString("zh-CN")}`
                       : ""}

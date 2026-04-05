@@ -3,6 +3,11 @@ import { enrichProject } from "@/lib/serialize";
 import { computePortfolioMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
 
+type BossBriefingProjectRow = Project & {
+  customer: Pick<Customer, "id" | "name" | "tier">;
+  quote: Quote | null;
+};
+
 export type BossBriefingDTO = {
   version: 1;
   generatedAt: string;
@@ -27,7 +32,7 @@ export type BossBriefingDTO = {
 };
 
 function concentrationTopCustomerPct(
-  rows: (Project & { customer: Customer })[],
+  rows: Pick<Project, "customerId">[],
 ): number {
   if (rows.length === 0) return 0;
   const byCustomer = new Map<string, number>();
@@ -40,7 +45,7 @@ function concentrationTopCustomerPct(
 }
 
 export function buildBossBriefingFromProjects(
-  rows: (Project & { customer: Customer; quote: Quote | null })[],
+  rows: BossBriefingProjectRow[],
 ): BossBriefingDTO {
   const vm = computePortfolioMetrics(rows);
   const autoPct =
@@ -114,8 +119,25 @@ export function buildBossBriefingFromProjects(
 }
 
 export async function getBossBriefing(): Promise<BossBriefingDTO> {
-  const rows = await prisma.project.findMany({
-    include: { customer: true, quote: true },
+  const projects = await prisma.project.findMany({
+    include: { quote: true },
   });
+  const customerIds = Array.from(new Set(projects.map((p) => p.customerId)));
+  const customers =
+    customerIds.length > 0
+      ? await prisma.customer.findMany({
+          where: { id: { in: customerIds } },
+          select: { id: true, name: true, tier: true },
+        })
+      : [];
+  const customerMap = new Map(customers.map((c) => [c.id, c]));
+  const rows: BossBriefingProjectRow[] = projects.map((p) => ({
+    ...p,
+    customer: customerMap.get(p.customerId) ?? {
+      id: p.customerId,
+      name: "未知客户",
+      tier: "NORMAL",
+    },
+  }));
   return buildBossBriefingFromProjects(rows);
 }

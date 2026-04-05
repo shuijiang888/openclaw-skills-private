@@ -10,7 +10,19 @@ import { enrichProject } from "@/lib/serialize";
 export const dynamic = "force-dynamic";
 
 function mapToRows(
-  projects: ReturnType<typeof enrichProject>[],
+  projects: Array<{
+    id: string;
+    name: string;
+    status: string;
+    customer: { name: string };
+    quote:
+      | {
+          suggestedPrice: number;
+          pendingRole: string | null;
+          computed?: { grossMarginAtSuggest: number };
+        }
+      | null;
+  }>,
 ): ProjectListRow[] {
   return projects.map((p) => ({
     id: p.id,
@@ -20,7 +32,7 @@ function mapToRows(
     suggestedPrice:
       p.quote && "suggestedPrice" in p.quote ? p.quote.suggestedPrice : null,
     grossMarginAtSuggest:
-      p.quote && "computed" in p.quote
+      p.quote && "computed" in p.quote && p.quote.computed
         ? p.quote.computed.grossMarginAtSuggest
         : null,
     pendingRole: p.quote?.pendingRole ?? null,

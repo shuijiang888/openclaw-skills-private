@@ -1,4 +1,4 @@
-import type { Customer, Project, Quote } from "@prisma/client";
+import type { Project, Quote } from "@prisma/client";
 import { defaultBenchmarkPrices } from "@/lib/benchmarks";
 import {
   discountPercent,
@@ -30,7 +30,7 @@ export function enrichQuote(
     Project,
     "isStandard" | "isSmallOrder" | "quantity" | "leadDays"
   >,
-  customer: Pick<Customer, "tier">,
+  customer: { tier: string },
 ): EnrichedQuote {
   const cost = totalCost(q);
   const k =
@@ -86,9 +86,9 @@ export function enrichQuote(
   };
 }
 
-export function enrichProject(
-  project: Project & { customer: Customer; quote: Quote | null },
-) {
+export function enrichProject<TCustomer extends { tier: string }>(
+  project: Project & { customer: TCustomer; quote: Quote | null },
+): Project & { customer: TCustomer; quote: EnrichedQuote | null } {
   if (!project.quote) {
     return { ...project, quote: null };
   }
