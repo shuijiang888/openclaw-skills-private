@@ -32,16 +32,6 @@ export const DEMO_NAV_LINKS = [
 
 export const DEMO_CONSOLE_SIDEBAR_LINKS = [
   { href: "/console", label: "控制台", roles: BACKOFFICE },
-  {
-    href: "/console/zt-system",
-    label: "智探007系统维护",
-    roles: BACKOFFICE,
-  },
-  {
-    href: "/console/zt-users",
-    label: "智探007用户组织",
-    roles: BACKOFFICE,
-  },
   { href: "/console/pipeline", label: "项目与审批", roles: BACKOFFICE },
   { href: "/console/customers", label: "主数据 · 客户", roles: BACKOFFICE },
   { href: "/console/readiness", label: "落地准备", roles: BACKOFFICE },

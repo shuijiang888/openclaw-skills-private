@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { withClientBasePath } from "@/lib/client-url";
+import { parseDemoRole } from "@/lib/approval";
+import { parseZtUserRole } from "@/lib/zt-ranks";
 
 export const DEMO_ROLE_STORAGE_KEY = "profit_demo_role";
 
@@ -207,15 +209,21 @@ export function RoleSwitcher() {
   }
 
   if (sessionMode) {
-    const label =
+    const profitRoleLabel =
+      ROLE_LABEL[parseDemoRole(sessionInfo.status === "in" ? sessionInfo.role : role)];
+    const ztRoleValue =
       sessionInfo.status === "in"
-        ? (ROLE_LABEL[sessionInfo.role] ?? sessionInfo.role)
-        : (ROLE_LABEL[role] ?? role);
+        ? parseZtUserRole(sessionInfo.ztRole ?? sessionInfo.role)
+        : parseZtUserRole(role);
+    const ztRoleLabel = ROLE_LABEL[ztRoleValue] ?? ztRoleValue;
+    const label =
+      isZtContext ? ztRoleLabel : (profitRoleLabel ?? parseDemoRole(role));
     const ztLabel =
-      sessionInfo.status === "in" && sessionInfo.ztRole
+      isZtContext && sessionInfo.status === "in" && sessionInfo.ztRole
         ? sessionInfo.isSuperAdmin
           ? "超超级管理员"
-          : sessionInfo.ztRole
+          : (ROLE_LABEL[parseZtUserRole(sessionInfo.ztRole)] ??
+            parseZtUserRole(sessionInfo.ztRole))
         : null;
     if (sessionInfo.status === "loading") {
       return (
