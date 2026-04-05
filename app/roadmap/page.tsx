@@ -40,7 +40,7 @@ export default function RoadmapPage() {
         <p className="text-xs font-medium tracking-wide text-zinc-500">
           第三章摘要 · 前瞻计划与价值预期
         </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">产品路线图</h1>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">AI 交付与价值服务</h1>
         <p className="mt-3 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
           按价值与依赖递增分期；完整论述见{" "}
           <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">
