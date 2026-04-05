@@ -33,7 +33,7 @@ echo "[6/7] ZT submission feedback includes points/rank..."
 curl -fsS -b "$tmp_cookie" -H "x-demo-role: SALES_DIRECTOR" -H "content-type: application/json" \
   -X POST "$BASE_URL/api/zt/submissions" \
   -d "{\"title\":\"验收脚本提交\",\"content\":\"自动验收\",\"region\":\"成都\",\"format\":\"text\",\"signalType\":\"tactical\"}" \
-  | jq -e '.pointsDelta==8 and (.rankLabel|type=="string") and (.ledgerId|type=="string")' >/dev/null
+  | jq -e '.submission.pointsGranted==8 and (.wallet.rankLabel|type=="string") and (.wallet.ledgerId|type=="string")' >/dev/null
 
 echo "[7/7] ZT me in demo mode should not 401..."
 status="$(curl -sS -o /tmp/ztme.json -w "%{http_code}" -b "$tmp_cookie" -H "x-demo-role: SALES_DIRECTOR" "$BASE_URL/api/zt/me")"
