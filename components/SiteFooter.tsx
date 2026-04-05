@@ -24,7 +24,7 @@ export function SiteFooter() {
     pathname.startsWith("/console/zt-users");
 
   return (
-    <footer className="mt-auto border-t border-slate-200/80 bg-white/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/60">
+    <footer className="mt-auto border-t border-slate-200/80 bg-white/75 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/75">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-slate-800 dark:text-slate-200">

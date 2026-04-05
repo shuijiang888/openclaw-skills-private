@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { PageContainer } from "@/components/PageContainer";
 import { RoleHomePanel } from "@/components/RoleHomePanel";
+import { SystemHero } from "@/components/SystemHero";
 import { computePortfolioMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
 
@@ -67,17 +68,11 @@ export default async function DashboardPage({
         </div>
       ) : null}
       <RoleHomePanel />
-      <div className="rounded-2xl border border-slate-200/90 bg-white/80 px-5 py-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
-        <p className="text-[11px] font-semibold tracking-wide text-amber-800 dark:text-amber-400">
-          经营简报
-        </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          工作台 · 经营概览
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          一眼看到利润风险池、自动化潜力与审批队列。对外汇报时可配合「战略全文」中的价值叙事使用。
-        </p>
-      </div>
+      <SystemHero
+        badge="经营简报"
+        title="工作台 · 经营概览"
+        description="一眼看到利润风险池、自动化潜力与审批队列。对外汇报时可配合「战略全文」中的价值叙事使用。"
+      />
 
       <BossBriefingCard />
 

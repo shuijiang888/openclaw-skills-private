@@ -8,7 +8,9 @@ export function PageContainer({
   className?: string;
 }) {
   return (
-    <div className={`mx-auto w-full max-w-6xl ${className}`.trim()}>
+    <div
+      className={`mx-auto w-full max-w-7xl px-1 sm:px-2 lg:px-3 ${className}`.trim()}
+    >
       {children}
     </div>
   );

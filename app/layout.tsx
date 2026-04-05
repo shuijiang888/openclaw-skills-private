@@ -43,7 +43,7 @@ export default async function RootLayout({
       <body className="flex min-h-full flex-col text-slate-900 dark:text-slate-50">
         <DataSyncListener />
         {gatePassed ? <Nav /> : null}
-        <main className={gatePassed ? "w-full flex-1 px-4 py-8 sm:py-10" : "w-full flex-1"}>
+        <main className={gatePassed ? "w-full flex-1 px-4 py-8 sm:py-10 lg:py-12" : "w-full flex-1"}>
           {children}
         </main>
         {gatePassed ? <PortalHomeButton /> : null}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { CoverGate } from "@/components/CoverGate";
+import { SystemHero } from "@/components/SystemHero";
 import { PLATFORM_AUTH_COOKIE } from "@/lib/session-cookie";
 import { verifyGateAuthToken } from "@/lib/gate-auth";
 
@@ -55,34 +56,12 @@ export default async function LandingPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-10 sm:space-y-10 sm:pb-14">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-700/40 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-5 py-10 text-white shadow-xl shadow-slate-900/20 sm:px-8 sm:py-12 lg:px-10">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_60%_-10%,rgba(56,189,248,0.18),transparent)]" />
-        <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="relative z-10">
-          <p className="inline-flex rounded-full border border-cyan-300/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-cyan-100">
-            Unified Entry Portal
-          </p>
-          <h1 className="mt-4 text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
-            AI价值服务作战平台
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            统一门户集中管理盈利系统、智探007与后续 CRM 连接能力，
-            支持多端访问与清晰分层导航。
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-300">
-            {["Mobile Ready", "Pad Ready", "Desktop Ready", "Role-aware"].map(
-              (tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1"
-                >
-                  {tag}
-                </span>
-              ),
-            )}
-          </div>
-        </div>
-      </section>
+      <SystemHero
+        eyebrow="Unified Entry Portal"
+        title="AI价值服务作战平台"
+        description="统一门户集中管理盈利系统、智探007与后续 CRM 连接能力，支持多端访问与清晰分层导航。"
+        tags={["Mobile Ready", "Pad Ready", "Desktop Ready", "Role-aware"]}
+      />
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">

@@ -85,8 +85,8 @@ export function ZtStrategistClient() {
   }, [lastReport]);
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-2xl border border-amber-300/30 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-5 text-slate-100">
+    <div className="space-y-5 motion-rise-up">
+      <section className="card-elevated rounded-2xl border border-amber-300/30 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-5 text-slate-100">
         <div className="grid gap-4 lg:grid-cols-[200px_1fr]">
           <div className="flex flex-col items-center justify-center rounded-xl border border-amber-400/40 bg-slate-950/40 p-3">
             <img
@@ -110,7 +110,7 @@ export function ZtStrategistClient() {
                   key={q}
                   type="button"
                   onClick={() => setQuestion(q)}
-                  className="rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs text-amber-100 hover:bg-amber-500/20"
+                  className="rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs text-amber-100 transition hover:bg-amber-500/20"
                 >
                   {q}
                 </button>
@@ -121,7 +121,7 @@ export function ZtStrategistClient() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="向大军师提问：例如“华南本周是否会出现竞品价格战？”"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100"
               />
               <button
                 type="button"
@@ -150,7 +150,7 @@ export function ZtStrategistClient() {
       ) : null}
 
       {lastReport ? (
-        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <section className="card-elevated rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             热点态势
           </h3>
@@ -182,7 +182,7 @@ export function ZtStrategistClient() {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className="card-elevated rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">对话记录</h3>
         <div className="mt-2 space-y-3">
           {history.map((x, idx) => (
@@ -210,7 +210,7 @@ export function ZtStrategistClient() {
 
 function Card({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="card-elevated rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
     </div>
@@ -225,7 +225,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="card-elevated rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h4>
       <div className="mt-2 space-y-1">{children}</div>
     </div>

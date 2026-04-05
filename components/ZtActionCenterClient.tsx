@@ -82,7 +82,7 @@ export function ZtActionCenterClient() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+      <div className="surface-card rounded-2xl p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-cyan-200">行动中心</h2>
           <span className="text-xs text-slate-400">
@@ -109,7 +109,7 @@ export function ZtActionCenterClient() {
         {items.map((c) => (
           <div
             key={c.id}
-            className="rounded-lg border border-slate-700 bg-slate-950/60 p-3"
+            className="surface-card rounded-xl p-3.5"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium text-slate-100">{c.title}</p>
@@ -125,7 +125,7 @@ export function ZtActionCenterClient() {
               type="button"
               disabled={c.status === "DONE" || busy === c.id}
               onClick={() => void markDone(c.id)}
-              className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-200 disabled:opacity-40"
+              className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1.5 text-xs text-emerald-200 disabled:opacity-40"
             >
               {c.status === "DONE"
                 ? "DONE"

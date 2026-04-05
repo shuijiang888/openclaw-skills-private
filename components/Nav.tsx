@@ -9,6 +9,11 @@ import { canAccessConsole, filterNavLinksForRole } from "@/lib/demo-role-modules
 import { parseDemoRole } from "@/lib/approval";
 import { usePathname } from "next/navigation";
 
+function isLinkActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Nav() {
   const role = parseDemoRole(useDemoRole());
   const pathname = usePathname();
@@ -75,13 +80,22 @@ export function Nav() {
           </div>
           <nav className="hidden flex-wrap gap-1 text-[13px] font-medium text-slate-600 lg:flex dark:text-slate-400">
             {links.map((l) => (
+              (() => {
+                const active = isLinkActive(pathname, l.href);
+                return (
               <Link
                 key={l.href}
                 href={l.href}
-                className="rounded-md px-2.5 py-1.5 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+                className={`rounded-md px-2.5 py-1.5 transition ${
+                  active
+                    ? "bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-200"
+                    : "hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+                }`}
               >
                 {l.label}
               </Link>
+                );
+              })()
             ))}
           </nav>
         </div>
@@ -112,13 +126,22 @@ export function Nav() {
         >
           <div className="grid gap-2 sm:grid-cols-2">
             {links.map((l) => (
+              (() => {
+                const active = isLinkActive(pathname, l.href);
+                return (
               <Link
                 key={l.href}
                 href={l.href}
-                className="inline-flex min-h-11 items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                className={`inline-flex min-h-11 items-center rounded-lg border px-3 py-2 text-[13px] font-medium transition ${
+                  active
+                    ? "border-cyan-300 bg-cyan-50 text-cyan-800 dark:border-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
               >
                 {l.label}
               </Link>
+                );
+              })()
             ))}
           </div>
         </nav>
