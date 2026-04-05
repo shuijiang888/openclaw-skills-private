@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { withClientBasePath } from "@/lib/client-url";
 
 function worldTime(offsetHours: number): string {
@@ -10,12 +10,11 @@ function worldTime(offsetHours: number): string {
   return dt.toISOString().slice(11, 16);
 }
 
-export function CoverGate({ children }: { children: React.ReactNode }) {
+export function CoverGate() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lockedForSec, setLockedForSec] = useState<number | null>(null);
-  const [gateOk, setGateOk] = useState<boolean | null>(null);
 
   const times = useMemo(
     () => [
@@ -26,34 +25,6 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
     ],
     [],
   );
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(withClientBasePath("/api/auth/verify"), {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        });
-        const j = (await res.json()) as { ok?: boolean; locked?: boolean; retryAfterSec?: number };
-        if (cancelled) return;
-        if (j.ok) {
-          setGateOk(true);
-          return;
-        }
-        if (j.locked && typeof j.retryAfterSec === "number") {
-          setLockedForSec(j.retryAfterSec);
-        }
-        setGateOk(false);
-      } catch {
-        if (!cancelled) setGateOk(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function submit() {
     if (loading) return;
@@ -78,24 +49,12 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         }
         return;
       }
-      setGateOk(true);
+      window.location.reload();
     } catch {
       setError("网络异常，请重试");
     } finally {
       setLoading(false);
     }
-  }
-
-  if (gateOk) {
-    return <>{children}</>;
-  }
-
-  if (gateOk === null) {
-    return (
-      <div className="mx-auto flex min-h-[40vh] w-full max-w-4xl items-center justify-center rounded-2xl border border-slate-200/90 bg-white/80 p-8 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300">
-        正在验证访问权限…
-      </div>
-    );
   }
 
   return (
