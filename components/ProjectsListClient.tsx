@@ -78,18 +78,18 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">项目列表</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            点击项目进入智能报价工作台。筛选随右上角「试点角色」（演示模式）或会话角色（登录模式）与待审角色联动。
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">项目列表</h1>
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+            点击项目进入智能报价工作台，筛选随当前角色与待审角色联动
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <CsvExportLink href="/api/export/projects">导出 CSV</CsvExportLink>
           <Link
             href="/projects/new"
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+            className="rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2 text-sm font-bold text-white shadow-md shadow-amber-500/20 transition hover:from-amber-600 hover:to-amber-700 hover:shadow-lg"
           >
-            新建报价
+            + 新建报价
           </Link>
         </div>
       </div>
@@ -100,10 +100,10 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               filter === f
-                ? "bg-violet-600 text-white dark:bg-violet-500"
-                : "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-amber-300 hover:text-amber-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-amber-700"
             }`}
           >
             {filterLabel(f)}
@@ -113,16 +113,17 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-100 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-left text-sm">
+          <thead className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-slate-50 dark:border-zinc-800 dark:from-zinc-950/50 dark:to-slate-950/50">
             <tr>
-              <th className="px-4 py-3 font-medium">项目</th>
-              <th className="px-4 py-3 font-medium">客户</th>
-              <th className="px-4 py-3 font-medium">状态</th>
-              <th className="px-4 py-3 font-medium">待审角色</th>
-              <th className="px-4 py-3 font-medium text-right">建议价</th>
-              <th className="px-4 py-3 font-medium text-right">毛利率</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">项目</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">客户</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">状态</th>
+              <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">待审角色</th>
+              <th className="px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500">建议价</th>
+              <th className="px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500">毛利率</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -152,7 +153,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/projects/${p.id}`}
-                        className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                        className="font-semibold text-slate-900 transition hover:text-amber-700 dark:text-white dark:hover:text-amber-400"
                       >
                         {p.name}
                       </Link>
@@ -166,7 +167,18 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                       {p.customerName}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        p.status === "APPROVED" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" :
+                        p.status === "PENDING_APPROVAL" ? "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300" :
+                        p.status === "PRICED" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" :
+                        "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          p.status === "APPROVED" ? "bg-emerald-500" :
+                          p.status === "PENDING_APPROVAL" ? "bg-amber-500 animate-pulse" :
+                          p.status === "PRICED" ? "bg-blue-500" :
+                          "bg-zinc-400"
+                        }`} />
                         {projectStatusLabel(p.status)}
                       </span>
                     </td>
@@ -180,7 +192,11 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
                         ? `¥${p.suggestedPrice.toLocaleString("zh-CN")}`
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className={`px-4 py-3 text-right tabular-nums font-medium ${
+                      p.grossMarginAtSuggest != null
+                        ? p.grossMarginAtSuggest >= 25 ? "text-emerald-600" : p.grossMarginAtSuggest >= 15 ? "text-amber-600" : "text-red-600"
+                        : "text-zinc-400"
+                    }`}>
                       {p.grossMarginAtSuggest != null
                         ? `${p.grossMarginAtSuggest}%`
                         : "—"}
@@ -191,6 +207,7 @@ export function ProjectsListClient({ rows }: { rows: ProjectListRow[] }) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

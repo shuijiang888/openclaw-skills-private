@@ -11,25 +11,25 @@ function BriefingInner({ data }: { data: BossBriefingDTO }) {
   return (
     <>
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {(
-          [
-            ["风险池（毛利率<15%）", String(m.lowMarginQuoteCount)],
-            ["自动通道占比", `${m.autoChannelEligiblePct}%`],
-            ["待审批", String(m.pendingApprovalCount)],
-            ["TOP1 客户占比", `${m.topCustomerConcentrationPct}%`],
-          ] as const
-        ).map(([k, v]) => (
-          <div
-            key={k}
-            className="rounded-lg border border-slate-200/90 bg-white/90 px-3 py-2 dark:border-slate-700 dark:bg-slate-950/40"
+        {[
+          { label: "风险池（毛利<15%）", value: String(m.lowMarginQuoteCount), href: "/projects", color: "text-red-600" },
+          { label: "自动通道占比", value: `${m.autoChannelEligiblePct}%`, href: "/projects", color: "text-emerald-600" },
+          { label: "待审批", value: String(m.pendingApprovalCount), href: "/projects?focus=my-queue", color: "text-amber-600" },
+          { label: "TOP1 客户占比", value: `${m.topCustomerConcentrationPct}%`, href: "/console/customers", color: "text-blue-600" },
+        ].map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className="card-hover rounded-lg border border-slate-200/90 bg-white/90 px-3 py-2 transition hover:border-amber-300 hover:shadow dark:border-slate-700 dark:bg-slate-950/40 dark:hover:border-amber-800"
           >
             <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-              {k}
+              {item.label}
             </div>
-            <div className="mt-0.5 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
-              {v}
+            <div className={`mt-0.5 text-lg font-bold tabular-nums ${item.color}`}>
+              {item.value}
             </div>
-          </div>
+            <div className="mt-0.5 text-[9px] text-amber-600 dark:text-amber-400">查看详情 →</div>
+          </Link>
         ))}
       </div>
       <ul className="mt-4 space-y-2 text-xs leading-relaxed text-slate-700 dark:text-slate-300">

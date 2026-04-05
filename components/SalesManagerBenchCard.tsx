@@ -13,8 +13,7 @@ export function SalesManagerBenchCard() {
           销售经理 · 上站清单
         </p>
         <p className="mt-1 text-xs leading-relaxed text-emerald-950/90 dark:text-emerald-100/90">
-          本档可使用左侧完整测算与<strong>提交审批</strong>。需要语义助手解析系数时，请将右上角切换为
-          <strong>销售总监及以上</strong>，解析结果仍须结合本清单自检。
+          下方已开放<strong>智能助手</strong>（qwen3.5 本地大模型），可直接解析商机语义并调整系数。请结合本清单自检后再提交审批。
         </p>
       </div>
       <ul className="list-inside list-disc space-y-1.5 text-[11px] text-emerald-900/95 dark:text-emerald-100/85">

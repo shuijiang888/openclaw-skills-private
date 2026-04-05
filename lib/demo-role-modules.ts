@@ -21,12 +21,11 @@ export const DEMO_NAV_LINKS = [
   { href: "/", label: "门户", roles: ALL },
   { href: "/health-check", label: "健康检查", roles: ALL },
   { href: "/about", label: "价值主张", roles: ALL },
-  { href: "/strategy", label: "战略全文", roles: NO_JUNIOR_SALES },
   { href: "/dashboard", label: "工作台", roles: ALL },
   { href: "/projects", label: "项目", roles: ALL },
   { href: "/projects/new", label: "新建报价", roles: ALL },
   { href: "/compass", label: "盈利罗盘", roles: ALL },
-  { href: "/roadmap", label: "路线图", roles: NO_JUNIOR_SALES },
+  { href: "/roadmap", label: "AI交付与价值服务", roles: NO_JUNIOR_SALES },
   { href: "/console", label: "管理后台", roles: BACKOFFICE },
 ] as const;
 
@@ -63,9 +62,9 @@ export function canAccessConsole(role: DemoRole): boolean {
   return BACKOFFICE.includes(role);
 }
 
-/** 报价智能助手：总监及以上可用（经理档聚焦填价与提交） */
-export function canUseQuoteAssistant(role: DemoRole): boolean {
-  return NO_JUNIOR_SALES.includes(role);
+/** 报价智能助手：所有角色均可使用（qwen3.5 本地大模型为全角色实时赋能） */
+export function canUseQuoteAssistant(_role: DemoRole): boolean {
+  return true;
 }
 
 /** 总经理 + 管理员可读客户主数据；批量导入仅管理员 */
