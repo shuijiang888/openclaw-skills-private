@@ -8,9 +8,21 @@ import {
 import { appendTimeline } from "@/lib/timeline";
 import { defaultBenchmarkPrices } from "@/lib/benchmarks";
 import { enrichProject } from "@/lib/serialize";
+import { resolveDataScope, scopeToWhereClause, type RbacRole } from "@/lib/rbac";
+import { demoRoleFromRequest, sessionUserIdFromRequest } from "@/lib/http";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const role = (demoRoleFromRequest(req) ?? "SALES_DIRECTOR") as RbacRole;
+  const userId = sessionUserIdFromRequest(req);
+
+  let where: Record<string, unknown> = {};
+  if (userId && role !== "ADMIN" && role !== "SUPER_ADMIN" && role !== "GM" && role !== "SALES_VP") {
+    const scope = await resolveDataScope(userId, role);
+    where = scopeToWhereClause(scope);
+  }
+
   const rows = await prisma.project.findMany({
+    where,
     orderBy: { updatedAt: "desc" },
     include: { customer: true, quote: true },
   });
@@ -53,6 +65,8 @@ export async function POST(req: Request) {
     detail: `建议价 ${suggestedPrice}`,
   });
 
+  const creatorId = sessionUserIdFromRequest(req) ?? "legacy_owner";
+
   const project = await prisma.project.create({
     data: {
       customerId: customer.id,
@@ -63,6 +77,7 @@ export async function POST(req: Request) {
       isStandard: Boolean(body.isStandard ?? true),
       isSmallOrder: Boolean(body.isSmallOrder ?? true),
       status: "PRICED",
+      ownerId: creatorId,
       quote: {
         create: {
           ...coeffs,
