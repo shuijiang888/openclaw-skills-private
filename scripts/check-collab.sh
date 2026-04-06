@@ -23,7 +23,7 @@ for heading in "目标对齐" "指令下发" "Cursor 执行" "过程管理" "质
 done
 
 [[ -f "$STATUS" ]] || err "missing collaboration/STATUS.md"
-grep -q "^task_id: collab-007" "$STATUS" || err "STATUS task_id must be collab-007"
+grep -q "^task_id: collab-008" "$STATUS" || err "STATUS task_id must be collab-008"
 grep -q "^state: done" "$STATUS" || err "STATUS state must be done (YAML block)"
 
 [[ -f "$RETRO" ]] || err "missing collaboration/retrospectives/collab-001-20260406.md"
@@ -46,6 +46,7 @@ grep -q "v1.2" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.2"
 grep -q "v1.4" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.4"
 grep -q "v1.5" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.5"
 grep -q "v1.6" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.6"
+grep -q "v1.7" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.7"
 
 [[ -f "$REPORT" ]] || err "missing collaboration/opportunity_insight_report.md"
 [[ -s "$REPORT" ]] || err "opportunity_insight_report.md is empty"
@@ -77,7 +78,11 @@ grep -q "阶段 1" "$MD_DIR/user_flow.md" || err "user_flow stages"
 [[ -s "$H5_MVP" ]] || err "empty mvp/h5_questionnaire.html"
 grep -q "computeScores" "$H5_MVP" || err "h5 must contain scoring engine"
 grep -q "viewport" "$H5_MVP" || err "h5 must set viewport"
-grep -q "企业营销能力快速诊断" "$H5_MVP" || err "h5 title/header"
-grep -q "rep-top3" "$H5_MVP" || err "h5 report TOP3 section"
+grep -q "drawRadar" "$H5_MVP" || err "h5 must draw SVG radar"
+grep -q "html2pdf" "$H5_MVP" || err "h5 must reference html2pdf"
+grep -q "var CONFIG" "$H5_MVP" || err "h5 must expose CONFIG"
+grep -q "basic-name-inp" "$H5_MVP" || err "h5 must have QB1 company field"
+grep -q "TOTAL_STEPS = 30" "$H5_MVP" || err "h5 must use 30 steps"
+grep -q "report-page" "$H5_MVP" || err "h5 report-page for PDF"
 
 echo "check-collab: OK"

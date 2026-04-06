@@ -4,19 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no" />
-  <title>企业营销能力快速诊断</title>
+  <title>企业营销能力诊断</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     :root {
-      --primary: #0d3b66;
-      --primary-light: #1a5080;
+      --primary: #0a2540;
+      --primary-mid: #123a5c;
       --accent: #2e8bc0;
-      --bg: #e8eef4;
+      --bg: #e6edf5;
       --card: #ffffff;
       --text: #1a1a2e;
       --muted: #5c6b7a;
       --danger: #c0392b;
       --radius: 12px;
-      --shadow: 0 4px 20px rgba(13, 59, 102, 0.12);
+      --shadow: 0 4px 24px rgba(10, 37, 64, 0.1);
     }
     * { box-sizing: border-box; }
     body {
@@ -28,194 +29,137 @@
       min-height: 100vh;
       -webkit-tap-highlight-color: transparent;
     }
-    .wrap {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 16px 16px 32px;
-    }
-    header {
-      text-align: center;
-      padding: 12px 0 8px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      color: var(--primary);
-      font-weight: 700;
-    }
-    header p {
-      margin: 8px 0 0;
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .progress-outer {
-      height: 8px;
-      background: #c5d4e3;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 16px 0;
-    }
-    .progress-inner {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      border-radius: 4px;
-      transition: width 0.25s ease;
-    }
-    .progress-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
+    .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; }
+    .wrap.report-wide { max-width: 640px; }
+    header.hero { text-align: center; padding: 20px 0 12px; }
+    header.hero h1 { margin: 0; font-size: 1.35rem; color: var(--primary); font-weight: 800; letter-spacing: -0.02em; }
+    header.hero p { margin: 10px 0 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
+    #screen-welcome { text-align: center; }
+    #screen-welcome .card { margin-top: 8px; }
+    .welcome-list { text-align: left; margin: 16px 0; padding-left: 20px; color: var(--muted); font-size: 15px; line-height: 1.7; }
+    .progress-outer { height: 8px; background: #c5d4e3; border-radius: 4px; overflow: hidden; margin: 16px 0; }
+    .progress-inner { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; transition: width 0.25s ease; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
     .card {
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 20px 18px;
       margin-bottom: 16px;
+      border: 1px solid rgba(10, 37, 64, 0.06);
     }
+    .section-label { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
     .dim-tag {
-      display: inline-block;
-      font-size: 12px;
-      color: var(--accent);
-      background: rgba(46, 139, 192, 0.12);
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 10px;
-      font-weight: 600;
+      display: inline-block; font-size: 12px; color: var(--accent);
+      background: rgba(46, 139, 192, 0.12); padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; font-weight: 600;
     }
-    .q-title {
-      font-size: 17px;
-      font-weight: 600;
-      line-height: 1.45;
-      margin: 0 0 16px;
-    }
-    .hint {
-      font-size: 13px;
-      color: var(--muted);
-      margin: -8px 0 14px;
-    }
+    .q-title { font-size: 17px; font-weight: 600; line-height: 1.45; margin: 0 0 16px; }
+    .hint { font-size: 13px; color: var(--muted); margin: -8px 0 14px; }
     .opt {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 14px 16px;
-      min-height: 44px;
-      margin-bottom: 10px;
-      border: 2px solid #d0dbe6;
-      border-radius: 10px;
-      background: #fafbfc;
-      font-size: 16px;
-      color: var(--text);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      display: block; width: 100%; text-align: left; padding: 14px 16px; min-height: 44px; margin-bottom: 10px;
+      border: 2px solid #d0dbe6; border-radius: 10px; background: #fafbfc; font-size: 16px; color: var(--text);
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
     }
     .opt:active { transform: scale(0.99); }
-    .opt.selected {
-      border-color: var(--primary);
-      background: rgba(13, 59, 102, 0.06);
-      font-weight: 500;
-    }
-    .opt.multi.selected {
-      border-color: var(--accent);
-      background: rgba(46, 139, 192, 0.1);
-    }
-    .nav-row {
-      display: flex;
-      gap: 12px;
-      margin-top: 20px;
-    }
+    .opt.selected { border-color: var(--primary); background: rgba(10, 37, 64, 0.06); font-weight: 500; }
+    .opt.multi.selected { border-color: var(--accent); background: rgba(46, 139, 192, 0.1); }
+    .nav-row { display: flex; gap: 12px; margin-top: 20px; }
     .btn {
-      flex: 1;
-      min-height: 48px;
-      font-size: 18px;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
+      flex: 1; min-height: 48px; font-size: 18px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer;
     }
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-    }
-    .btn-primary:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-    .btn-ghost {
-      background: #eef2f6;
-      color: var(--primary);
-    }
-    .err {
-      color: var(--danger);
-      font-size: 14px;
-      margin-top: 10px;
-      display: none;
-    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-ghost { background: #eef2f6; color: var(--primary); }
+    .err { color: var(--danger); font-size: 14px; margin-top: 10px; display: none; }
     .err.show { display: block; }
     input.inp, textarea.inp {
-      width: 100%;
-      padding: 14px 14px;
-      font-size: 16px;
-      border: 2px solid #d0dbe6;
-      border-radius: 10px;
-      margin-bottom: 12px;
+      width: 100%; padding: 14px; font-size: 16px; border: 2px solid #d0dbe6; border-radius: 10px; margin-bottom: 12px;
     }
     textarea.inp { min-height: 88px; resize: vertical; }
     .label { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
-    #screen-report { display: none; }
-    #screen-report.visible { display: block; }
-    #screen-quiz.hidden { display: none; }
-    .score-big {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--primary);
-      text-align: center;
-      margin: 8px 0;
+    #screen-quiz, #screen-report { display: none; }
+    #screen-quiz.visible, #screen-report.visible { display: block; }
+    #screen-welcome.hidden { display: none; }
+
+    /* —— 专业报告页 —— */
+    #report-page {
+      background: #fff;
+      color: #1a1a2e;
+      padding: 28px 22px 32px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(10, 37, 64, 0.08);
+      box-shadow: var(--shadow);
     }
-    .level-pill {
-      display: inline-block;
-      margin: 0 auto 16px;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 15px;
-      background: var(--accent);
-      color: #fff;
+    .report-header { border-bottom: 3px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px; }
+    .report-header h1 { margin: 0; font-size: 1.35rem; color: var(--primary); font-weight: 800; }
+    .report-meta { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 16px; }
+    .report-meta span { background: #f0f4f8; padding: 4px 10px; border-radius: 6px; }
+    .score-hero { text-align: center; padding: 20px 0 8px; }
+    .score-number { font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .score-label { font-size: 14px; color: var(--muted); margin-top: 6px; }
+    .score-level {
+      display: inline-block; margin-top: 12px; padding: 8px 20px; border-radius: 24px;
+      font-weight: 700; font-size: 16px; background: var(--accent); color: #fff;
     }
-    .dim-list li {
-      margin: 8px 0;
-      line-height: 1.5;
+    .radar-section { margin: 28px 0; }
+    .radar-section h2 { font-size: 1.05rem; color: var(--primary); margin: 0 0 12px; }
+    .radar-box {
+      background: #f4f7fb; border-radius: 12px; padding: 16px; text-align: center;
+      border: 1px solid #dde5ee;
     }
-    .top3 li { margin: 12px 0; }
-    .cta-row {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
+    #radar-chart { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+    .radar-legend { margin-top: 16px; text-align: left; font-size: 14px; }
+    .radar-legend li { margin: 6px 0; padding-left: 4px; }
+    .dim-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+    .dim-table th, .dim-table td { border: 1px solid #dde5ee; padding: 10px 8px; text-align: left; }
+    .dim-table th { background: #f0f4f8; color: var(--primary); font-weight: 600; }
+    .top3-section h2 { font-size: 1.05rem; color: var(--primary); margin: 24px 0 12px; }
+    .top3-section ol { margin: 0; padding-left: 20px; }
+    .top3-section li { margin: 12px 0; line-height: 1.55; }
+    .cta-section {
+      margin-top: 28px; padding: 20px; background: linear-gradient(135deg, #f0f6fc, #e8f0f8);
+      border-radius: 12px; text-align: center; border: 1px solid #d0dbe6;
     }
-    .btn-secondary {
-      background: var(--primary-light);
-      color: #fff;
+    .cta-section p { margin: 0 0 14px; font-size: 15px; color: var(--text); }
+    .btn-book {
+      display: inline-block; min-height: 52px; line-height: 52px; padding: 0 28px; font-size: 18px; font-weight: 700;
+      background: var(--primary); color: #fff !important; text-decoration: none; border-radius: 10px;
     }
+    .btn-book:active { opacity: 0.92; }
+    .report-footnote { font-size: 12px; color: var(--muted); margin-top: 20px; line-height: 1.5; }
+    .report-actions { margin-top: 16px; }
+    .report-actions .btn { width: 100%; margin-bottom: 10px; }
+    .btn-export { background: var(--primary-mid); color: #fff; }
+    .btn-export.loading { pointer-events: none; opacity: 0.75; }
     .lead-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e0e6ed; }
+    .hotline-note { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>企业营销能力快速诊断</h1>
-      <p>约 5–8 分钟 · 提交后即时生成摘要（结果需真实使用后校准）</p>
+  <div class="wrap" id="main-wrap">
+    <header class="hero">
+      <h1 id="app-title">企业营销能力诊断</h1>
+      <p id="app-sub">约 6–10 分钟 · 提交后生成专业摘要（得分需真实样本校准）</p>
     </header>
+
+    <div id="screen-welcome">
+      <div class="card">
+        <p style="margin:0 0 12px;font-weight:600;color:var(--primary);">欢迎使用营销能力快速诊断</p>
+        <ul class="welcome-list">
+          <li>共 <strong>30</strong> 题（企业基本信息 4 题 + 能力自评 26 题）</li>
+          <li>结果仅用于自评与顾问沟通参考</li>
+          <li>提交后可查看雷达图并 <strong>导出 PDF</strong></li>
+        </ul>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-start">开始答题</button>
+      </div>
+    </div>
 
     <div id="screen-quiz">
       <div class="progress-meta">
-        <span id="dim-label">维度</span>
-        <span id="step-label">1 / 26</span>
+        <span id="dim-label">企业基本信息</span>
+        <span id="step-label">1 / 30</span>
       </div>
-      <div class="progress-outer"><div class="progress-inner" id="progress-bar" style="width:3.85%"></div></div>
+      <div class="progress-outer"><div class="progress-inner" id="progress-bar"></div></div>
       <div class="card" id="question-card"></div>
       <p class="err" id="err-msg">请完成本题后再继续</p>
       <div class="nav-row">
@@ -225,23 +169,55 @@
     </div>
 
     <div id="screen-report">
-      <div class="card">
-        <h2 style="margin:0 0 8px;font-size:1.2rem;color:var(--primary);">《诊断报告》摘要</h2>
-        <p style="margin:0;color:var(--muted);font-size:14px;">浏览器内测算 · 仅供参考</p>
-        <div class="score-big" id="rep-total">—</div>
-        <div style="text-align:center"><span class="level-pill" id="rep-level">—</span></div>
-        <h3 style="font-size:16px;margin:16px 0 8px;">各维度得分（加权）</h3>
-        <ul class="dim-list" id="rep-dims"></ul>
-        <h3 style="font-size:16px;margin:20px 0 8px;">核心短板 TOP3</h3>
-        <ol class="top3" id="rep-top3"></ol>
-      </div>
-      <div class="card">
-        <div class="cta-row">
-          <button type="button" class="btn btn-primary" id="cta-screenshot">截图保存本页</button>
-          <button type="button" class="btn btn-secondary" id="cta-book">预约专家解读（演示）</button>
-          <button type="button" class="btn btn-ghost" id="cta-reset">重新填写</button>
+      <div class="wrap report-wide" style="padding-top:0">
+        <div id="report-page">
+          <header class="report-header">
+            <h1 id="rep-doc-title">《企业营销能力诊断报告》</h1>
+            <div class="report-meta">
+              <span id="rep-company">—</span>
+              <span id="rep-date">—</span>
+              <span id="rep-sid">问卷编号：—</span>
+              <span id="rep-duration" style="display:none"></span>
+            </div>
+          </header>
+
+          <div class="score-hero">
+            <div class="score-number" id="rep-total">—</div>
+            <div class="score-label">综合得分 / 100</div>
+            <div class="score-level" id="rep-level">—</div>
+          </div>
+
+          <div class="radar-section">
+            <h2>六维度能力雷达</h2>
+            <div class="radar-box">
+              <svg id="radar-chart" width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="雷达图"></svg>
+              <ul class="radar-legend" id="radar-legend"></ul>
+            </div>
+          </div>
+
+          <h2 style="font-size:1.05rem;color:var(--primary);margin:20px 0 10px;">各维度得分（加权）</h2>
+          <table class="dim-table" id="rep-dim-table"></table>
+
+          <div class="top3-section">
+            <h2>核心问题 TOP3</h2>
+            <ol id="rep-top3"></ol>
+          </div>
+
+          <div class="cta-section">
+            <p>基于本次诊断，建议与营销专家进行 30 分钟一对一交流，深入拆解短板与落地路径。</p>
+            <a href="#" class="btn-book" id="rep-book-link" target="_blank" rel="noopener noreferrer">立即预约专家咨询</a>
+            <p class="hotline-note">服务热线：<span id="rep-hotline">—</span></p>
+          </div>
+
+          <p class="report-footnote">本报告由自评问卷自动生成，不构成投资或法律意见；量化结论请在 POC 或顾问尽调后校准。</p>
         </div>
-        <div class="lead-form">
+
+        <div class="report-actions">
+          <button type="button" class="btn btn-export btn-primary" id="btn-export-pdf">导出 PDF 报告</button>
+          <button type="button" class="btn btn-ghost" id="cta-reset" style="background:#fff;border:2px solid #d0dbe6">重新填写</button>
+        </div>
+
+        <div class="card lead-form">
           <p style="font-weight:600;margin:0 0 12px;">留下联系方式（便于回访）</p>
           <label class="label">姓名</label>
           <input class="inp" id="lead-name" placeholder="必填" />
@@ -249,16 +225,27 @@
           <input class="inp" id="lead-phone" type="tel" inputmode="tel" placeholder="必填" />
           <label class="label">公司</label>
           <input class="inp" id="lead-co" placeholder="必填" />
-          <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="lead-save">保存线索（仅本地演示）</button>
-          <p style="font-size:13px;color:var(--muted);margin:10px 0 0;">Phase 2 将接入 CRM；当前仅弹窗确认，不落库。</p>
+          <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="lead-save">保存线索（演示）</button>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0 0;">Phase 2 接入 CRM；当前为本地演示。</p>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+/* ========== 销售可修改：预约链接 / 热线 / 报告标题 ========== */
+var CONFIG = {
+  companyName: '纷享销客·中西南',
+  bookingUrl: 'https://www.fxiaoke.com/',
+  hotline: '400-000-0000',
+  reportTitle: '企业营销能力诊断报告'
+};
+
 (function () {
   'use strict';
+
+  var RADAR_LABELS = ['市场定位', '获客渠道', '销售管道', '客户成功', '团队激励', '数字化'];
+  var MAX_W = [20, 20, 20, 15, 15, 10];
 
   var DIMS = [
     { id: 'D1', name: '市场定位与目标客户', maxW: 20, issues: '画像与战略叙事可能不清晰，市场投入难衡量。' },
@@ -269,10 +256,26 @@
     { id: 'D6', name: '数字化工具与数据应用', maxW: 10, issues: 'CRM/看板/SOP 在线化不足，数据难运营。' }
   ];
 
+  var BASIC_INDUSTRY = [
+    { v: 1, t: '制造业' }, { v: 2, t: '服务业' }, { v: 3, t: '科技/互联网' },
+    { v: 4, t: '金融' }, { v: 5, t: '其他' }
+  ];
+  var BASIC_SCALE = [
+    { v: 1, t: '50人以下' }, { v: 2, t: '50-200人' }, { v: 3, t: '200-1000人' }, { v: 4, t: '1000人以上' }
+  ];
+  var BASIC_YEARS = [
+    { v: 1, t: '3年以下' }, { v: 2, t: '3-10年' }, { v: 3, t: '10年以上' }
+  ];
+
+  var TOTAL_STEPS = 30;
+  var submissionId = '';
+
   var state = {
     qIndex: 0,
-    single: {},      // qid -> score number
-    multi: {},       // qid -> array of option keys
+    startedAt: null,
+    basic: { name: '', industry: null, scale: null, years: null },
+    single: {},
+    multi: {},
     text: { q25: {}, q26: '' }
   };
 
@@ -282,17 +285,14 @@
     var i = arr.indexOf(key);
     if (toggle) {
       if (i >= 0) arr.splice(i, 1); else arr.push(key);
-    } else {
-      state.multi[qid] = [key];
-    }
+    } else state.multi[qid] = [key];
   }
 
   function scoreQ2(keys) {
     var sum = 0;
-    keys.forEach(function (k) { sum += 2; });
+    keys.forEach(function () { sum += 2; });
     return Math.min(5, sum);
   }
-
   function scoreQ5(keys) {
     var MAIN = ['ch1','ch2','ch3','ch4','ch5','ch6'];
     var n = keys.filter(function (k) { return MAIN.indexOf(k) >= 0; }).length;
@@ -301,11 +301,7 @@
     if (n === 0 && keys.indexOf('none') < 0) return 0;
     return Math.min(5, n + 1);
   }
-
-  function scoreQ8(keys) {
-    return Math.max(0, 5 - keys.length);
-  }
-
+  function scoreQ8(keys) { return Math.max(0, 5 - keys.length); }
   function scoreQ11(keys) {
     var s = 5;
     if (keys.indexOf('mismatch') >= 0) s -= 1;
@@ -314,10 +310,8 @@
     if (keys.indexOf('nosum') >= 0) s -= 1;
     return Math.max(0, s);
   }
-
   function scoreQ15(keys) { return Math.max(0, 5 - keys.length); }
   function scoreQ19(keys) { return Math.max(0, 5 - keys.length); }
-
   function scoreQ23(keys) {
     var n = keys.length;
     if (n <= 0) return 0;
@@ -334,8 +328,7 @@
     r[4] = (state.single.q17||0) + (state.single.q18||0) + scoreQ19(state.multi.q19||[]) + (state.single.q20||0);
     r[5] = (state.single.q21||0) + (state.single.q22||0) + scoreQ23(state.multi.q23||[]) + (state.single.q24||0);
     var w = r.map(function (raw, i) {
-      var cap = DIMS[i].maxW;
-      return (raw / 20) * cap;
+      return (raw / 20) * DIMS[i].maxW;
     });
     var total = w.reduce(function (a,b) { return a+b; }, 0);
     return { raw: r, weighted: w, total: Math.round(total * 10) / 10 };
@@ -357,11 +350,8 @@
         { k: 'd', t: '不清晰，机会驱动', s: 1 }
     ]},
     { id: 'q2', dim: 0, type: 'mc2', title: '未来 12 个月战略重点？（最多选 2 项）', hint: '每项 2 分，合计封顶 5 分', opts: [
-        { k: 'p1', t: '守住基本盘、提升利润' },
-        { k: 'p2', t: '拓展新行业/新区域' },
-        { k: 'p3', t: '大客户突破/灯塔案例' },
-        { k: 'p4', t: '渠道扩张与秩序整治' },
-        { k: 'p5', t: '出海/第二增长曲线' }
+        { k: 'p1', t: '守住基本盘、提升利润' }, { k: 'p2', t: '拓展新行业/新区域' },
+        { k: 'p3', t: '大客户突破/灯塔案例' }, { k: 'p4', t: '渠道扩张与秩序整治' }, { k: 'p5', t: '出海/第二增长曲线' }
     ]},
     { id: 'q3', dim: 0, type: 'sc', title: '与主要竞争对手相比，差异化表达是否一致？', opts: [
         { k: 'a', t: '对外话术、标书、官网叙事一致', s: 5 },
@@ -374,118 +364,74 @@
         { k: 'c', t: '以曝光为主，与销售脱节', s: 1 }
     ]},
     { id: 'q5', dim: 1, type: 'mc', title: '当前有效获客渠道？（可多选）', hint: '前 6 项：得分=min(5,N+1)；仅选「暂无可复制渠道」为 1 分', opts: [
-        { k: 'ch1', t: '官网/SEO/SEM' },
-        { k: 'ch2', t: '展会与行业活动' },
-        { k: 'ch3', t: '客户转介绍' },
-        { k: 'ch4', t: '渠道伙伴' },
-        { k: 'ch5', t: '内容/社群/短视频' },
-        { k: 'ch6', t: '电销/外呼团队' },
+        { k: 'ch1', t: '官网/SEO/SEM' }, { k: 'ch2', t: '展会与行业活动' }, { k: 'ch3', t: '客户转介绍' },
+        { k: 'ch4', t: '渠道伙伴' }, { k: 'ch5', t: '内容/社群/短视频' }, { k: 'ch6', t: '电销/外呼团队' },
         { k: 'none', t: '暂无可复制渠道' }
     ]},
     { id: 'q6', dim: 1, type: 'sc', title: '线索到商机转化率与行业/历史对比？', opts: [
-        { k: 'a', t: '优于历史与对标', s: 5 },
-        { k: 'b', t: '持平', s: 3 },
-        { k: 'c', t: '低于预期，原因不清', s: 2 },
-        { k: 'd', t: '无统计', s: 1 }
+        { k: 'a', t: '优于历史与对标', s: 5 }, { k: 'b', t: '持平', s: 3 },
+        { k: 'c', t: '低于预期，原因不清', s: 2 }, { k: 'd', t: '无统计', s: 1 }
     ]},
     { id: 'q7', dim: 1, type: 'sc', title: '市场部与销售部对「合格线索定义」是否一致？', opts: [
-        { k: 'a', t: '书面一致并系统落地', s: 5 },
-        { k: 'b', t: '会议对齐，执行有偏差', s: 3 },
-        { k: 'c', t: '无统一标准', s: 1 }
+        { k: 'a', t: '书面一致并系统落地', s: 5 }, { k: 'b', t: '会议对齐，执行有偏差', s: 3 }, { k: 'c', t: '无统一标准', s: 1 }
     ]},
     { id: 'q8', dim: 1, type: 'mc', title: '线索质量问题表现？（多选，每项扣 1 分，基础 5 分）', opts: [
-        { k: 'a', t: '重复线索多、撞单多' },
-        { k: 'b', t: '假号码/无效留资多' },
-        { k: 'c', t: '跟进优先级靠感觉' },
-        { k: 'd', t: '渠道造假量或刷数据' }
+        { k: 'a', t: '重复线索多、撞单多' }, { k: 'b', t: '假号码/无效留资多' },
+        { k: 'c', t: '跟进优先级靠感觉' }, { k: 'd', t: '渠道造假量或刷数据' }
     ]},
     { id: 'q9', dim: 2, type: 'sc', title: '销售管道阶段定义与赢率是否标准化？', opts: [
-        { k: 'a', t: '阶段、必填字段、退出标准清晰', s: 5 },
-        { k: 'b', t: '有阶段但执行松散', s: 3 },
-        { k: 'c', t: '无统一管道语言', s: 1 }
+        { k: 'a', t: '阶段、必填字段、退出标准清晰', s: 5 }, { k: 'b', t: '有阶段但执行松散', s: 3 }, { k: 'c', t: '无统一管道语言', s: 1 }
     ]},
     { id: 'q10', dim: 2, type: 'sc', title: '年度/季度计划到个人动作分解？', opts: [
-        { k: 'a', t: '工具+复盘闭环', s: 5 },
-        { k: 'b', t: '有分解，落地走样', s: 3 },
-        { k: 'c', t: '老板拍板或走过场', s: 1 }
+        { k: 'a', t: '工具+复盘闭环', s: 5 }, { k: 'b', t: '有分解，落地走样', s: 3 }, { k: 'c', t: '老板拍板或走过场', s: 1 }
     ]},
-    { id: 'q11', dim: 2, type: 'mc', title: '丢单主要原因？（多选，见计分规则）', hint: '产品/关系/协同各 -1；未总结原因再 -1；价格/竞品不扣分', opts: [
-        { k: 'price', t: '价格/商务政策' },
-        { k: 'mismatch', t: '产品/方案不匹配' },
-        { k: 'relation', t: '关系/决策链失守' },
-        { k: 'slow', t: '内部协同慢、响应慢' },
-        { k: 'comp', t: '竞品强力抢单' },
-        { k: 'nosum', t: '未总结原因' }
+    { id: 'q11', dim: 2, type: 'mc', title: '丢单主要原因？（多选，见计分规则）', hint: '产品/关系/协同各 -1；未总结再 -1；价格/竞品不扣分', opts: [
+        { k: 'price', t: '价格/商务政策' }, { k: 'mismatch', t: '产品/方案不匹配' }, { k: 'relation', t: '关系/决策链失守' },
+        { k: 'slow', t: '内部协同慢、响应慢' }, { k: 'comp', t: '竞品强力抢单' }, { k: 'nosum', t: '未总结原因' }
     ]},
     { id: 'q12', dim: 2, type: 'sc', title: '大客户/复杂项目是否有协作机制（铁三角/项目制）？', opts: [
-        { k: 'a', t: '常态化运作', s: 5 },
-        { k: 'b', t: '大项目临时组队', s: 3 },
-        { k: 'c', t: '基本靠单兵', s: 1 }
+        { k: 'a', t: '常态化运作', s: 5 }, { k: 'b', t: '大项目临时组队', s: 3 }, { k: 'c', t: '基本靠单兵', s: 1 }
     ]},
     { id: 'q13', dim: 3, type: 'sc', title: '交付后客户健康度是否可度量（使用、工单、回款）？', opts: [
-        { k: 'a', t: '有健康分或红黄绿', s: 5 },
-        { k: 'b', t: '部分数据分散在各系统', s: 3 },
-        { k: 'c', t: '几乎不跟踪', s: 1 }
+        { k: 'a', t: '有健康分或红黄绿', s: 5 }, { k: 'b', t: '部分数据分散在各系统', s: 3 }, { k: 'c', t: '几乎不跟踪', s: 1 }
     ]},
     { id: 'q14', dim: 3, type: 'sc', title: '续费/增购流程是否销售化、可预测？', opts: [
-        { k: 'a', t: '有续约节奏与清单', s: 5 },
-        { k: 'b', t: '靠老客户关系维护', s: 3 },
-        { k: 'c', t: '被动响应', s: 1 }
+        { k: 'a', t: '有续约节奏与清单', s: 5 }, { k: 'b', t: '靠老客户关系维护', s: 3 }, { k: 'c', t: '被动响应', s: 1 }
     ]},
     { id: 'q15', dim: 3, type: 'mc', title: '回款与风险表现？（多选，每项扣 1 分，基础 5 分）', opts: [
-        { k: 'a', t: '应收账款周期长、催收弱' },
-        { k: 'b', t: '无合同发货或单据不全' },
-        { k: 'c', t: '授信随意、坏账风险高' },
-        { k: 'd', t: '验收拖延导致挂账' }
+        { k: 'a', t: '应收账款周期长、催收弱' }, { k: 'b', t: '无合同发货或单据不全' },
+        { k: 'c', t: '授信随意、坏账风险高' }, { k: 'd', t: '验收拖延导致挂账' }
     ]},
     { id: 'q16', dim: 3, type: 'sc', title: '售后成本与客户满意是否挂钩到销售或渠道？', opts: [
-        { k: 'a', t: '有机制', s: 5 },
-        { k: 'b', t: '部分挂钩', s: 3 },
-        { k: 'c', t: '不挂钩，售后成短板', s: 1 }
+        { k: 'a', t: '有机制', s: 5 }, { k: 'b', t: '部分挂钩', s: 3 }, { k: 'c', t: '不挂钩，售后成短板', s: 1 }
     ]},
     { id: 'q17', dim: 4, type: 'sc', title: '考核是否与过程质量、协作挂钩（不仅是销售额）？', opts: [
-        { k: 'a', t: '多维度且可解释', s: 5 },
-        { k: 'b', t: '以业绩为主，辅以简单行为项', s: 3 },
-        { k: 'c', t: '几乎只看数字', s: 1 }
+        { k: 'a', t: '多维度且可解释', s: 5 }, { k: 'b', t: '以业绩为主，辅以简单行为项', s: 3 }, { k: 'c', t: '几乎只看数字', s: 1 }
     ]},
     { id: 'q18', dim: 4, type: 'sc', title: '新人存活率与培养体系？', opts: [
-        { k: 'a', t: '标准化培训+带教+认证', s: 5 },
-        { k: 'b', t: '有培训但效果一般', s: 3 },
-        { k: 'c', t: '招不来或留不住', s: 1 }
+        { k: 'a', t: '标准化培训+带教+认证', s: 5 }, { k: 'b', t: '有培训但效果一般', s: 3 }, { k: 'c', t: '招不来或留不住', s: 1 }
     ]},
     { id: 'q19', dim: 4, type: 'mc', title: '团队管理痛点？（多选，每项扣 1 分，基础 5 分）', opts: [
-        { k: 'a', t: '躺平在老客户' },
-        { k: 'b', t: '管理者弱、只会自己干' },
-        { k: 'c', t: '激励不公平引发内耗' },
-        { k: 'd', t: '会议多、表格多无结果' }
+        { k: 'a', t: '躺平在老客户' }, { k: 'b', t: '管理者弱、只会自己干' },
+        { k: 'c', t: '激励不公平引发内耗' }, { k: 'd', t: '会议多、表格多无结果' }
     ]},
     { id: 'q20', dim: 4, type: 'sc', title: '跨部门协作（交付/产品/财务）效率？', opts: [
-        { k: 'a', t: '流程清晰 SLA 明确', s: 5 },
-        { k: 'b', t: '常需老板拍板', s: 3 },
-        { k: 'c', t: '内耗严重', s: 1 }
+        { k: 'a', t: '流程清晰 SLA 明确', s: 5 }, { k: 'b', t: '常需老板拍板', s: 3 }, { k: 'c', t: '内耗严重', s: 1 }
     ]},
     { id: 'q21', dim: 5, type: 'sc', title: 'CRM/销售系统使用情况？', opts: [
-        { k: 'a', t: '主数据统一、过程必填、报表可信', s: 5 },
-        { k: 'b', t: '在用但数据质量一般', s: 3 },
-        { k: 'c', t: '表格/邮件为主', s: 1 }
+        { k: 'a', t: '主数据统一、过程必填、报表可信', s: 5 }, { k: 'b', t: '在用但数据质量一般', s: 3 }, { k: 'c', t: '表格/邮件为主', s: 1 }
     ]},
     { id: 'q22', dim: 5, type: 'sc', title: '是否具备可运营的数据看板（管道、转化、人效）？', opts: [
-        { k: 'a', t: '实时或 T+1', s: 5 },
-        { k: 'b', t: '月度手工统计', s: 3 },
-        { k: 'c', t: '无', s: 1 }
+        { k: 'a', t: '实时或 T+1', s: 5 }, { k: 'b', t: '月度手工统计', s: 3 }, { k: 'c', t: '无', s: 1 }
     ]},
     { id: 'q23', dim: 5, type: 'mc', title: '销售 SOP / playbooks 是否在线化？（多选）', hint: 'N=0→0 分；N=1→3 分；N≥2→5 分', opts: [
-        { k: 'a', t: '拜访与商机 SOP' },
-        { k: 'b', t: '报价与合同审批在线' },
-        { k: 'c', t: '培训与话术库' },
-        { k: 'd', t: '与企微/钉钉协同' }
+        { k: 'a', t: '拜访与商机 SOP' }, { k: 'b', t: '报价与合同审批在线' },
+        { k: 'c', t: '培训与话术库' }, { k: 'd', t: '与企微/钉钉协同' }
     ]},
     { id: 'q24', dim: 5, type: 'sc', title: '对 AI 辅助（线索评分、纪要、推荐下一步）态度与试点？', opts: [
-        { k: 'a', t: '已试点或规划清晰', s: 5 },
-        { k: 'b', t: '观望', s: 3 },
-        { k: 'c', t: '无计划', s: 1 }
+        { k: 'a', t: '已试点或规划清晰', s: 5 }, { k: 'b', t: '观望', s: 3 }, { k: 'c', t: '无计划', s: 1 }
     ]},
-    { id: 'q25', dim: -1, type: 'contact', title: '方便回访的联系方式', hint: '不计入得分' },
+    { id: 'q25', dim: -1, type: 'contact', title: '方便回访的联系方式', hint: '不计入得分；公司默认可与 QB1 一致' },
     { id: 'q26', dim: -1, type: 'open', title: '最想解决的 1 个营销问题（可选）', hint: '一句话即可' }
   ];
 
@@ -503,9 +449,31 @@
   }
   function hideErr() { errEl.classList.remove('show'); }
 
+  function basicIndustryLabel() {
+    var x = BASIC_INDUSTRY.find(function (o) { return o.v === state.basic.industry; });
+    return x ? x.t : '—';
+  }
+
   function validateCurrent() {
-    var q = QUESTIONS[state.qIndex];
     hideErr();
+    var qi = state.qIndex;
+    if (qi === 0) {
+      if (!state.basic.name || !state.basic.name.trim()) { showErr('请填写公司全称'); return false; }
+      return true;
+    }
+    if (qi === 1) {
+      if (state.basic.industry == null) { showErr('请选择所属行业'); return false; }
+      return true;
+    }
+    if (qi === 2) {
+      if (state.basic.scale == null) { showErr('请选择企业规模'); return false; }
+      return true;
+    }
+    if (qi === 3) {
+      if (state.basic.years == null) { showErr('请选择成立年限'); return false; }
+      return true;
+    }
+    var q = QUESTIONS[qi - 4];
     if (q.type === 'sc') {
       if (state.single[q.id] == null) { showErr(); return false; }
       return true;
@@ -513,9 +481,7 @@
     if (q.type === 'mc' || q.type === 'mc2') {
       var arr = state.multi[q.id] || [];
       if (q.id === 'q2' && arr.length < 1) { showErr('请至少选择 1 项战略重点'); return false; }
-      if (q.id === 'q5') {
-        if (arr.length < 1) { showErr('请至少选择一项'); return false; }
-      }
+      if (q.id === 'q5' && arr.length < 1) { showErr('请至少选择一项'); return false; }
       return true;
     }
     if (q.type === 'contact') {
@@ -525,110 +491,272 @@
       if (!t.company || !t.company.trim()) { showErr('请填写公司'); return false; }
       return true;
     }
-    if (q.type === 'open') return true;
     return true;
-  }
-
-  function render() {
-    var q = QUESTIONS[state.qIndex];
-    var di = q.dim;
-    if (di >= 0) dimLabel.textContent = DIMS[di].id + ' ' + DIMS[di].name;
-    else dimLabel.textContent = '联系信息';
-
-    var pct = ((state.qIndex + 1) / 26) * 100;
-    bar.style.width = pct + '%';
-    stepLabel.textContent = (state.qIndex + 1) + ' / 26';
-
-    var html = '';
-    html += '<div class="dim-tag">Q' + (state.qIndex + 1) + '</div>';
-    html += '<div class="q-title">' + q.title + '</div>';
-    if (q.hint) html += '<p class="hint">' + q.hint + '</p>';
-
-    if (q.type === 'sc') {
-      q.opts.forEach(function (o) {
-        var sel = state.single[q.id] === o.s ? ' selected' : '';
-        html += '<button type="button" class="opt' + sel + '" data-sc="' + o.s + '">' + o.t + '</button>';
-      });
-    } else if (q.type === 'mc') {
-      var selArr = state.multi[q.id] || [];
-      q.opts.forEach(function (o) {
-        var sel = selArr.indexOf(o.k) >= 0 ? ' multi selected' : ' multi';
-        html += '<button type="button" class="opt' + sel + '" data-mc="' + o.k + '">' + o.t + '</button>';
-      });
-    } else if (q.type === 'mc2') {
-      var s2 = state.multi[q.id] || [];
-      q.opts.forEach(function (o) {
-        var sel = s2.indexOf(o.k) >= 0 ? ' multi selected' : ' multi';
-        html += '<button type="button" class="opt' + sel + '" data-mc2="' + o.k + '">' + o.t + '</button>';
-      });
-    } else if (q.type === 'contact') {
-      var t = state.text.q25;
-      html += '<label class="label">姓名</label><input class="inp" data-f="name" value="' + esc(t.name||'') + '" />';
-      html += '<label class="label">手机</label><input class="inp" data-f="phone" value="' + esc(t.phone||'') + '" type="tel" />';
-      html += '<label class="label">公司</label><input class="inp" data-f="company" value="' + esc(t.company||'') + '" />';
-      html += '<label class="label">职位（选填）</label><input class="inp" data-f="title" value="' + esc(t.title||'') + '" />';
-    } else if (q.type === 'open') {
-      html += '<textarea class="inp" id="open-ta" placeholder="选填">' + esc(state.text.q26||'') + '</textarea>';
-    }
-
-    card.innerHTML = html;
-
-    card.querySelectorAll('.opt[data-sc]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        state.single[q.id] = parseInt(btn.getAttribute('data-sc'), 10);
-        render();
-      });
-    });
-    card.querySelectorAll('.opt[data-mc]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var k = btn.getAttribute('data-mc');
-        setMulti(q.id, k, true);
-        render();
-      });
-    });
-    card.querySelectorAll('.opt[data-mc2]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var k = btn.getAttribute('data-mc2');
-        var arr = state.multi[q.id] || [];
-        var i = arr.indexOf(k);
-        if (i >= 0) arr.splice(i, 1);
-        else {
-          if (arr.length >= 2) arr.shift();
-          arr.push(k);
-        }
-        state.multi[q.id] = arr;
-        render();
-      });
-    });
-    card.querySelectorAll('.inp[data-f]').forEach(function (inp) {
-      inp.addEventListener('input', function () {
-        state.text.q25[inp.getAttribute('data-f')] = inp.value;
-      });
-    });
-    var ta = document.getElementById('open-ta');
-    if (ta) ta.addEventListener('input', function () { state.text.q26 = ta.value; });
-
-    btnPrev.style.visibility = state.qIndex === 0 ? 'hidden' : 'visible';
-    btnNext.textContent = state.qIndex === 25 ? '提交并生成报告' : '下一题';
   }
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   }
 
+  function render() {
+    var qi = state.qIndex;
+    var pct = ((qi + 1) / TOTAL_STEPS) * 100;
+    bar.style.width = pct + '%';
+    stepLabel.textContent = (qi + 1) + ' / ' + TOTAL_STEPS;
+
+    if (qi <= 3) {
+      dimLabel.textContent = '企业基本信息（必填）';
+      var html = '';
+      if (qi === 0) {
+        html += '<div class="section-label">📋 Q_B1</div><div class="q-title">贵司名称是？</div>';
+        html += '<input type="text" class="inp" id="basic-name-inp" placeholder="请输入公司全称" value="' + esc(state.basic.name) + '" />';
+      } else if (qi === 1) {
+        html += '<div class="section-label">📋 Q_B2</div><div class="q-title">所属行业？</div>';
+        BASIC_INDUSTRY.forEach(function (o) {
+          var sel = state.basic.industry === o.v ? ' selected' : '';
+          html += '<button type="button" class="opt' + sel + '" data-basic="industry" data-v="' + o.v + '">' + o.t + '</button>';
+        });
+      } else if (qi === 2) {
+        html += '<div class="section-label">📋 Q_B3</div><div class="q-title">企业规模？</div>';
+        BASIC_SCALE.forEach(function (o) {
+          var sel = state.basic.scale === o.v ? ' selected' : '';
+          html += '<button type="button" class="opt' + sel + '" data-basic="scale" data-v="' + o.v + '">' + o.t + '</button>';
+        });
+      } else {
+        html += '<div class="section-label">📋 Q_B4</div><div class="q-title">成立年限？</div>';
+        BASIC_YEARS.forEach(function (o) {
+          var sel = state.basic.years === o.v ? ' selected' : '';
+          html += '<button type="button" class="opt' + sel + '" data-basic="years" data-v="' + o.v + '">' + o.t + '</button>';
+        });
+      }
+      card.innerHTML = html;
+      var bn = document.getElementById('basic-name-inp');
+      if (bn) bn.addEventListener('input', function () { state.basic.name = bn.value; });
+      card.querySelectorAll('[data-basic]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var f = btn.getAttribute('data-basic');
+          var v = parseInt(btn.getAttribute('data-v'), 10);
+          state.basic[f] = v;
+          render();
+        });
+      });
+    } else {
+      var q = QUESTIONS[qi - 4];
+      var di = q.dim;
+      if (di >= 0) dimLabel.textContent = DIMS[di].id + ' ' + DIMS[di].name;
+      else dimLabel.textContent = '联系信息';
+
+      var html2 = '';
+      var dispNum = qi - 3;
+      html2 += '<div class="dim-tag">Q' + dispNum + '</div>';
+      html2 += '<div class="q-title">' + q.title + '</div>';
+      if (q.hint) html2 += '<p class="hint">' + q.hint + '</p>';
+
+      if (q.type === 'sc') {
+        q.opts.forEach(function (o) {
+          var sel = state.single[q.id] === o.s ? ' selected' : '';
+          html2 += '<button type="button" class="opt' + sel + '" data-sc="' + o.s + '">' + o.t + '</button>';
+        });
+      } else if (q.type === 'mc') {
+        var selArr = state.multi[q.id] || [];
+        q.opts.forEach(function (o) {
+          var sel = selArr.indexOf(o.k) >= 0 ? ' multi selected' : ' multi';
+          html2 += '<button type="button" class="opt' + sel + '" data-mc="' + o.k + '">' + o.t + '</button>';
+        });
+      } else if (q.type === 'mc2') {
+        var s2 = state.multi[q.id] || [];
+        q.opts.forEach(function (o) {
+          var sel = s2.indexOf(o.k) >= 0 ? ' multi selected' : ' multi';
+          html2 += '<button type="button" class="opt' + sel + '" data-mc2="' + o.k + '">' + o.t + '</button>';
+        });
+      } else if (q.type === 'contact') {
+        var t = state.text.q25;
+        if (!t.company && state.basic.name) t.company = state.basic.name;
+        html2 += '<label class="label">姓名</label><input class="inp" data-f="name" value="' + esc(t.name||'') + '" />';
+        html2 += '<label class="label">手机</label><input class="inp" data-f="phone" value="' + esc(t.phone||'') + '" type="tel" />';
+        html2 += '<label class="label">公司</label><input class="inp" data-f="company" value="' + esc(t.company||'') + '" />';
+        html2 += '<label class="label">职位（选填）</label><input class="inp" data-f="title" value="' + esc(t.title||'') + '" />';
+        html2 += '<p class="hint">咨询热线（顾问）：' + esc(CONFIG.hotline) + '</p>';
+      } else if (q.type === 'open') {
+        html2 += '<textarea class="inp" id="open-ta" placeholder="选填">' + esc(state.text.q26||'') + '</textarea>';
+      }
+      card.innerHTML = html2;
+
+      card.querySelectorAll('.opt[data-sc]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          state.single[q.id] = parseInt(btn.getAttribute('data-sc'), 10);
+          render();
+        });
+      });
+      card.querySelectorAll('.opt[data-mc]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setMulti(q.id, btn.getAttribute('data-mc'), true);
+          render();
+        });
+      });
+      card.querySelectorAll('.opt[data-mc2]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var k = btn.getAttribute('data-mc2');
+          var arr = state.multi[q.id] || [];
+          var i = arr.indexOf(k);
+          if (i >= 0) arr.splice(i, 1);
+          else {
+            if (arr.length >= 2) arr.shift();
+            arr.push(k);
+          }
+          state.multi[q.id] = arr;
+          render();
+        });
+      });
+      card.querySelectorAll('.inp[data-f]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          state.text.q25[inp.getAttribute('data-f')] = inp.value;
+        });
+      });
+      var ta = document.getElementById('open-ta');
+      if (ta) ta.addEventListener('input', function () { state.text.q26 = ta.value; });
+    }
+
+    btnPrev.style.visibility = qi === 0 ? 'hidden' : 'visible';
+    btnNext.textContent = qi === TOTAL_STEPS - 1 ? '提交并生成报告' : '下一题';
+  }
+
+  /** 纯 SVG 雷达图：6 轴、按各维度满分归一化；网格 25/50/75/100% */
+  function drawRadar(svg, weighted, animate) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var W = 300, H = 300, cx = 150, cy = 150, R = 88;
+    var n = 6;
+    var angles = [];
+    for (var k = 0; k < n; k++) angles.push(-Math.PI / 2 + (k * 2 * Math.PI) / n);
+
+    function pt(angle, dist) {
+      return { x: cx + dist * Math.cos(angle), y: cy + dist * Math.sin(angle) };
+    }
+    function hexPath(level) {
+      var d = '';
+      for (var i = 0; i < n; i++) {
+        var p = pt(angles[i], R * level);
+        d += (i === 0 ? 'M' : 'L') + p.x.toFixed(2) + ',' + p.y.toFixed(2) + ' ';
+      }
+      return d + 'Z';
+    }
+    [0.25, 0.5, 0.75, 1].forEach(function (lv) {
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', hexPath(lv));
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#c5d4e3');
+      path.setAttribute('stroke-width', lv === 1 ? '1.5' : '1');
+      svg.appendChild(path);
+    });
+    for (var a = 0; a < n; a++) {
+      var pEdge = pt(angles[a], R);
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+      line.setAttribute('x2', pEdge.x); line.setAttribute('y2', pEdge.y);
+      line.setAttribute('stroke', '#dde5ee');
+      line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+    }
+
+    var ratios = weighted.map(function (w, i) { return Math.min(1, Math.max(0, w / MAX_W[i])); });
+    var t0 = animate ? 0 : 1;
+
+    function drawData(t) {
+      var existing = svg.querySelectorAll('.radar-data');
+      existing.forEach(function (el) { el.remove(); });
+      var pts = [];
+      for (var j = 0; j < n; j++) {
+        var rr = R * ratios[j] * t;
+        var p = pt(angles[j], rr);
+        pts.push(p.x.toFixed(2) + ',' + p.y.toFixed(2));
+      }
+      var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('class', 'radar-data');
+      poly.setAttribute('points', pts.join(' '));
+      poly.setAttribute('fill', 'rgba(46, 139, 192, 0.35)');
+      poly.setAttribute('stroke', '#0a2540');
+      poly.setAttribute('stroke-width', '2');
+      svg.appendChild(poly);
+      for (var j2 = 0; j2 < n; j2++) {
+        var rr2 = R * ratios[j2] * t;
+        var p2 = pt(angles[j2], rr2);
+        var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'radar-data');
+        c.setAttribute('cx', p2.x); c.setAttribute('cy', p2.y); c.setAttribute('r', '4');
+        c.setAttribute('fill', '#2e8bc0');
+        c.setAttribute('stroke', '#fff');
+        c.setAttribute('stroke-width', '1.5');
+        svg.appendChild(c);
+      }
+    }
+    drawData(t0);
+    if (animate) {
+      var start = null, dur = 600;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        var ease = 1 - Math.pow(1 - p, 3);
+        drawData(ease);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    for (var li = 0; li < n; li++) {
+      var pL = pt(angles[li], R + 22);
+      var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', pL.x);
+      text.setAttribute('y', pL.y);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '11');
+      text.setAttribute('fill', '#5c6b7a');
+      text.textContent = RADAR_LABELS[li] + ' ' + (Math.round(weighted[li] * 10) / 10) + '/' + MAX_W[li];
+      svg.appendChild(text);
+    }
+  }
+
   function showReport() {
     var res = computeScores();
-    document.getElementById('screen-quiz').classList.add('hidden');
+    submissionId = 'MD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+
+    document.getElementById('screen-quiz').classList.remove('visible');
     document.getElementById('screen-report').classList.add('visible');
+    document.getElementById('main-wrap').classList.add('report-wide');
+
+    document.getElementById('app-title').textContent = CONFIG.reportTitle;
+    document.getElementById('rep-doc-title').textContent = '《' + CONFIG.reportTitle + '》';
+    var cname = (state.basic.name || '').trim() || '未填写企业名称';
+    document.getElementById('rep-company').textContent = '企业：' + cname;
+    document.getElementById('rep-date').textContent = '诊断日期：' + formatDate(new Date());
+    document.getElementById('rep-sid').textContent = '问卷编号：' + submissionId;
+    if (state.startedAt) {
+      var mins = Math.max(1, Math.round((Date.now() - state.startedAt) / 60000));
+      var eld = document.getElementById('rep-duration');
+      eld.style.display = 'inline-block';
+      eld.textContent = '答题约 ' + mins + ' 分钟';
+    }
+
     document.getElementById('rep-total').textContent = res.total + ' / 100';
     document.getElementById('rep-level').textContent = levelOf(res.total);
 
-    var ul = document.getElementById('rep-dims');
-    ul.innerHTML = '';
-    DIMS.forEach(function (d, i) {
+    var svg = document.getElementById('radar-chart');
+    drawRadar(svg, res.weighted, true);
+
+    var leg = document.getElementById('radar-legend');
+    leg.innerHTML = '';
+    for (var i = 0; i < 6; i++) {
       var li = document.createElement('li');
-      li.textContent = d.name + '：' + (Math.round(res.weighted[i] * 10) / 10) + ' / ' + d.maxW;
-      ul.appendChild(li);
+      li.textContent = RADAR_LABELS[i] + '：' + (Math.round(res.weighted[i] * 10) / 10) + ' / ' + MAX_W[i] + ' 分';
+      leg.appendChild(li);
+    }
+
+    var tbl = document.getElementById('rep-dim-table');
+    tbl.innerHTML = '<thead><tr><th>维度</th><th>加权得分</th><th>满分</th></tr></thead><tbody></tbody>';
+    var tb = tbl.querySelector('tbody');
+    DIMS.forEach(function (d, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + esc(d.name) + '</td><td>' + (Math.round(res.weighted[i] * 10) / 10) + '</td><td>' + d.maxW + '</td>';
+      tb.appendChild(tr);
     });
 
     var idxs = [0,1,2,3,4,5].sort(function (a,b) { return res.weighted[a] - res.weighted[b]; });
@@ -637,18 +765,37 @@
     for (var j = 0; j < 3; j++) {
       var ii = idxs[j];
       var li2 = document.createElement('li');
-      li2.innerHTML = '<strong>' + DIMS[ii].name + '</strong>（加权 ' + (Math.round(res.weighted[ii]*10)/10) + '）— ' + DIMS[ii].issues;
+      li2.innerHTML = '<strong>' + esc(DIMS[ii].name) + '</strong>（加权 ' + (Math.round(res.weighted[ii]*10)/10) + '）— ' + esc(DIMS[ii].issues);
       top3.appendChild(li2);
     }
 
+    var book = document.getElementById('rep-book-link');
+    book.href = CONFIG.bookingUrl;
+    document.getElementById('rep-hotline').textContent = CONFIG.hotline;
+
     document.getElementById('lead-name').value = state.text.q25.name || '';
     document.getElementById('lead-phone').value = state.text.q25.phone || '';
-    document.getElementById('lead-co').value = state.text.q25.company || '';
+    document.getElementById('lead-co').value = state.text.q25.company || state.basic.name || '';
   }
+
+  function formatDate(d) {
+    var y = d.getFullYear();
+    var m = ('0' + (d.getMonth() + 1)).slice(-2);
+    var day = ('0' + d.getDate()).slice(-2);
+    return y + '-' + m + '-' + day;
+  }
+
+  document.getElementById('btn-start').addEventListener('click', function () {
+    document.getElementById('screen-welcome').classList.add('hidden');
+    document.getElementById('screen-quiz').classList.add('visible');
+    state.startedAt = Date.now();
+    state.qIndex = 0;
+    render();
+  });
 
   btnNext.addEventListener('click', function () {
     if (!validateCurrent()) return;
-    if (state.qIndex < 25) {
+    if (state.qIndex < TOTAL_STEPS - 1) {
       state.qIndex++;
       render();
     } else {
@@ -664,27 +811,61 @@
   });
 
   document.getElementById('cta-reset').addEventListener('click', function () {
-    state = { qIndex: 0, single: {}, multi: {}, text: { q25: {}, q26: '' } };
+    state = {
+      qIndex: 0,
+      startedAt: null,
+      basic: { name: '', industry: null, scale: null, years: null },
+      single: {},
+      multi: {},
+      text: { q25: {}, q26: '' }
+    };
     document.getElementById('screen-report').classList.remove('visible');
-    document.getElementById('screen-quiz').classList.remove('hidden');
-    render();
+    document.getElementById('screen-quiz').classList.remove('visible');
+    document.getElementById('screen-welcome').classList.remove('hidden');
+    document.getElementById('main-wrap').classList.remove('report-wide');
+    document.getElementById('app-title').textContent = '企业营销能力诊断';
   });
 
-  document.getElementById('cta-screenshot').addEventListener('click', function () {
-    alert('请使用手机系统截图功能保存本页（MVP 未集成 html2canvas）。');
+  document.getElementById('btn-export-pdf').addEventListener('click', function () {
+    var btn = document.getElementById('btn-export-pdf');
+    if (typeof html2pdf === 'undefined') {
+      alert('PDF 组件未加载，请检查网络后重试（需加载 html2pdf.js CDN）。');
+      return;
+    }
+    var el = document.getElementById('report-page');
+    var safeName = (state.basic.name || '企业').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 40);
+    var opt = {
+      margin: 10,
+      filename: '企业营销诊断报告_' + safeName + '.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    btn.classList.add('loading');
+    btn.textContent = '正在生成…';
+    var done = function () {
+      btn.classList.remove('loading');
+      btn.textContent = '导出 PDF 报告';
+    };
+    var p = html2pdf().set(opt).from(el).save();
+    if (p && typeof p.then === 'function') {
+      p.then(done).catch(function () {
+        done();
+        alert('PDF 生成失败，请重试或换浏览器。');
+      });
+    } else {
+      setTimeout(done, 2500);
+    }
   });
-  document.getElementById('cta-book').addEventListener('click', function () {
-    alert('预约链接 Phase 2 配置；请将联系方式交给销售顾问。');
-  });
+
   document.getElementById('lead-save').addEventListener('click', function () {
     var n = document.getElementById('lead-name').value.trim();
     var p = document.getElementById('lead-phone').value.trim();
     var c = document.getElementById('lead-co').value.trim();
     if (!n || !p || !c) { alert('请填写姓名、手机、公司'); return; }
-    alert('已记录（演示）：' + n + ' / ' + p + ' / ' + c + '\n实际环境将写入 CRM。');
+    alert('已记录（演示）：' + n + ' / ' + p + ' / ' + c + '\n行业：' + basicIndustryLabel());
   });
-
-  render();
 })();
   </script>
 </body>
