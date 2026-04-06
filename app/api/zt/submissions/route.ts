@@ -180,7 +180,7 @@ export async function POST(req: Request) {
         });
       }
 
-      const wallet = await applyPointsAndSyncRank(tx, {
+      const pointsState = await applyPointsAndSyncRank(tx, {
         userId: uctx.userId,
         actorRole: uctx.ztRole,
         pointsDelta: 8,
@@ -190,10 +190,19 @@ export async function POST(req: Request) {
         refId: submission.id,
       });
 
-      return { submission, wallet };
+      return { submission, pointsState };
     });
 
-    return NextResponse.json(created);
+    return NextResponse.json({
+      ...created,
+      feedback: {
+        pointsDelta: 8,
+        currentPoints: created.pointsState.wallet.points,
+        rank: created.pointsState.rankLabel,
+        rankChanged: created.pointsState.rankChanged,
+        ledgerId: created.pointsState.ledgerId,
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       {

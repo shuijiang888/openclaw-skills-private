@@ -109,7 +109,7 @@ function roleScopeFromRequest(req: Request): {
   const ctx = getRequestUserContext(req);
   const role = ztRoleFromRequest(req);
   const roleScope = actorRoleCandidatesForZt(role);
-  const adminView = ctx.isAdminLike || role === "GENERAL";
+  const adminView = ctx.isZtManager;
   if (adminView) {
     return {
       submissionWhere: undefined,

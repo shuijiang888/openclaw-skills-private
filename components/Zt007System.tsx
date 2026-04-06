@@ -52,6 +52,14 @@ type Submission = {
   createdAt: string;
 };
 
+type SubmissionFeedback = {
+  pointsDelta: number;
+  currentPoints: number;
+  rank: string;
+  rankChanged: boolean;
+  ledgerId: string;
+};
+
 type Redemption = {
   id: string;
   item: string;
@@ -208,6 +216,8 @@ export function Zt007System() {
     }[role] ?? role;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [lastFeedback, setLastFeedback] = useState<SubmissionFeedback | null>(null);
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [cards, setCards] = useState<ActionCard[]>([]);
   const [tasks, setTasks] = useState<BountyTask[]>([]);
@@ -386,12 +396,24 @@ export function Zt007System() {
 
   async function submitSignal(e: FormEvent) {
     e.preventDefault();
+    setError(null);
+    setMessage(null);
+    setLastFeedback(null);
     if (!submissionForm.intelDefId) {
       setError("请先选择商业情报定义。");
       return;
     }
     try {
-      await api<{ ok: boolean }>("/api/zt/submissions", {
+      const created = await api<{
+        submission: Submission;
+        wallet: {
+          id: string;
+          points: number;
+          lifetimePoints: number;
+          rank: string;
+        };
+        feedback?: SubmissionFeedback;
+      }>("/api/zt/submissions", {
         method: "POST",
         body: JSON.stringify({
           ...submissionForm,
@@ -399,6 +421,15 @@ export function Zt007System() {
           extraFields: submissionForm.extraFields,
         }),
       });
+      const feedback = created.feedback;
+      setMessage(
+        feedback?.rankChanged
+          ? "情报提交成功，积分已到账，军衔已升级。"
+          : "情报提交成功，积分已到账。",
+      );
+      if (feedback) {
+        setLastFeedback(feedback);
+      }
       setSubmissionForm({
         intelDefId: intelDefs[0]?.id ?? "",
         title: "",
@@ -579,6 +610,18 @@ export function Zt007System() {
       {error ? (
         <div className="rounded-lg border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
           {error}
+        </div>
+      ) : null}
+      {message ? (
+        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
+          {message}
+        </div>
+      ) : null}
+      {lastFeedback ? (
+        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-200">
+          +{lastFeedback.pointsDelta} 分 · 当前积分 {lastFeedback.currentPoints} · 军衔{" "}
+          {lastFeedback.rank}
+          {lastFeedback.rankChanged ? "（已升级）" : ""} · 流水 {lastFeedback.ledgerId}
         </div>
       ) : null}
 

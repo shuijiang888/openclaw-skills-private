@@ -26,7 +26,7 @@ function parseFeatures(raw: string): Record<string, boolean> {
 export async function GET(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const config = await getZtSystemConfig();
@@ -39,7 +39,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;

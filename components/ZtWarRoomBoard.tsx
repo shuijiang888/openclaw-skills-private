@@ -45,6 +45,7 @@ export function ZtWarRoomBoard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [board, setBoard] = useState<BoardKey>("city");
+  const [autoRotate, setAutoRotate] = useState(true);
 
   async function load() {
     setBusy(true);
@@ -81,6 +82,7 @@ export function ZtWarRoomBoard() {
   }, []);
 
   useEffect(() => {
+    if (!autoRotate) return;
     const timer = window.setInterval(() => {
       setBoard((prev) => {
         const idx = BOARD_ORDER.indexOf(prev);
@@ -89,7 +91,7 @@ export function ZtWarRoomBoard() {
       });
     }, 8000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [autoRotate]);
 
   const title = useMemo(() => {
     if (board === "city") return "城市战区热点";
@@ -115,6 +117,24 @@ export function ZtWarRoomBoard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAutoRotate((prev) => !prev)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                autoRotate
+                  ? "border-emerald-300 bg-emerald-400/20 text-emerald-100"
+                  : "border-slate-600 text-slate-300 hover:border-cyan-500/60"
+              }`}
+            >
+              {autoRotate ? "自动轮播开" : "自动轮播关"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-cyan-500/60 hover:text-cyan-100"
+            >
+              刷新数据
+            </button>
             {BOARD_ORDER.map((x) => (
               <button
                 key={x}
@@ -149,6 +169,26 @@ export function ZtWarRoomBoard() {
         <div className="mt-4 rounded-2xl border border-cyan-300/25 bg-slate-950/45 p-4">
           {busy ? <p className="text-sm text-cyan-200">战情链路同步中...</p> : null}
           {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+          {!busy && !error && snapshot?.warnings?.length ? (
+            <div className="mb-3 rounded-xl border border-rose-300/30 bg-rose-950/20 px-3 py-2">
+              <p className="text-xs font-semibold text-rose-200">风险预警</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-rose-100/90">
+                {snapshot.warnings.slice(0, 3).map((x, idx) => (
+                  <li key={`${idx}-${x}`}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {!busy && !error && snapshot?.opportunities?.length ? (
+            <div className="mb-3 rounded-xl border border-emerald-300/30 bg-emerald-950/20 px-3 py-2">
+              <p className="text-xs font-semibold text-emerald-200">作战机会建议</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-emerald-100/90">
+                {snapshot.opportunities.slice(0, 3).map((x, idx) => (
+                  <li key={`${idx}-${x}`}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {!busy && !error && snapshot ? (
             <BoardTable board={board} snapshot={snapshot} />
           ) : null}

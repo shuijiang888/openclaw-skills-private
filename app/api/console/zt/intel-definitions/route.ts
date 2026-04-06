@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

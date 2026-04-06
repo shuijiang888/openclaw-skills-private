@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
       );
     }
 
-    const where = ctx.isAdminLike
+    const where = ctx.isZtManager
       ? { id: taskId }
       : {
           id: taskId,
@@ -68,7 +68,7 @@ export async function PATCH(req: Request) {
     }
 
     // 非管理员只能做 OPEN -> CLAIMED 的认领动作
-    if (!ctx.isAdminLike && !(exists.status === "OPEN" && status === "CLAIMED")) {
+    if (!ctx.isZtManager && !(exists.status === "OPEN" && status === "CLAIMED")) {
       return NextResponse.json(
         { error: "forbidden transition for non-admin user" },
         { status: 403 },
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
   try {
     await ensureZtBootstrap();
     const ctx = getRequestUserContext(req);
-    if (!ctx.isAdminLike) {
+    if (!ctx.isZtManager) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
     const body = (await req.json().catch(() => null)) as

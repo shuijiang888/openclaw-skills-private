@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     await ensureZtBootstrap();
     const ctx = getRequestUserContext(req);
     if (ctx.userId) {
-      const rows = ctx.isAdminLike
+      const rows = ctx.isZtManager
         ? await prisma.ztRedemption.findMany({
             orderBy: { createdAt: "desc" },
             take: 50,
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   await ensureZtBootstrap();
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const body = (await req.json().catch(() => null)) as
