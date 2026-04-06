@@ -1,20 +1,14 @@
-# 当前任务（OpenClaw 维护）
+# 协作状态
 
-## 任务 ID
+```yaml
+task_id: collab-003
+state: in_progress
+updated: "2026-04-06"
+owner: cursor
+last_step: "准备接手 collab-003，读取 CURRENT_TASK + HANDOFF"
+blocker: ""
+```
 
-`collab-002`
+## 人类可读备注
 
-## 背景
-
-collab-001 已验证「写 HANDOFF → Cursor 执行 → STATUS 回传 → 脚本验收」闭环。本轮固化流程：产出 collab-001 复盘、建立可复用 `TEMPLATE.md`，并视需要更新 `scripts/check-collab.sh`。
-
-## 完成定义（DoD）
-
-- `collaboration/retrospectives/collab-001-20260406.md` 存在且覆盖 HANDOFF 要求的四块内容。
-- `collaboration/TEMPLATE.md` 存在且含 **完成定义（DoD）**、**验收步骤**、**非目标** 三节（可测试、可对照）。
-- `./scripts/check-collab.sh` 退出码为 0。
-- `collaboration/STATUS.md` 中 `task_id: collab-002` 且 `state: done`。
-
-## 非目标
-
-见 `collaboration/HANDOFF.md` 文末「非目标」。
+collab-002 改进点已记录：任务文件 vs STATUS 模板应分离。collab-003 目标：用 Protocol Health Check 把"协作质量自检"固化为可重复工具，形成闭环改进机制。
