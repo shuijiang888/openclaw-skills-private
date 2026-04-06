@@ -19,6 +19,7 @@ export function Nav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isPortalContext = pathname === "/";
+  const isWorkbenchContext = isPortalContext || pathname.startsWith("/dashboard");
   const isZtContext =
     pathname.startsWith("/zt007") ||
     pathname.startsWith("/personal") ||
@@ -32,7 +33,12 @@ export function Nav() {
     { href: "/health-check", label: "健康检查" },
     { href: "/profit/dashboard", label: "盈利系统模块" },
     { href: "/zt007", label: "智探007模块" },
-    { href: "/zt007/strategist", label: "AI大军师" },
+  ];
+  const workbenchLinks = [
+    { href: "/", label: "门户" },
+    { href: "/health-check", label: "健康检查" },
+    { href: "/profit/dashboard", label: "盈利系统模块" },
+    { href: "/zt007", label: "智探007模块" },
   ];
   const ztLinks = [
     { href: "/", label: "门户" },
@@ -55,9 +61,11 @@ export function Nav() {
   );
   const links = isPortalContext
     ? portalLinks
-    : isZtContext
-      ? ztLinks
-      : profitLinks;
+    : isWorkbenchContext
+      ? workbenchLinks
+      : isZtContext
+        ? ztLinks
+        : profitLinks;
 
   useEffect(() => {
     setMobileOpen(false);
@@ -122,13 +130,15 @@ export function Nav() {
           </nav>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
-          <Link
-            href={isPortalContext ? "/dashboard" : isZtContext ? "/zt007" : "/dashboard"}
-            className="hidden rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:inline-flex dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-          >
-            {isPortalContext ? "进入工作台" : isZtContext ? "进入智探007" : "进入系统"}
-          </Link>
-          <RoleSwitcher />
+          {!isWorkbenchContext ? (
+            <Link
+              href={isPortalContext ? "/dashboard" : isZtContext ? "/zt007" : "/dashboard"}
+              className="hidden rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:inline-flex dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+            >
+              {isPortalContext ? "进入工作台" : isZtContext ? "进入智探007" : "进入系统"}
+            </Link>
+          ) : null}
+          {!isWorkbenchContext ? <RoleSwitcher /> : null}
           <button
             type="button"
             aria-expanded={mobileOpen}
