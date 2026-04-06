@@ -41,7 +41,7 @@ const portalCards: PortalCard[] = [
     title: "SKILL大市场（高价值、好生态、等你来）",
     subtitle: "SKILL Marketplace",
     description: "高价值能力与生态协同预留模块，后续将逐步开放入驻与连接。",
-    href: "/crm",
+    href: "/profit/crm",
     cta: "即将上线",
   },
 ];
