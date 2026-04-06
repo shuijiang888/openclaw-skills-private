@@ -1,17 +1,20 @@
-# 协作状态（机器可读字段在下方）
+# 当前任务（OpenClaw 维护）
 
-<!-- 
-  OpenClaw / Cursor 共用；Cursor 执行任务时更新 YAML 块。
--->
-```yaml
-task_id: collab-002
-state: in_progress
-updated: "2026-04-06"
-owner: cursor
-last_step: "准备接手 collab-002，读取 CURRENT_TASK + HANDOFF"
-blocker: ""
-```
+## 任务 ID
 
-## 人类可读备注
+`collab-002`
 
-collab-001 已闭环。collab-002 目标：为仓库建立"可复用任务模板"和"复盘文档"，形成标准交接资产。
+## 背景
+
+collab-001 已验证「写 HANDOFF → Cursor 执行 → STATUS 回传 → 脚本验收」闭环。本轮固化流程：产出 collab-001 复盘、建立可复用 `TEMPLATE.md`，并视需要更新 `scripts/check-collab.sh`。
+
+## 完成定义（DoD）
+
+- `collaboration/retrospectives/collab-001-20260406.md` 存在且覆盖 HANDOFF 要求的四块内容。
+- `collaboration/TEMPLATE.md` 存在且含 **完成定义（DoD）**、**验收步骤**、**非目标** 三节（可测试、可对照）。
+- `./scripts/check-collab.sh` 退出码为 0。
+- `collaboration/STATUS.md` 中 `task_id: collab-002` 且 `state: done`。
+
+## 非目标
+
+见 `collaboration/HANDOFF.md` 文末「非目标」。
