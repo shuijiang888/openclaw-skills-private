@@ -9,6 +9,7 @@ RETRO="$ROOT/collaboration/retrospectives/collab-001-20260406.md"
 TEMPLATE="$ROOT/collaboration/TEMPLATE.md"
 HEALTH="$ROOT/collaboration/HEALTH_CHECKLIST.md"
 CHANGELOG="$ROOT/collaboration/PROTOCOL_CHANGELOG.md"
+REPORT="$ROOT/collaboration/opportunity_insight_report.md"
 
 err() { echo "check-collab: $*" >&2; exit 1; }
 
@@ -19,7 +20,7 @@ for heading in "目标对齐" "指令下发" "Cursor 执行" "过程管理" "质
 done
 
 [[ -f "$STATUS" ]] || err "missing collaboration/STATUS.md"
-grep -q "^task_id: collab-003" "$STATUS" || err "STATUS task_id must be collab-003"
+grep -q "^task_id: collab-004" "$STATUS" || err "STATUS task_id must be collab-004"
 grep -q "^state: done" "$STATUS" || err "STATUS state must be done (YAML block)"
 
 [[ -f "$RETRO" ]] || err "missing collaboration/retrospectives/collab-001-20260406.md"
@@ -39,5 +40,11 @@ grep -q "推荐项" "$HEALTH" || err "HEALTH_CHECKLIST missing 推荐项 section
 grep -q "v1.0" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.0"
 grep -q "v1.1" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.1"
 grep -q "v1.2" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.2"
+
+[[ -f "$REPORT" ]] || err "missing collaboration/opportunity_insight_report.md"
+[[ -s "$REPORT" ]] || err "opportunity_insight_report.md is empty"
+for n in 一 二 三 四 五 六; do
+  grep -q "^## ${n}、" "$REPORT" || err "report missing chapter heading: ## ${n}、"
+done
 
 echo "check-collab: OK"
