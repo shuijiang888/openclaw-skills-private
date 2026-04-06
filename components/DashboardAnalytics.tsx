@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/client-base-path";
 import { SalesFunnelChart } from "@/components/charts/SalesFunnelChart";
 import { MiniBarChart } from "@/components/charts/MiniBarChart";
 import { DonutChart } from "@/components/charts/DonutChart";
@@ -15,7 +16,7 @@ export function DashboardAnalytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
-    void fetch("/api/projects")
+    void fetch(apiUrl("/api/projects"))
       .then(r => r.json())
       .then((projects: { status: string; customer?: { name: string }; customerId: string }[]) => {
         const draft = projects.filter(p => p.status === "DRAFT").length;

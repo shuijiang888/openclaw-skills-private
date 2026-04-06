@@ -72,6 +72,7 @@ type ProjectDTO = {
   leadDays: number;
   isStandard: boolean;
   isSmallOrder: boolean;
+  customerId: string;
   customer: { name: string; tier: string };
   quote: EnrichedQuote | null;
 };
@@ -351,7 +352,10 @@ export function Workbench({ projectId }: { projectId: string }) {
 
       <div className="xl:grid xl:grid-cols-[1fr_minmax(300px,380px)] xl:items-start xl:gap-8">
         <div className="min-w-0 space-y-6">
-          <CustomerProfileCard customerId={data.customerId} />
+          <CustomerProfileCard
+            customerId={data.customerId}
+            customerName={data.customer.name}
+          />
           <div className="grid gap-4 lg:grid-cols-3">
         <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-1">
           <h2 className="text-sm font-medium text-zinc-500">项目摘要</h2>

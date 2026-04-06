@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgentMascot } from "@/components/AgentMascot";
+import { AiScenarioTools } from "@/components/AiScenarioTools";
 import { demoHeaders, useDemoRole } from "@/components/RoleSwitcher";
 import type { DemoRole } from "@/lib/approval";
 import { parseDemoRole } from "@/lib/approval";
@@ -559,6 +560,9 @@ export function QuoteAssistantPanel({
             </div>
           </div>
         ) : null}
+
+        {/* 竞品应对 & 异议处理 */}
+        <AiScenarioTools onInsertText={(t) => setText(prev => prev.trim() ? `${prev.trim()}\n${t}` : t)} disabled={disabled} />
 
         {(parsedSummary.length > 0 || parsedHints.length > 0) && (
           <div className="mt-3 space-y-2 rounded-xl border border-violet-100 bg-white/70 p-3 text-xs dark:border-violet-900/40 dark:bg-slate-950/60">

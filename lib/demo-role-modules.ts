@@ -26,6 +26,7 @@ export const DEMO_NAV_LINKS = [
   { href: "/projects/new", label: "新建报价", roles: ALL },
   { href: "/compass", label: "盈利罗盘", roles: ALL },
   { href: "/roadmap", label: "AI交付与价值服务", roles: NO_JUNIOR_SALES },
+  { href: "/data-screen", label: "数据大屏", roles: ALL },
   { href: "/console", label: "管理后台", roles: BACKOFFICE },
 ] as const;
 

@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/client-base-path";
 
 type CustomerProfile = {
-  id: string;
   name: string;
   tier: string;
   arDays: number;
   projectCount: number;
   totalQuoted: number;
-  avgMargin: number;
   pendingCount: number;
   approvedCount: number;
 };
@@ -20,31 +19,38 @@ const TIER_CONFIG: Record<string, { label: string; color: string; bg: string }> 
   NORMAL: { label: "普通", color: "text-slate-600", bg: "bg-slate-100 dark:bg-slate-800" },
 };
 
-export function CustomerProfileCard({ customerId }: { customerId: string }) {
+export function CustomerProfileCard({ customerId, customerName }: { customerId: string; customerName: string }) {
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
 
   useEffect(() => {
-    void fetch(`/api/customers`)
-      .then(r => r.json())
-      .then((customers: { id: string; name: string; tier: string; arDays: number }[]) => {
-        const c = customers.find(x => x.id === customerId);
+    if (!customerId && !customerName) return;
+
+    void Promise.all([
+      fetch(apiUrl("/api/customers")).then(r => r.ok ? r.json() : []),
+      fetch(apiUrl("/api/projects")).then(r => r.ok ? r.json() : []),
+    ])
+      .then(([customers, projects]: [
+        { id: string; name: string; tier: string; arDays: number }[],
+        { customerId: string; status: string; quote?: { suggestedPrice: number } | null }[],
+      ]) => {
+        const c = customers.find(x => x.id === customerId) ?? customers.find(x => x.name === customerName);
         if (!c) return;
-        return fetch("/api/projects").then(r => r.json()).then((projects: { customerId: string; status: string; quote?: { suggestedPrice: number } | null }[]) => {
-          const myProjects = projects.filter((p: { customerId: string }) => p.customerId === customerId);
-          const quoted = myProjects.filter((p: { quote?: { suggestedPrice: number } | null }) => p.quote);
-          const totalQuoted = quoted.reduce((s: number, p: { quote?: { suggestedPrice: number } | null }) => s + (p.quote?.suggestedPrice ?? 0), 0);
-          setProfile({
-            id: c.id, name: c.name, tier: c.tier, arDays: c.arDays,
-            projectCount: myProjects.length,
-            totalQuoted: Math.round(totalQuoted),
-            avgMargin: 0,
-            pendingCount: myProjects.filter((p: { status: string }) => p.status === "PENDING_APPROVAL").length,
-            approvedCount: myProjects.filter((p: { status: string }) => p.status === "APPROVED").length,
-          });
+
+        const myProjects = projects.filter(p => p.customerId === c.id);
+        const totalQuoted = myProjects.reduce((s, p) => s + (p.quote?.suggestedPrice ?? 0), 0);
+
+        setProfile({
+          name: c.name,
+          tier: c.tier,
+          arDays: c.arDays,
+          projectCount: myProjects.length,
+          totalQuoted: Math.round(totalQuoted),
+          pendingCount: myProjects.filter(p => p.status === "PENDING_APPROVAL").length,
+          approvedCount: myProjects.filter(p => p.status === "APPROVED").length,
         });
       })
       .catch(() => {});
-  }, [customerId]);
+  }, [customerId, customerName]);
 
   if (!profile) return null;
 
