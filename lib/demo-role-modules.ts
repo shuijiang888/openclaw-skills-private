@@ -44,6 +44,11 @@ export const DEMO_CONSOLE_SIDEBAR_LINKS = [
     label: "智能体审计",
     roles: ["ADMIN"] as DemoRole[],
   },
+  {
+    href: "/console/users",
+    label: "用户管理",
+    roles: ["ADMIN"] as DemoRole[],
+  },
 ] as const;
 
 export const DEMO_ZT_CONSOLE_SIDEBAR_LINKS = [
