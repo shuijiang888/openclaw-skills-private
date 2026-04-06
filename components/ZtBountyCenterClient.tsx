@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { demoHeaders } from "@/components/RoleSwitcher";
 import { withClientBasePath } from "@/lib/client-url";
 
@@ -14,6 +14,8 @@ type BountyTask = {
   taskType?: string;
   deadlineAt?: string | null;
   reviewNote?: string;
+  reviewedByRole?: string | null;
+  reviewedAt?: string | null;
   allowedTransitions?: string[];
 };
 
@@ -45,6 +47,38 @@ type TaskCreateForm = {
   rewardPoints: number;
   deadlineAt: string;
 };
+
+type TaskTemplate = {
+  key: string;
+  label: string;
+  titlePrefix: string;
+  descriptionHint: string;
+  rewardPoints: number;
+};
+
+const TASK_TEMPLATES: TaskTemplate[] = [
+  {
+    key: "HOT_CITY",
+    label: "模板：城市热点排查",
+    titlePrefix: "城市热点排查",
+    descriptionHint: "围绕重点城市采集本周高频商情，要求包含客户动作、竞品动作、风险判断。",
+    rewardPoints: 40,
+  },
+  {
+    key: "COMPETITOR",
+    label: "模板：竞品异动追踪",
+    titlePrefix: "竞品异动追踪",
+    descriptionHint: "聚焦核心竞品价格策略、渠道活动、关键客户渗透动态，附证据来源。",
+    rewardPoints: 50,
+  },
+  {
+    key: "CUSTOMER_RISK",
+    label: "模板：客户风险预警",
+    titlePrefix: "客户风险预警",
+    descriptionHint: "识别客户流失信号、采购延迟或预算收缩迹象，输出建议动作。",
+    rewardPoints: 45,
+  },
+];
 
 function toDatetimeLocalInput(raw?: string | null): string {
   if (!raw) return "";
@@ -147,6 +181,7 @@ export function ZtBountyCenterClient() {
     ledgerId: string;
   } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [quickMode, setQuickMode] = useState(false);
   const [form, setForm] = useState({
     intelDefId: "",
     title: "",
@@ -169,6 +204,18 @@ export function ZtBountyCenterClient() {
     acc[task.status] = (acc[task.status] ?? 0) + 1;
     return acc;
   }, {});
+  const reviewHistory = useMemo(
+    () =>
+      tasks
+        .filter((t) => Boolean(t.reviewedAt || t.reviewNote))
+        .sort((a, b) => {
+          const ta = a.reviewedAt ? new Date(a.reviewedAt).getTime() : 0;
+          const tb = b.reviewedAt ? new Date(b.reviewedAt).getTime() : 0;
+          return tb - ta;
+        })
+        .slice(0, 12),
+    [tasks],
+  );
   async function load() {
     const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
       cache: "no-store",
@@ -336,6 +383,19 @@ export function ZtBountyCenterClient() {
     });
   }
 
+  function applyTemplate(tpl: TaskTemplate) {
+    setCreatingTask((prev) => {
+      const nextTitle = `${tpl.titlePrefix} · ${new Date().toLocaleDateString("zh-CN")}`;
+      return {
+        ...prev,
+        title: nextTitle,
+        description: tpl.descriptionHint,
+        rewardPoints: tpl.rewardPoints,
+      };
+    });
+    setMessage(`已应用模板：${tpl.label}。请确认后创建任务。`);
+  }
+
   async function createTask() {
     if (!creatingTask.intelDefId) {
       setError("请先选择商情定义后再创建任务。");
@@ -437,6 +497,19 @@ export function ZtBountyCenterClient() {
     setError("");
     setMessage("");
     try {
+      const payloadBody = quickMode
+        ? {
+            intelDefId: form.intelDefId,
+            title: form.title.trim(),
+            content: form.content.trim(),
+            taskId: form.taskId || undefined,
+            extraFields: form.extraFields,
+          }
+        : {
+            ...form,
+            taskId: form.taskId || undefined,
+            extraFields: form.extraFields,
+          };
       const res = await fetch(withClientBasePath("/api/zt/submissions"), {
         method: "POST",
         credentials: "include",
@@ -444,11 +517,7 @@ export function ZtBountyCenterClient() {
           "content-type": "application/json",
           ...demoHeaders(),
         },
-        body: JSON.stringify({
-          ...form,
-          taskId: form.taskId || undefined,
-          extraFields: form.extraFields,
-        }),
+        body: JSON.stringify(payloadBody),
       });
       const payload = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -656,6 +725,18 @@ export function ZtBountyCenterClient() {
           <div className="mb-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3">
             <h3 className="text-sm font-semibold text-cyan-200">任务管理（管理员）</h3>
             <div className="mt-2 grid gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {TASK_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.key}
+                    type="button"
+                    onClick={() => applyTemplate(tpl)}
+                    className="min-h-11 rounded-md border border-slate-600 bg-slate-900/70 px-2.5 text-xs text-slate-200 hover:border-cyan-500/60"
+                  >
+                    {tpl.label}
+                  </button>
+                ))}
+              </div>
               <select
                 className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                 value={creatingTask.intelDefId}
@@ -717,6 +798,33 @@ export function ZtBountyCenterClient() {
               >
                 {creatingTaskBusy ? "创建中..." : "创建任务"}
               </button>
+            </div>
+          </div>
+        ) : null}
+        {isManager ? (
+          <div className="mb-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3">
+            <h3 className="text-sm font-semibold text-cyan-200">审核记录（最近12条）</h3>
+            <div className="mt-2 space-y-2">
+              {reviewHistory.map((item) => (
+                <div
+                  key={`review-${item.id}`}
+                  className="rounded-md border border-slate-700 bg-slate-900/40 p-2 text-xs text-slate-300"
+                >
+                  <p className="font-medium text-slate-100">{item.title}</p>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    状态：{item.status} · 角色：{item.reviewedByRole ?? "未记录"} · 时间：
+                    {item.reviewedAt
+                      ? new Date(item.reviewedAt).toLocaleString("zh-CN")
+                      : "未记录"}
+                  </p>
+                  <p className="mt-1 text-[11px] text-slate-300">
+                    备注：{item.reviewNote?.trim() || "（无）"}
+                  </p>
+                </div>
+              ))}
+              {reviewHistory.length === 0 ? (
+                <p className="text-xs text-slate-400">暂无审核记录。</p>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -884,43 +992,49 @@ export function ZtBountyCenterClient() {
             value={form.title}
             onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
           />
-          <input
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            placeholder="区域"
-            value={form.region}
-            onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
-            required={
-              selectedIntelDef?.requiredFields?.includes("region") ?? false
-            }
-          />
-          <select
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            value={form.signalType}
-            onChange={(e) => setForm((p) => ({ ...p, signalType: e.target.value }))}
-          >
-            {(selectedIntelDef?.allowedSignalTypes?.length
-              ? selectedIntelDef.allowedSignalTypes
-              : ["strategic", "tactical", "knowledge"]
-            ).map((x) => (
-              <option key={x} value={x}>
-                {x}
-              </option>
-            ))}
-          </select>
-          <select
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            value={form.format}
-            onChange={(e) => setForm((p) => ({ ...p, format: e.target.value }))}
-          >
-            {(selectedIntelDef?.allowedFormats?.length
-              ? selectedIntelDef.allowedFormats
-              : ["text", "image", "video", "voice", "link"]
-            ).map((x) => (
-              <option key={x} value={x}>
-                {x}
-              </option>
-            ))}
-          </select>
+          {!quickMode ? (
+            <input
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              placeholder="区域"
+              value={form.region}
+              onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
+              required={
+                selectedIntelDef?.requiredFields?.includes("region") ?? false
+              }
+            />
+          ) : null}
+          {!quickMode ? (
+            <select
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              value={form.signalType}
+              onChange={(e) => setForm((p) => ({ ...p, signalType: e.target.value }))}
+            >
+              {(selectedIntelDef?.allowedSignalTypes?.length
+                ? selectedIntelDef.allowedSignalTypes
+                : ["strategic", "tactical", "knowledge"]
+              ).map((x) => (
+                <option key={x} value={x}>
+                  {x}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {!quickMode ? (
+            <select
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              value={form.format}
+              onChange={(e) => setForm((p) => ({ ...p, format: e.target.value }))}
+            >
+              {(selectedIntelDef?.allowedFormats?.length
+                ? selectedIntelDef.allowedFormats
+                : ["text", "image", "video", "voice", "link"]
+              ).map((x) => (
+                <option key={x} value={x}>
+                  {x}
+                </option>
+              ))}
+            </select>
+          ) : null}
           <select
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             value={form.taskId}
@@ -947,6 +1061,38 @@ export function ZtBountyCenterClient() {
               </option>
             ))}
           </select>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setQuickMode((prev) => !prev)}
+              className="min-h-11 rounded-md border border-slate-600 px-3 text-xs text-slate-300"
+            >
+              {quickMode ? "切换标准模式" : "切换极速上报"}
+            </button>
+            <button
+              type="submit"
+              disabled={busy || !form.intelDefId}
+              className="min-h-11 rounded-md border border-cyan-500/30 bg-cyan-500/15 px-3 py-1.5 text-sm text-cyan-200 disabled:opacity-60"
+            >
+              {busy
+                ? "提交中..."
+                : !form.intelDefId
+                  ? "请先配置商情定义"
+                  : quickMode
+                    ? "极速提交 +8"
+                    : "提交情报 +8"}
+            </button>
+          </div>
+          <input
+            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            placeholder={quickMode ? "区域（极速模式可选）" : "区域"}
+            value={form.region}
+            onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
+            required={
+              !quickMode &&
+              (selectedIntelDef?.requiredFields?.includes("region") ?? false)
+            }
+          />
           <textarea
             className="min-h-24 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             placeholder="内容"
@@ -954,7 +1100,7 @@ export function ZtBountyCenterClient() {
             onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
             required
           />
-          {dynamicRequiredFields.length > 0 ? (
+          {!quickMode && dynamicRequiredFields.length > 0 ? (
             <div className="grid gap-2 sm:grid-cols-2">
               {dynamicRequiredFields.map((field) => (
                 <input
@@ -982,17 +1128,11 @@ export function ZtBountyCenterClient() {
               {selectedIntelDef.requiredFields.join("、") || "title/content"}）
             </p>
           ) : null}
-          <button
-            type="submit"
-            disabled={busy || !form.intelDefId}
-            className="rounded-md border border-cyan-500/30 bg-cyan-500/15 px-3 py-1.5 text-sm text-cyan-200 disabled:opacity-60"
-          >
-            {busy
-              ? "提交中..."
-              : !form.intelDefId
-                ? "请先配置商情定义"
-                : "提交情报 +8"}
-          </button>
+          {quickMode ? (
+            <p className="text-[11px] text-cyan-300/90">
+              极速模式：仅保留最少字段用于移动端快速上报；系统仍按定义进行基础校验。
+            </p>
+          ) : null}
         </form>
         {message ? (
           <p className="mt-2 text-xs text-emerald-300">{message}</p>
