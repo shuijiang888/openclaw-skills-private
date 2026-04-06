@@ -75,6 +75,13 @@ export async function PATCH(req: Request) {
       { status: 400 },
     );
   }
+  const exists = await prisma.ztRedemption.findUnique({
+    where: { id: redemptionId },
+    select: { id: true },
+  });
+  if (!exists) {
+    return NextResponse.json({ error: "redemption not found" }, { status: 404 });
+  }
   const updated = await prisma.ztRedemption.update({
     where: { id: redemptionId },
     data: {
