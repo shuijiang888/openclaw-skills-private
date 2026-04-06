@@ -15,3 +15,9 @@
 - 新增：`HEALTH_CHECKLIST.md` 交接质量门禁（OpenClaw 写 HANDOFF 前自检）
 - 新增：本变更日志，协议演进可追踪
 - 目标：减少模糊 DoD、边界遗漏与返工
+
+## v1.3（collab-004）
+
+- 改进：`CURRENT_TASK.md` 保持纯人类可读叙述，不含 YAML 状态块
+- 改进：写 HANDOFF 前先过 HEALTH_CHECKLIST（必填项必填）
+- 新增：collab-004 引入真实业务任务，验证协议对复杂场景的承载能力

@@ -1,94 +1,84 @@
-# 给 Cursor 的指令（collab-003）
+# 给 Cursor 的指令（collab-004）
 
-**task_id:** `collab-003`
+**task_id:** `collab-004`
 
 ## 背景
 
-collab-002 复盘发现关键改进点：OpenClaw 写 HANDOFF 时需有"质量自检"机制，避免任务描述模糊、DoD 不清、边界遗漏。本轮目标：建立 Protocol Health Check，让每一轮交接都有质量门禁。
+我们需要验证 OpenClaw → Cursor 协同协议能否承载真实的、有业务价值的任务。collab-004 选择一个具体场景：从真实商机洞察出发，梳理"从线索到赢单的完整路径"，验证"AI能做什么、销售应该做什么、客户会看到什么"。
 
-## 你要做的事
+## 完成定义（DoD）
 
-### 任务A：建立"协作质量自检清单"
+- [ ] 新增文件 `collaboration/opportunity_insight_report.md`
+- [ ] 文件包含六大章节（见下方）
+- [ ] 每章节有实质内容，不是占位符
+- [ ] 案例必须是真实行业（医疗/能源/制造之一）
+- [ ] `./scripts/check-collab.sh` 退出码 0
 
-在 `collaboration/HEALTH_CHECKLIST.md` 新建清单，供 OpenClaw 每次写 HANDOFF 前自检：
+## 验收步骤
 
-```
-## HANDOFF 质量自检清单（每次写任务前必须过一遍）
-
-### 必填项（缺一则打回）
-- [ ] task_id：格式为 collab-NNN
-- [ ] 背景：为什么要做这件事（1-3句）
-- [ ] DoD：每条可测试，通过/失败标准明确
-- [ ] 验收步骤：按顺序的操作步骤，步骤N预期结果是什么
-- [ ] 非目标：明确边界，防止范围蔓延
-- [ ] 安全约束：如有特殊高危操作，必须写明
-
-### 推荐项（建议填，降低返工）
-- [ ] 依赖项：执行前需哪些文件/状态就绪
-- [ ] 样例输出：期望产出文件的内容结构
-
-### 自检执行时机
-- OpenClaw 写完 HANDOFF.md 后，对照本清单过一遍
-- 如有必填项缺失，Cursor 在 decisions-needed/ 下新建 `handoff-quality.md` 指出缺失项，等待 OpenClaw 补齐后再开工
-```
-
-### 任务B：创建"Protocol 版本记录"
-
-在 `collaboration/PROTOCOL_CHANGELOG.md` 新建协议演进记录：
-
-```
-# Protocol 变更日志
-
-## v1.0（collab-001 前）
-- 初始约定：HANDOFF + STATUS + check-collab.sh
-
-## v1.1（collab-002 后）
-- 新增：TEMPLATE.md 标准任务模板
-- 改进：RETROSPECTIVE 机制，Cursor 每轮留复盘
-- 改进：CURRENT_TASK.md 保持纯叙述，YAML 只在 STATUS.md
-
-## v1.2（本轮 collab-003）
-- 新增：HEALTH_CHECKLIST.md 交接质量门禁
-- 目标：OpenClaw 写 HANDOFF 必须自检，减少返工
-```
-
-### 任务C：更新 check-collab.sh
-
-新增一项检查：`HEALTH_CHECKLIST.md` 存在。修改方式：在 check-collab.sh 末尾加一行 `[[ -f "$ROOT/collaboration/HEALTH_CHECKLIST.md" ]] || err "missing HEALTH_CHECKLIST.md"`
-
-### 任务D：更新 collab-002 复盘（增补）
-
-在 `collaboration/retrospectives/collab-001-20260406.md` 末尾追加：
-
-```
-## collab-002 新增发现（追加到上方改进建议）
-
-- 协议本身需要版本管理：每次改进写入 PROTOCOL_CHANGELOG.md
-- 健康检查前置化：HANDOFF 写得好不好，应在开工前就被检验
-- check-collab.sh 应动态感知本轮任务边界，而非硬编码上一轮检查项
-```
-
-### 任务E：更新 STATUS.md
-
-将 `collaboration/STATUS.md` YAML 块更新为：
-- `task_id: collab-003`
-- `state: done`
-- `last_step: HEALTH_CHECKLIST + PROTOCOL_CHANGELOG + check-collab更新`
-
-## 验收
-
-- `collaboration/HEALTH_CHECKLIST.md` 存在且含必填/推荐项清单
-- `collaboration/PROTOCOL_CHANGELOG.md` 存在且含 v1.0/v1.1/v1.2 三条记录
-- `collaboration/retrospectives/collab-001-20260406.md` 末尾有 collab-002 的追加复盘
-- `check-collab.sh` 新增 HEALTH_CHECKLIST.md 检查项
-- `STATUS.md` 中 `task_id: collab-003` 且 `state: done`
+1. **创建文件** `collaboration/opportunity_insight_report.md`
+2. **写第一章：目标企业画像**
+   - 选一个真实行业（医疗/能源/制造）
+   - 写一家真实目标企业名称、行业、规模、采购痛点
+   - 预期产出：3-5个要点的企业概述
+3. **写第二章：AI侦察阶段**
+   - 列出AI能做什么（FABM匹配、外网信号、因果推理）
+   - 列出FABM里这家企业的关键字段
+   - 预期产出：FABM画像摘要 + 3个外网信号源
+4. **写第三章：销售跟进链路**
+   - 从AI发现 → 销售首次接触 → 方案呈现 → 赢单 的典型路径
+   - 每步标注"AI负责"vs"销售负责"
+   - 预期产出：5-7步的阶段地图
+5. **写第四章：价值叙事设计**
+   - 针对该企业，列出3个核心ROI故事点
+   - 每个故事点包含：客户痛点 → 纷享方案 → 量化结果
+   - 预期产出：3个完整的价值叙事
+6. **写第五章：竞争壁垒**
+   - 列出1-2个最可能的竞争对手及应对话术
+   - 预期产出：竞争对比表 + 差异化话术
+7. **写第六章：风险与机会**
+   - 3个最大风险 + 对应的AI预警信号
+   - 预期产出：风险-信号对照表
+8. **回写 STATUS.md**：`task_id: collab-004`，`state: done`，`last_step: 完成商机洞察报告`
 
 ## 非目标
 
-- 不修改 .git/config
-- 不执行 npm install / pip install 等环境变更
-- 不在 retrospectives/ 外新建 md 文件
+- 不做实际客户接触（只是方案设计）
+- 不生成 PPT/Word，只写 Markdown
+- 不调用任何 API（不实际跑 FABM 查询）
+- 不修改 .git/config 或 scripts/
 
 ## 安全约束
 
-无新增高危操作，按 AGENTS.md 红线执行即可。
+无新增高危操作。按 AGENTS.md 红线执行即可。
+
+## 依赖项
+
+无（不需要特定环境就绪，Cursor 直接可开工）
+
+## 样例产出
+
+文件路径：`collaboration/opportunity_insight_report.md`
+
+格式参考：
+```
+# 【行业】目标企业商机洞察报告
+
+## 一、目标企业画像
+...（3-5要点）
+
+## 二、AI侦察阶段
+...（FABM摘要 + 外网信号源）
+
+## 三、销售跟进链路
+...（5-7步地图，标注AI vs 销售）
+
+## 四、价值叙事设计
+...（3个ROI故事点）
+
+## 五、竞争壁垒
+...（竞争对比表 + 话术）
+
+## 六、风险与机会
+...（3个风险-信号对照）
+```
