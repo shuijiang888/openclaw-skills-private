@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { withClientBasePath } from "@/lib/client-url";
+import { normalizeNavPath } from "@/lib/nav-path";
 
 export function PortalHomeButton() {
-  const pathname = usePathname();
+  const pathname = normalizeNavPath(usePathname() ?? "/");
   const isZtContext =
     pathname.startsWith("/zt007") ||
     pathname.startsWith("/personal") ||

@@ -8,9 +8,10 @@ import {
   filterZtConsoleSidebarForRole,
 } from "@/lib/demo-role-modules";
 import { parseDemoRole } from "@/lib/approval";
+import { normalizeNavPath } from "@/lib/nav-path";
 
 export function ConsoleSidebar() {
-  const pathname = usePathname();
+  const pathname = normalizeNavPath(usePathname() ?? "/");
   const role = parseDemoRole(useDemoRole());
   const isZtConsoleContext =
     pathname.startsWith("/console/system") ||

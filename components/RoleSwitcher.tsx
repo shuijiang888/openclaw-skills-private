@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { withClientBasePath } from "@/lib/client-url";
 import { parseDemoRole } from "@/lib/approval";
 import { parseZtUserRole } from "@/lib/zt-ranks";
+import { normalizeNavPath } from "@/lib/nav-path";
 
 export const DEMO_ROLE_STORAGE_KEY = "profit_demo_role";
 
@@ -132,16 +133,12 @@ export function useDemoRole(): string {
 
 export function RoleSwitcher() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = normalizeNavPath(usePathname() ?? "/");
   const role = useDemoRole();
   const sessionMode = isClientSessionAuth();
   const isZtContext =
     pathname.startsWith("/zt007") ||
     pathname.startsWith("/personal") ||
-    pathname.startsWith("/console/system") ||
-    pathname.startsWith("/console/users") ||
-    pathname.startsWith("/console/zt-system") ||
-    pathname.startsWith("/console/zt-users") ||
     pathname.startsWith("/console/system") ||
     pathname.startsWith("/console/users") ||
     pathname.startsWith("/console/zt-system") ||
