@@ -7,6 +7,25 @@ import { ensureZtBootstrap } from "@/lib/zt-bootstrap";
 import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 import { pickRequiredFieldMisses } from "@/lib/zt-intel-definitions";
 
+function sanitizeExtraFields(input: unknown): Record<string, string> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const normalized: Record<string, string> = {};
+  for (const [rawKey, rawValue] of Object.entries(input)) {
+    const key = String(rawKey ?? "")
+      .trim()
+      .replace(/[^A-Za-z0-9_]/g, "")
+      .slice(0, 48);
+    if (!key) continue;
+    const value =
+      typeof rawValue === "string"
+        ? rawValue.trim()
+        : String(rawValue ?? "").trim();
+    if (!value) continue;
+    normalized[key] = value.slice(0, 2000);
+  }
+  return normalized;
+}
+
 export async function GET(req: Request) {
   try {
     await ensureZtBootstrap();
@@ -45,6 +64,7 @@ export async function POST(req: Request) {
       region?: string;
       format?: string;
       signalType?: string;
+      extraFields?: Record<string, unknown>;
     };
 
     const title = String(body.title ?? "").trim();
@@ -115,12 +135,17 @@ export async function POST(req: Request) {
         return [];
       }
     })();
-    const missingRequired = pickRequiredFieldMisses(requiredFields, {
+    const extraFields = sanitizeExtraFields(body.extraFields);
+    const submittedFieldMap: Record<string, unknown> = {
       title,
       content,
       region: String(body.region ?? ""),
       signalType,
       format,
+      ...extraFields,
+    };
+    const missingRequired = pickRequiredFieldMisses(requiredFields, {
+      ...submittedFieldMap,
     });
     if (missingRequired.length > 0) {
       return NextResponse.json(
@@ -144,6 +169,7 @@ export async function POST(req: Request) {
           actorRole: role,
           status: "APPROVED",
           pointsGranted: 8,
+          extraJson: JSON.stringify(extraFields),
         },
       });
 

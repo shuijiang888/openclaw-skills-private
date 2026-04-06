@@ -72,6 +72,28 @@ type IntelDef = {
   defaultRewardPoints: number;
 };
 
+const BUILTIN_SUBMISSION_FIELDS = new Set([
+  "title",
+  "content",
+  "region",
+  "signalType",
+  "format",
+  "taskId",
+  "intelDefId",
+]);
+
+function prettyFieldLabel(field: string): string {
+  const key = String(field ?? "").trim();
+  if (key === "competitor") return "竞品名称";
+  if (key === "evidence") return "证据来源";
+  if (key === "customerName") return "客户名称";
+  if (key === "nextAction") return "下一步动作";
+  if (key === "impactLevel") return "影响等级";
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (s) => s.toUpperCase());
+}
+
 type OverviewResponse = {
   overview: Overview;
   wallet: { actorRole: string; points: number } | null;
@@ -246,6 +268,7 @@ export function Zt007System() {
     signalType: "tactical",
     content: "",
     taskId: "",
+    extraFields: {} as Record<string, string>,
   });
 
   const [redeemForm, setRedeemForm] = useState({
@@ -267,6 +290,13 @@ export function Zt007System() {
       intelDefs.find((x) => x.id === submissionForm.intelDefId) ??
       null,
     [intelDefs, submissionForm.intelDefId],
+  );
+  const dynamicRequiredFields = useMemo(
+    () =>
+      (selectedIntelDef?.requiredFields ?? []).filter(
+        (field) => !BUILTIN_SUBMISSION_FIELDS.has(field),
+      ),
+    [selectedIntelDef],
   );
 
   const publishedCapabilities = [
@@ -314,6 +344,7 @@ export function Zt007System() {
         body: JSON.stringify({
           ...submissionForm,
           taskId: submissionForm.taskId || undefined,
+          extraFields: submissionForm.extraFields,
         }),
       });
       setSubmissionForm({
@@ -324,6 +355,7 @@ export function Zt007System() {
         signalType: "tactical",
         content: "",
         taskId: "",
+        extraFields: {},
       });
       await loadAll();
     } catch (err) {
@@ -627,7 +659,11 @@ export function Zt007System() {
                     className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                     value={submissionForm.intelDefId}
                     onChange={(e) =>
-                      setSubmissionForm((p) => ({ ...p, intelDefId: e.target.value }))
+                      setSubmissionForm((p) => ({
+                        ...p,
+                        intelDefId: e.target.value,
+                        extraFields: {},
+                      }))
                     }
                     required
                   >
@@ -716,6 +752,10 @@ export function Zt007System() {
                           ...p,
                           taskId: nextTaskId,
                           intelDefId: task?.intelDefId ?? p.intelDefId,
+                          extraFields:
+                            task?.intelDefId && task.intelDefId !== p.intelDefId
+                              ? {}
+                              : p.extraFields,
                         };
                       })
                     }
@@ -736,6 +776,28 @@ export function Zt007System() {
                     setSubmissionForm((p) => ({ ...p, content: e.target.value }))
                   }
                 />
+                {dynamicRequiredFields.length > 0 ? (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {dynamicRequiredFields.map((field) => (
+                      <input
+                        key={field}
+                        className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                        placeholder={`${prettyFieldLabel(field)}（必填）`}
+                        value={submissionForm.extraFields[field] ?? ""}
+                        onChange={(e) =>
+                          setSubmissionForm((p) => ({
+                            ...p,
+                            extraFields: {
+                              ...p.extraFields,
+                              [field]: e.target.value,
+                            },
+                          }))
+                        }
+                        required
+                      />
+                    ))}
+                  </div>
+                ) : null}
                 <button
                   type="submit"
                   disabled={!submissionForm.intelDefId}

@@ -24,6 +24,28 @@ type IntelDef = {
   defaultRewardPoints: number;
 };
 
+const BUILTIN_SUBMISSION_FIELDS = new Set([
+  "title",
+  "content",
+  "region",
+  "signalType",
+  "format",
+  "taskId",
+  "intelDefId",
+]);
+
+function prettyFieldLabel(field: string): string {
+  const key = String(field ?? "").trim();
+  if (key === "competitor") return "竞品名称";
+  if (key === "evidence") return "证据来源";
+  if (key === "customerName") return "客户名称";
+  if (key === "nextAction") return "下一步动作";
+  if (key === "impactLevel") return "影响等级";
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (s) => s.toUpperCase());
+}
+
 export function ZtBountyCenterClient() {
   const [tasks, setTasks] = useState<BountyTask[]>([]);
   const [intelDefs, setIntelDefs] = useState<IntelDef[]>([]);
@@ -44,9 +66,13 @@ export function ZtBountyCenterClient() {
     signalType: "tactical",
     content: "",
     taskId: "",
+    extraFields: {} as Record<string, string>,
   });
   const selectedIntelDef =
     intelDefs.find((x) => x.id === form.intelDefId) ?? null;
+  const dynamicRequiredFields = (selectedIntelDef?.requiredFields ?? []).filter(
+    (field) => !BUILTIN_SUBMISSION_FIELDS.has(field),
+  );
 
   async function load() {
     const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
@@ -109,6 +135,7 @@ export function ZtBountyCenterClient() {
         body: JSON.stringify({
           ...form,
           taskId: form.taskId || undefined,
+          extraFields: form.extraFields,
         }),
       });
       const payload = (await res.json().catch(() => ({}))) as {
@@ -140,6 +167,7 @@ export function ZtBountyCenterClient() {
         signalType: "tactical",
         content: "",
         taskId: "",
+        extraFields: {},
       });
       await load();
     } catch (err) {
@@ -180,7 +208,13 @@ export function ZtBountyCenterClient() {
           <select
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             value={form.intelDefId}
-            onChange={(e) => setForm((p) => ({ ...p, intelDefId: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                intelDefId: e.target.value,
+                extraFields: {},
+              }))
+            }
             required
           >
             {intelDefs.length === 0 ? (
@@ -264,6 +298,28 @@ export function ZtBountyCenterClient() {
             onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
             required
           />
+          {dynamicRequiredFields.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {dynamicRequiredFields.map((field) => (
+                <input
+                  key={field}
+                  className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  placeholder={`${prettyFieldLabel(field)}（必填）`}
+                  value={form.extraFields[field] ?? ""}
+                  onChange={(e) =>
+                    setForm((p) => ({
+                      ...p,
+                      extraFields: {
+                        ...p.extraFields,
+                        [field]: e.target.value,
+                      },
+                    }))
+                  }
+                  required
+                />
+              ))}
+            </div>
+          ) : null}
           {selectedIntelDef ? (
             <p className="text-[11px] text-slate-400">
               当前商情定义：{selectedIntelDef.name}（必填：
