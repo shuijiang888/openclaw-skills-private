@@ -72,7 +72,6 @@ type ProjectDTO = {
   leadDays: number;
   isStandard: boolean;
   isSmallOrder: boolean;
-  customerId: string;
   customer: { name: string; tier: string };
   quote: EnrichedQuote | null;
 };
