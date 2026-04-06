@@ -49,11 +49,14 @@ export function Nav() {
         ]
       : []),
   ];
+  const profitLinks = filterNavLinksForRole(role).filter(
+    (l) => l.href !== "/zt007/strategist",
+  );
   const links = isPortalContext
     ? portalLinks
     : isZtContext
       ? ztLinks
-      : filterNavLinksForRole(role);
+      : profitLinks;
 
   useEffect(() => {
     setMobileOpen(false);
