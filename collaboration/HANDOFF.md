@@ -1,238 +1,566 @@
-# 给 Cursor 的指令（collab-008）
+# 给 Cursor 的指令（collab-009）
 
-**task_id:** `collab-008`
+**task_id:** `collab-009`
 
 ## 背景
 
-collab-007 验收通过（92/100），但发现两个必须修复的问题：
-1. **Q1-Q4 基础信息缺失**——无法收集公司名称/行业/规模，CRM线索不完整
-2. **报告页过于简单**——仅有文字列表，没有可视化
+collab-008 已完成企业级问卷H5（95/100）。本轮目标：设计完整的"企业营销诊断系统"实现方案，让 Agent1/2 可照此文档直接开发、部署、对接纷享CRM。
 
-本轮对 Cursor 提出更高要求：
-- 增加 **雷达图**（6维度得分对比可视化）
-- 增加 **PDF导出**（html2pdf.js）
-- 增加 **配置化**（销售可自定义公司名/预约链接）
-- 整体报告页设计升级为企业专业级
+**最终部署位置：** 腾讯云 `119.45.205.137`，Nginx路由 `/diag/*`，入口嵌入门户首页卡片。
+
+**用户旅程（必须先理解）：**
+```
+销售发二维码 → 客户填问卷 → 提交 → 后端评分+生成报告 → 客户收到报告 → 预约CTA → 纷享CRM创建线索 → 销售跟进
+```
 
 ---
 
 ## 完成定义（DoD）
 
-- [ ] `h5_questionnaire.html` 修复并增强，所有 DoD 项全部通过
-- [ ] 基础信息4题（Q_B1～Q_B4）在Q1前插入，不影响后面26题编号
-- [ ] 报告页有 **SVG雷达图**（6维度，动态绑定数据，非静态图）
-- [ ] 报告页有 **PDF导出按钮**（html2pdf.js，点击生成下载）
-- [ ] 报告页底部CTA的**预约链接可配置**（非硬编码alert）
-- [ ] 整体报告页设计升级为企业专业报告风格（配色/版式）
-- [ ] `./scripts/check-collab.sh` 更新绑定 collab-008
-- [ ] `STATUS.md`：`task_id: collab-008`，`state: done`
+- [ ] `marketing_diagnosis/system/openapi_integration.md` — 纷享CRM OpenAPI对接方案
+- [ ] `marketing_diagnosis/system/database_schema.md` — PostgreSQL数据库表结构
+- [ ] `marketing_diagnosis/system/backend_api_design.md` — 后端API接口设计
+- [ ] `marketing_diagnosis/system/deployment_guide.md` — 腾讯云部署指南
+- [ ] `marketing_diagnosis/system/crm_workflow.md` — CRM线索创建后的跟进流程
+- [ ] `./scripts/check-collab.sh` 更新绑定 collab-009
+- [ ] `STATUS.md`：`task_id: collab-009`，`state: done`
 
 ---
 
 ## 参考文件（必须先读）
 
-- `collaboration/marketing_diagnosis/mvp/h5_questionnaire.html` — 现有实现，Q1～Q26 逻辑不变
-- `collaboration/marketing_diagnosis/scoring_model.md` — 评分规则
-- `collaboration/marketing_diagnosis/report_template.md` — 报告结构参考
+- `collaboration/marketing_diagnosis/mvp/h5_questionnaire.html` — 现有H5（API提交部分需要改造）
+- `collaboration/marketing_diagnosis/system_design.md` — Phase 1设计（已有架构草图）
+- `collaboration/marketing_diagnosis/scoring_model.md` — 评分模型（需在后端重新实现）
+- `collaboration/marketing_diagnosis/report_template.md` — 报告模板
 
 ---
 
 ## 验收步骤
 
-### Step 1：修复基础信息4题
+### Step 1：设计纷享CRM OpenAPI对接方案（openapi_integration.md）
 
-在问卷开头（Q1前）插入企业基本信息一节，共4题：
+**必须包含：**
 
-```html
-<!-- 新增：企业基本信息 -->
-<section id="section-basic" class="card">
-  <div class="section-label">📋 企业基本信息（必填）</div>
-  
-  <!-- Q_B1：填空 -->
-  <div class="q-title">贵司名称是？</div>
-  <input type="text" id="basic-name" placeholder="请输入公司全称" />
-  
-  <!-- Q_B2：单选 -->
-  <div class="q-title">所属行业？</div>
-  <div class="opts-row">
-    <button type="button" class="opt" data-sc="1">制造业</button>
-    <button type="button" class="opt" data-sc="2">服务业</button>
-    <button type="button" class="opt" data-sc="3">科技/互联网</button>
-    <button type="button" class="opt" data-sc="4">金融</button>
-    <button type="button" class="opt" data-sc="5">其他</button>
-  </div>
-  
-  <!-- Q_B3：单选 -->
-  <div class="q-title">企业规模？</div>
-  <div class="opts-row">
-    <button type="button" class="opt" data-sc="1">50人以下</button>
-    <button type="button" class="opt" data-sc="2">50-200人</button>
-    <button type="button" class="opt" data-sc="3">200-1000人</button>
-    <button type="button" class="opt" data-sc="4">1000人以上</button>
-  </div>
-  
-  <!-- Q_B4：单选 -->
-  <div class="q-title">成立年限？</div>
-  <div class="opts-row">
-    <button type="button" class="opt" data-sc="1">3年以下</button>
-    <button type="button" class="opt" data-sc="2">3-10年</button>
-    <button type="button" class="opt" data-sc="3">10年以上</button>
-  </div>
-</section>
+#### 1.1 纷享CRM OpenAPI基础信息
+```markdown
+## 纷享CRM OpenAPI 对接方案
+
+### API基础
+- 文档地址：https://open.fxiaoke.com/ （待确认）
+- 认证方式：AppId + AppSecret → AccessToken
+- Token刷新机制：有效期2小时，需自动刷新
+
+### 核心接口（需要老江提供真实API地址和AppId/AppSecret）
+| 接口 | 方法 | 用途 |
+|------|------|------|
+| 创建线索 | POST /crm/v2/leads | 问卷提交后创建CRM线索 |
+| 更新线索 | PUT /crm/v2/leads/{id} | 补充分数/等级/预约状态 |
+| 创建商机 | POST /crm/v2/opportunities | 高分线索转商机 |
+| 查询用户 | GET /crm/v2/users | 销售工号→用户ID映射 |
 ```
 
-**要求：**
-- 插入后重新编号：问卷从Q_B1开始 → Q1→Q26（新增的4题叫QB1-QB4）
-- state对象增加`basic: { name:'', industry: null, scale: null, years: null }`
-- 基础信息作为第一屏展示，点击"开始答题"才进入QB1
-- 总题数变成30题（4基础+26能力），进度条相应调整
+#### 1.2 字段映射（问卷→CRM）
+```markdown
+## 问卷字段 → 纷享CRM字段 映射
 
-### Step 2：设计SVG雷达图
+| 问卷字段 | CRM字段 | 说明 |
+|----------|---------|------|
+| 公司名称 | company_name | 必填 |
+| 行业 | industry | 下拉选项 |
+| 规模 | employee_size | 下拉选项 |
+| 联系人姓名 | name | 必填 |
+| 手机 | mobile | 必填 |
+| 综合得分 | diagnosis_score | 自定义字段(Number) |
+| 等级 | diagnosis_level | 自定义字段(单选) |
+| TOP3问题 | diagnosis_top3 | 自定义字段(多行文本) |
+| 来源 | lead_source | 固定值：营销诊断问卷 |
+| utm_sales | owner_id | 销售工号→CRM用户ID |
+```
 
-报告页增加6维度雷达图（SVG实现，不依赖ECharts等库）：
+#### 1.3 线索创建Request示例
+```json
+{
+  "lead": {
+    "name": "李总",
+    "mobile": "13800138000",
+    "company_name": "深圳市XX科技有限公司",
+    "industry": "IT/互联网",
+    "employee_size": "100-500人",
+    "diagnosis_score": 72,
+    "diagnosis_level": "良好",
+    "diagnosis_top3": "1. 获客渠道单一\n2. 销售管道标准化不足\n3. CRM数据质量一般",
+    "lead_source": "营销诊断问卷",
+    "utm_sales": "SHUIJIANG",
+    "custom_fields": [
+      { "field_name": "diagnosis_dim1", "value": 15 },
+      { "field_name": "diagnosis_dim2", "value": 14 }
+    ]
+  }
+}
+```
 
+#### 1.4 待确认事项（必须标注）
+```markdown
+## ⚠️ 待老江提供（部署前必须确认）
+
+1. 纷享CRM的AppId和AppSecret（联系纷享技术支持获取）
+2. OpenAPI的真是HTTPS地址
+3. 自定义字段API（diagnosis_score等）是否支持批量创建
+4. 线索创建后是否自动分配销售（还是手动分配）
+```
+
+---
+
+### Step 2：设计数据库Schema（database_schema.md）
+
+**必须包含：**
+
+#### 2.1 ER图（文字描述）
+```
+Campaign（营销活动）
+  1:N
+Submission（问卷提交）
+  1:1
+Report（诊断报告）
+  1:1
+Lead（客户联系信息）
+  N:1
+Submission
+```
+
+#### 2.2 表结构（PostgreSQL）
+
+```sql
+-- 营销活动表
+CREATE TABLE campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,           -- 活动名称，如"2026Q2营销诊断"
+  utm_source VARCHAR(50),                -- 来源渠道
+  q_version VARCHAR(20),                -- 问卷版本
+  booking_url VARCHAR(500),            -- 预约链接
+  hotline VARCHAR(50),                  -- 热线电话
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 问卷提交表（核心）
+CREATE TABLE submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID REFERENCES campaigns(id),
+  
+  -- 基础信息
+  company_name VARCHAR(255) NOT NULL,
+  industry VARCHAR(100),
+  scale VARCHAR(50),
+  years VARCHAR(20),
+  
+  -- 联系信息
+  contact_name VARCHAR(100),
+  contact_phone VARCHAR(20),
+  contact_company VARCHAR(255),
+  open_question TEXT,
+  
+  -- 原始答案（JSON）
+  answers_json JSONB NOT NULL,
+  
+  -- 评分结果
+  score_total DECIMAL(5,2),
+  score_level VARCHAR(20),             -- 卓越/良好/一般/薄弱/危机
+  score_d1 DECIMAL(5,2),
+  score_d2 DECIMAL(5,2),
+  score_d3 DECIMAL(5,2),
+  score_d4 DECIMAL(5,2),
+  score_d5 DECIMAL(5,2),
+  score_d6 DECIMAL(5,2),
+  
+  -- UTM追踪
+  utm_sales VARCHAR(50),              -- 销售工号
+  utm_medium VARCHAR(100),             -- 渠道
+  
+  -- CRM关联
+  crm_lead_id VARCHAR(50),            -- 纷享CRM线索ID
+  crm_lead_status VARCHAR(20),        -- pending/created/updated
+  
+  -- 元数据
+  device_fingerprint VARCHAR(100),
+  duration_seconds INTEGER,
+  submitted_at TIMESTAMP DEFAULT NOW(),
+  
+  CONSTRAINT valid_level CHECK (score_level IN ('卓越','良好','一般','薄弱','危机'))
+);
+
+-- 报告表
+CREATE TABLE reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  submission_id UUID UNIQUE REFERENCES submissions(id),
+  
+  -- 报告文件
+  pdf_path VARCHAR(500),                -- /uploads/reports/{id}.pdf
+  share_url VARCHAR(500),              -- 外链URL
+  expires_at TIMESTAMP,                -- 链接过期时间
+  
+  -- 报告状态
+  status VARCHAR(20) DEFAULT 'pending',  -- pending/generating/ready/failed
+  
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 预约表
+CREATE TABLE bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  submission_id UUID REFERENCES submissions(id),
+  
+  contact_name VARCHAR(100),
+  contact_phone VARCHAR(20),
+  preferred_time VARCHAR(100),         -- 方便时段
+  note TEXT,
+  
+  -- 预约状态
+  status VARCHAR(20) DEFAULT 'pending',  -- pending/confirmed/completed/cancelled
+  
+  -- CRM关联
+  crm_task_id VARCHAR(50),            -- 纷享CRM任务ID
+  
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 索引
+CREATE INDEX idx_submissions_campaign ON submissions(campaign_id);
+CREATE INDEX idx_submissions_crm_status ON submissions(crm_lead_status);
+CREATE INDEX idx_submissions_utm_sales ON submissions(utm_sales);
+CREATE INDEX idx_reports_status ON reports(status);
+```
+
+#### 2.3 迁移脚本命名
+```markdown
+迁移脚本命名规范：
+V001__init_schema.sql
+V002__add_crm_fields.sql
+...
+```
+
+---
+
+### Step 3：设计后端API（backend_api_design.md）
+
+**必须包含：**
+
+#### 3.1 技术选型
+```markdown
+## 技术选型
+
+- 运行时：Node.js 18+（与现有profit-web一致）
+- 框架：Fastify（轻量高性能）
+- ORM：Prisma（与现有prisma一致，降低学习成本）
+- 数据库：PostgreSQL（腾讯云RDS或本地PostgreSQL）
+- 队列：Redis + Bull（异步任务：PDF生成/CRM推送）
+- 认证：JWT（给管理后台用）/ 无需认证（问卷提交端）
+```
+
+#### 3.2 API接口设计
+
+```markdown
+## API接口设计
+
+### 问卷提交（对外，H5调用）
+POST /api/v1/submissions
+Content-Type: application/json
+
+Request:
+{
+  "campaign_id": "uuid",
+  "company_name": "...",
+  "industry": "...",
+  "scale": "...",
+  "years": "...",
+  "contact_name": "...",
+  "contact_phone": "...",
+  "answers": [...],  // 原始答案数组
+  "utm_sales": "SHUIJIANG",
+  "duration_seconds": 180
+}
+
+Response (202 Accepted):
+{
+  "submission_id": "uuid",
+  "message": "提交成功，报告生成中",
+  "report_url": null  // 稍后轮询
+}
+
+### 报告状态查询
+GET /api/v1/submissions/:id/report
+
+Response:
+{
+  "status": "ready|generating|pending",
+  "pdf_url": "https://...",  // status=ready时返回
+  "expires_at": "2026-04-14T00:00:00Z"
+}
+
+### 预约提交
+POST /api/v1/bookings
+{
+  "submission_id": "uuid",
+  "contact_name": "...",
+  "contact_phone": "...",
+  "preferred_time": "工作日上午10点",
+  "note": "想聊渠道数字化"
+}
+
+### 管理后台：线索列表
+GET /api/v1/admin/submissions?page=1&limit=20&level=薄弱
+
+### 管理后台：更新CRM状态
+POST /api/v1/admin/submissions/:id/sync-crm
+```
+
+#### 3.3 异步任务设计
+```markdown
+## 异步任务（Bull队列）
+
+### 任务类型
+
+1. GenerateReportJob
+   - 输入：submission_id
+   - 处理：渲染PDF，存入/uploads/reports/
+   - 输出：更新reports表pdf_path
+
+2. SyncCrmJob
+   - 输入：submission_id
+   - 处理：调用纷享OpenAPI创建/更新线索
+   - 输出：更新submissions.crm_lead_id
+
+3. SendNotificationJob
+   - 输入：submission_id + type(email|sms|wechat)
+   - 处理：发送报告链接给客户
+```
+
+#### 3.4 目录结构
+```
+/opt/marketing-diag/
+├── api/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── submissions.ts
+│   │   │   ├── reports.ts
+│   │   │   ├── bookings.ts
+│   │   │   └── admin.ts
+│   │   ├── services/
+│   │   │   ├── scoring.ts        # 评分引擎（复用H5逻辑）
+│   │   │   ├── report.ts         # PDF生成
+│   │   │   ├── crm.ts            # 纷享CRM对接
+│   │   │   └── notification.ts
+│   │   ├── jobs/
+│   │   │   ├── report.ts
+│   │   │   └── crm.ts
+│   │   └── index.ts
+│   └── package.json
+├── prisma/
+│   └── schema.prisma
+├── uploads/
+│   └── reports/
+├── nginx/
+│   └── diag.conf
+└── pm2.config.js
+```
+
+---
+
+### Step 4：设计部署指南（deployment_guide.md）
+
+**必须包含：**
+
+#### 4.1 服务器准备
+```markdown
+## 服务器准备（腾讯云119.45.205.137）
+
+### 1. 安装PostgreSQL
+```bash
+sudo apt-get install postgresql postgresql-contrib
+sudo -u postgres psql
+CREATE DATABASE marketing_diag;
+CREATE USER diag_user WITH ENCRYPTED PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE marketing_diag TO diag_user;
+```
+
+### 2. 安装Redis
+```bash
+sudo apt-get install redis-server
+sudo systemctl enable redis-server
+```
+
+### 3. 克隆代码
+```bash
+mkdir -p /opt/marketing-diag
+cd /opt/marketing-diag
+git clone <repo_url> .
+npm install
+npx prisma migrate deploy
+npx prisma db seed  # 初始化默认campaign
+```
+
+### 4. 配置环境变量
+```bash
+# .env
+DATABASE_URL=postgresql://diag_user:password@localhost:5432/marketing_diag
+REDIS_URL=redis://localhost:6379
+FXIAOKE_APP_ID=your_app_id
+FXIAOKE_APP_SECRET=your_app_secret
+FXIAOKE_API_URL=https://open.fxiaoke.com
+JWT_SECRET=your_jwt_secret
+```
+```
+
+#### 4.2 Nginx配置
+```nginx
+server {
+    listen 80;
+    server_name 119.45.205.137;
+    
+    location /diag/ {
+        proxy_pass http://127.0.0.1:3090/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    
+    location /diag/uploads/ {
+        alias /opt/marketing-diag/uploads/;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+}
+```
+
+#### 4.3 PM2配置
 ```javascript
-// 雷达图数据结构（6个维度）
-var radarData = {
-  labels: ['市场定位', '获客渠道', '销售管道', '客户成功', '团队激励', '数字化'],
-  datasets: [{
-    values: [weighted_d1, weighted_d2, weighted_d3, weighted_d4, weighted_d5, weighted_d6],
-    max: [20, 20, 20, 15, 15, 10]  // 各维度满分
+// pm2.config.js
+module.exports = {
+  apps: [{
+    name: 'marketing-diag',
+    script: 'dist/index.js',
+    cwd: '/opt/marketing-diag/api',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3090
+    },
+    watch: false,
+    instances: 1,
+    autorestart: true
   }]
 };
 ```
 
-**SVG雷达图要求：**
-- 6边形雷达图（蜘蛛网格式）
-- 每个轴标注维度名称和当前得分/满分（如"市场定位 15/20"）
-- 得分区域填充半透明蓝色
-- 参考网格线（满分/75%/50%/25% 各一圈）
-- 纯SVG + JavaScript动态绑定数据，无外部依赖
-- 雷达图尺寸：300×300px，移动端居中显示
+#### 4.4 发布流程
+```bash
+# 1. 拉取代码
+cd /opt/marketing-diag && git pull
 
-### Step 3：升级报告页设计
+# 2. 数据库迁移
+npx prisma migrate deploy
 
-**整体风格：企业级专业报告**
+# 3. 重启服务
+pm2 restart marketing-diag
 
-```html
-<!-- 报告页结构 -->
-<div id="report-page">
-  <header class="report-header">
-    <h1>《企业营销能力诊断报告》</h1>
-    <div class="report-meta">
-      <span>{{公司名称}}</span>
-      <span>{{诊断日期}}</span>
-      <span>问卷编号：{{submission_id}}</span>
-    </div>
-  </header>
-  
-  <!-- 综合得分 -->
-  <div class="score-hero">
-    <div class="score-number">{{总分}}</div>
-    <div class="score-label">综合得分 / 100</div>
-    <div class="score-level">{{等级}}</div>
-  </div>
-  
-  <!-- 雷达图 -->
-  <div class="radar-section">
-    <h2>六维度能力雷达</h2>
-    <svg id="radar-chart" width="300" height="300"></svg>
-    <div class="radar-legend">
-      <!-- 各维度得分列表 -->
-    </div>
-  </div>
-  
-  <!-- TOP3问题 -->
-  <div class="top3-section">
-    <h2>核心问题 TOP3</h2>
-    <!-- 按加权分最低的3个维度生成 -->
-  </div>
-  
-  <!-- 预约CTA -->
-  <div class="cta-section">
-    <p>基于本次诊断，建议与营销专家进行30分钟一对一交流</p>
-    <a href="{{booking_url}}" class="btn-book">立即预约专家咨询</a>
-  </div>
-  
-  <!-- 导出按钮 -->
-  <button id="btn-export-pdf">导出PDF报告</button>
-</div>
+# 4. 验证
+curl http://127.0.0.1:3090/api/v1/health
 ```
 
-**设计要求：**
-- 报告页有独立CSS，风格：深蓝主色调，白色背景，专业报告感
-- 字体层级清晰（标题/正文/数据）
-- 雷达图区域有浅灰背景框
-- CTA按钮大且醒目（触屏友好）
+#### 4.5 门禁检查清单
+```markdown
+## 发布门禁（每次发布前必查）
 
-### Step 4：集成html2pdf.js
-
-使用CDN引入html2pdf.js（不超过200KB）：
-
-```html
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+- [ ] 数据库migration已执行
+- [ ] .env文件已配置
+- [ ] FXIAOKE API凭证有效
+- [ ] Nginx路由已更新
+- [ ] PM2进程健康
+- [ ] 健康检查接口返回200
+- [ ] 验证码机制已开启（防刷）
 ```
 
-**PDF导出功能：**
+---
 
-```javascript
-document.getElementById('btn-export-pdf').addEventListener('click', function() {
-  var element = document.getElementById('report-page');
-  var opt = {
-    margin: 10,
-    filename: '企业营销诊断报告_' + (state.basic.name || '企业') + '.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-  html2pdf().set(opt).from(element).save();
-});
+### Step 5：设计CRM跟进流程（crm_workflow.md）
+
+**必须包含：**
+
+#### 5.1 线索创建后的标准流程
+```markdown
+## 线索→商机的标准流程
+
+1. 客户提交问卷
+   → H5 POST /api/v1/submissions
+   → 后端计算分数
+   → 异步生成PDF
+   → 异步创建CRM线索
+
+2. 销售收到通知
+   → 纷享CRM内收到新线索
+   → 分配给对应销售（utm_sales映射）
+   → 标注：来源=营销诊断问卷
+
+3. 销售查看报告
+   → 登录管理后台
+   → 查看线索详情（分数+TOP3问题）
+   → 下载完整PDF报告
+
+4. 预约确认
+   → 客户预约后创建CRM任务
+   → 提醒销售准备
+   → 咨询完成后更新线索状态
+
+5. 商机转化
+   → 高分线索（≥70）转商机
+   → 推进标准销售流程
+   → 最终赢单/流失登记
 ```
 
-**要求：**
-- PDF文件名包含公司名称
-- A4竖版
-- 图片清晰度足够
-- 导出时按钮显示"正在生成..."状态
+#### 5.2 UTM追踪机制
+```markdown
+## UTM追踪（用于知道哪个销售带来的线索）
 
-### Step 5：预约链接配置化
-
-**要求：**
-- 在HTML文件顶部定义配置对象（销售可修改）：
-
-```javascript
-var CONFIG = {
-  companyName: '纷享销客·中西南',
-  bookingUrl: 'https://example.com/booking',  // 替换为实际预约链接
-  hotline: '400-XXX-XXXX',
-  reportTitle: '企业营销能力诊断报告'
-};
+### 生成追踪链接
+```
+https://your-domain.com/diag?campaign=q2&sales=SHUIJIANG
 ```
 
-- 预约按钮链接到`CONFIG.bookingUrl`（新窗口打开）
-- 联系信息（电话）从CONFIG读取
-- 报告中公司名称从`state.basic.name`读取
+参数：
+- campaign: 活动ID
+- sales: 销售工号
 
-### Step 6：其他升级
+### 追踪流程
+1. 销售在CRM导出专属链接/二维码
+2. 客户扫码 → 自动携带sales参数
+3. 问卷提交时记录utm_sales
+4. CRM线索关联销售工号
+5. 月底统计各销售带来线索数量和质量
+```
 
-**必做：**
-- 进度条调整：总题数从26变为30（4基础+26能力）
-- 基础信息收集后，点击"开始答题"按钮才进入QB1
-- 报告页显示公司名称（在标题旁）
-- 联系信息（Q26）中联系电话从CONFIG读取
+#### 5.3 销售管理后台功能
+```markdown
+## 管理后台功能（非公开，销售内部使用）
 
-**可选（若时间允许）：**
-- 增加答题时长统计（报告中显示"答题时长X分钟"）
-- 报告中增加"同类企业对比"（模拟数据）
+### 基础功能
+- 线索列表（支持筛选：活动/销售/等级/日期）
+- 线索详情（查看答案/分数/报告）
+- 手动同步CRM状态
+
+### 高级功能（Phase 2）
+- 导出Excel
+- 批量操作
+- 数据看板（提交量/完成率/预约率/转化率）
+```
 
 ---
 
 ## 非目标
 
-- 不修改与本任务无关的脚本逻辑
-- 不接入后端API（线索仍为演示alert）
-- 不做CRM对接（Phase 2才做）
-- 不修改`questionnaire_design.md`（保持独立文档）
+- 不实际部署（设计文档，Agent1/2按此开发）
+- 不获取真实的纷享AppId/AppSecret（文档里标注为待确认）
+- 不写实际代码（只写接口设计和Schema）
 
 ---
 
@@ -244,23 +572,10 @@ var CONFIG = {
 
 ## 验收标准自检清单
 
-- [ ] 双击HTML可直接打开
-- [ ] 第一屏显示企业基本信息4题，填写后进入能力题
-- [ ] 进度条正确（0～30题）
-- [ ] 雷达图SVG动态生成，数据与得分一致
-- [ ] 点击"导出PDF"可下载A4 PDF文件（文件名含公司名）
-- [ ] 预约按钮链接到CONFIG.bookingUrl
-- [ ] 报告页显示公司名称
-- [ ] 移动端（375px）布局正常
-- [ ] 企业微信打开无问题
-
----
-
-## 加分项（完成后额外加分）
-
-以下为"做了就更好"的功能，不做不影响验收：
-
-- [ ] 雷达图有动画效果（从中心展开到各点）
-- [ ] PDF导出有loading动画
-- [ ] 报告中显示"行业Benchmark参考"（模拟数据，标注"样本量N=XX"）
-- [ ] 分享截图按钮（一键生成分享图片）
+- [ ] openapi_integration.md：字段映射完整，包含Request示例和待确认清单
+- [ ] database_schema.md：5张表DDL完整，包含索引和约束
+- [ ] backend_api_design.md：4个API + 3个异步任务 + 目录结构
+- [ ] deployment_guide.md：PostgreSQL/Redis/Nginx/PM2/门禁清单
+- [ ] crm_workflow.md：5步流程 + UTM追踪 + 后台功能
+- [ ] 所有文件路径在 `marketing_diagnosis/system/` 下
+- [ ] check-collab.sh通过

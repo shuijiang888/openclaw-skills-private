@@ -48,3 +48,10 @@
 - 新增：html2pdf.js PDF导出（A4，含公司名称）
 - 新增：配置化（CONFIG对象，销售可自定义预约链接）
 - 加分项：雷达图动画/PDF loading动画/行业Benchmark/分享图
+
+## v1.8（collab-009）
+
+- 新增：企业营销诊断系统完整设计文档
+- 输出：openapi_integration + database_schema + backend_api + deployment_guide + crm_workflow
+- 目标：从H5→完整系统，Agent1/2可照此直接开发部署
+- 里程碑：腾讯云部署，/diag/*路由，纷享CRM OpenAPI对接
