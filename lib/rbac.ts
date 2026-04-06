@@ -6,7 +6,13 @@
 
 import { prisma } from "@/lib/prisma";
 
-export type RbacRole = "SALES_MANAGER" | "SALES_DIRECTOR" | "SALES_VP" | "GM" | "ADMIN" | "SUPER_ADMIN";
+export type RbacRole =
+  | "SALES_MANAGER"
+  | "SALES_DIRECTOR"
+  | "SALES_VP"
+  | "GM"
+  | "ADMIN"
+  | "SUPER_ADMIN";
 
 export type DataScope = {
   mode: "own" | "team" | "all";
@@ -45,7 +51,7 @@ export async function resolveDataScope(userId: string, role: RbacRole): Promise<
 
     return {
       mode: "team",
-      ownerIds: teamMembers.map(m => m.id),
+      ownerIds: teamMembers.map((m) => m.id),
     };
   }
 
@@ -70,7 +76,15 @@ export function scopeToWhereClause(scope: DataScope): Record<string, unknown> {
  * 检查用户是否有权访问指定页面/功能
  */
 export function canAccessRoute(role: RbacRole, route: string): boolean {
-  const OPEN_ROUTES = ["/", "/about", "/dashboard", "/projects", "/compass", "/data-screen", "/login"];
+  const OPEN_ROUTES = [
+    "/",
+    "/about",
+    "/dashboard",
+    "/projects",
+    "/compass",
+    "/data-screen",
+    "/login",
+  ];
   const DIRECTOR_PLUS = ["/roadmap", "/strategy"];
   const BACKOFFICE = ["/console"];
   const ADMIN_ONLY = ["/console/rules", "/console/agent-audit"];

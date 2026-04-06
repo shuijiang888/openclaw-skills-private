@@ -81,18 +81,18 @@ model CompassItem {
 
 /// 罗盘四象限划分阈值（单例 id=default）：高毛利 / 高增长的百分数阈值
 model CompassQuadrantThreshold {
-  id             String   @id
-  marginHighPct  Float
-  growthHighPct  Float
-  updatedAt      DateTime @updatedAt
+  id            String   @id
+  marginHighPct Float
+  growthHighPct Float
+  updatedAt     DateTime @updatedAt
 }
 
 /// 罗盘「对策矩阵」阈值规则（种子初始化，一期后台只读展示；生产可接配置页）
 model CompassAlertRule {
-  id              String @id @default(cuid())
-  conditionLabel  String
-  actionLabel     String
-  sortOrder       Int    @default(0)
+  id             String @id @default(cuid())
+  conditionLabel String
+  actionLabel    String
+  sortOrder      Int    @default(0)
 }
 
 /// A2：助手/审批等关键操作的审计日志（5字段标准：who/when/what/why/requestId）
@@ -127,35 +127,35 @@ model Team {
 
 /// 会话登录（PROFIT_AUTH_MODE=session）
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String   @default("")
-  passwordHash String
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  name                  String     @default("")
+  passwordHash          String
   /// 业务角色：SALES_MANAGER | SALES_DIRECTOR | SALES_VP | GM | ADMIN | SUPER_ADMIN
-  role         String   @default("SALES_DIRECTOR")
-  mobile       String   @default("")
-  isActive     Boolean  @default(true)
-  isSuperAdmin Boolean  @default(false)
-  teamId       String?
-  team         Team?    @relation(fields: [teamId], references: [id])
+  role                  String     @default("SALES_DIRECTOR")
+  mobile                String     @default("")
+  isActive              Boolean    @default(true)
+  isSuperAdmin          Boolean    @default(false)
+  teamId                String?
+  team                  Team?      @relation(fields: [teamId], references: [id])
   /// 智探007 组织归属（可为空）
-  orgUnitId    String?
-  orgUnit      ZtOrgUnit? @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
+  orgUnitId             String?
+  orgUnit               ZtOrgUnit? @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
   /// 用户侧交互调用大模型权限（仍受系统总开关约束）
-  ztAllowInteractiveLlm Boolean @default(true)
+  ztAllowInteractiveLlm Boolean    @default(true)
   /// 首次登录强制改密（批量初始化账号默认开启）
-  mustChangePassword    Boolean  @default(false)
+  mustChangePassword    Boolean    @default(false)
   passwordChangedAt     DateTime?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   ztPointWallet          ZtPointWallet?
   ztPointLedgers         ZtPointLedger[]
   ztSubmissions          ZtSubmission[]
   ztRedemptions          ZtRedemption[]
   ztRankChanges          ZtRankChangeLog[]
-  ztSystemConfigsUpdated ZtSystemConfig[] @relation("ZtConfigUpdatedBy")
+  ztSystemConfigsUpdated ZtSystemConfig[]  @relation("ZtConfigUpdatedBy")
 }
 
 /// 智探007 组织单元（可扩展为多租户/多层级组织）
@@ -194,37 +194,37 @@ model ZtSignal {
 
 /// 智探007：今日行动卡
 model ZtActionCard {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   title        String
   reason       String
   suggestion   String
-  priority     String   @default("P1")
-  status       String   @default("OPEN")
-  assignedRole String   @default("SALES_DIRECTOR")
-  rewardPoints Int      @default(10)
+  priority     String    @default("P1")
+  status       String    @default("OPEN")
+  assignedRole String    @default("SALES_DIRECTOR")
+  rewardPoints Int       @default(10)
   dueAt        DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([assignedRole, status])
 }
 
 /// 智探007：任务悬赏
 model ZtBountyTask {
-  id           String   @id @default(cuid())
-  intelDefId   String?
+  id              String             @id @default(cuid())
+  intelDefId      String?
   intelDefinition ZtIntelDefinition? @relation(fields: [intelDefId], references: [id], onDelete: SetNull)
-  title        String
-  description  String
-  taskType     String   @default("tactical")
-  rewardPoints Int      @default(30)
-  status       String   @default("OPEN")
-  reviewNote   String   @default("")
-  reviewedByRole String?
-  reviewedAt   DateTime?
-  deadlineAt   DateTime?
-  createdAt    DateTime @default(now())
-  submissions  ZtSubmission[]
+  title           String
+  description     String
+  taskType        String             @default("tactical")
+  rewardPoints    Int                @default(30)
+  status          String             @default("OPEN")
+  reviewNote      String             @default("")
+  reviewedByRole  String?
+  reviewedAt      DateTime?
+  deadlineAt      DateTime?
+  createdAt       DateTime           @default(now())
+  submissions     ZtSubmission[]
 
   @@index([status, createdAt])
   @@index([intelDefId, status, createdAt])
@@ -232,24 +232,24 @@ model ZtBountyTask {
 
 /// 智探007：任务/自由情报提交
 model ZtSubmission {
-  id           String       @id @default(cuid())
-  taskId       String?
-  task         ZtBountyTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  intelDefId   String?
+  id              String             @id @default(cuid())
+  taskId          String?
+  task            ZtBountyTask?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  intelDefId      String?
   intelDefinition ZtIntelDefinition? @relation(fields: [intelDefId], references: [id], onDelete: SetNull)
-  title        String
-  content      String
-  signalType   String       @default("tactical")
-  region       String       @default("")
-  format       String       @default("text")
-  extraJson    String       @default("{}")
-  userId       String?
-  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-  actorName    String       @default("")
-  actorRole    String       @default("SALES_DIRECTOR")
-  status       String       @default("PENDING")
-  pointsGranted Int         @default(0)
-  createdAt    DateTime     @default(now())
+  title           String
+  content         String
+  signalType      String             @default("tactical")
+  region          String             @default("")
+  format          String             @default("text")
+  extraJson       String             @default("{}")
+  userId          String?
+  user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorName       String             @default("")
+  actorRole       String             @default("SALES_DIRECTOR")
+  status          String             @default("PENDING")
+  pointsGranted   Int                @default(0)
+  createdAt       DateTime           @default(now())
 
   @@index([actorRole, createdAt])
   @@index([userId, createdAt])
@@ -273,25 +273,25 @@ model ZtIntelDefinition {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
-  bountyTasks  ZtBountyTask[]
-  submissions  ZtSubmission[]
+  bountyTasks ZtBountyTask[]
+  submissions ZtSubmission[]
 
   @@index([isActive, sortOrder, createdAt])
 }
 
 /// 智探007：角色积分钱包（MVP 按角色汇总）
 model ZtPointWallet {
-  id                String   @id @default(cuid())
-  actorRole         String?  @unique
-  userId            String?  @unique
-  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  points            Int      @default(0)
-  lifetimePoints    Int      @default(0)
-  rank              String   @default("战士")
-  rankLevel         Int      @default(1)
+  id                String    @id @default(cuid())
+  actorRole         String?   @unique
+  userId            String?   @unique
+  user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  points            Int       @default(0)
+  lifetimePoints    Int       @default(0)
+  rank              String    @default("战士")
+  rankLevel         Int       @default(1)
   lastRankChangedAt DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([points, updatedAt])
 }
@@ -317,17 +317,17 @@ model ZtPointLedger {
 
 /// 智探007：积分兑换申请（线下核销）
 model ZtRedemption {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   actorRole     String
   userId        String?
-  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  actorName     String   @default("")
-  rankAtRequest String   @default("战士")
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorName     String    @default("")
+  rankAtRequest String    @default("战士")
   item          String
   pointsCost    Int
-  redeemCode    String   @unique
-  status        String   @default("REQUESTED")
-  createdAt     DateTime @default(now())
+  redeemCode    String    @unique
+  status        String    @default("REQUESTED")
+  createdAt     DateTime  @default(now())
   verifiedAt    DateTime?
 
   @@index([actorRole, createdAt])

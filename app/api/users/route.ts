@@ -2,12 +2,23 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { canPerformAction, type RbacRole } from "@/lib/rbac";
 import { demoRoleFromRequest } from "@/lib/http";
+import { isSessionAuthMode } from "@/lib/auth-mode";
+import { parseDemoRole } from "@/lib/approval";
 import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
 
+function requestRbacRole(req: Request): RbacRole {
+  if (isSessionAuthMode()) {
+    const role = parseDemoRole(req.headers.get("x-profit-session-role"));
+    return role === "ADMIN" ? "ADMIN" : role;
+  }
+  const role = demoRoleFromRequest(req);
+  return role === "ADMIN" ? "ADMIN" : role;
+}
+
 export async function GET(req: Request) {
-  const role = (demoRoleFromRequest(req) ?? "SALES_DIRECTOR") as RbacRole;
+  const role = requestRbacRole(req);
   if (!canPerformAction(role, "user:manage")) {
     return NextResponse.json({ error: "无权限访问用户管理" }, { status: 403 });
   }
@@ -33,7 +44,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const role = (demoRoleFromRequest(req) ?? "SALES_DIRECTOR") as RbacRole;
+  const role = requestRbacRole(req);
   if (!canPerformAction(role, "user:manage")) {
     return NextResponse.json({ error: "无权限创建用户" }, { status: 403 });
   }

@@ -19,3 +19,10 @@ export function ztRoleFromRequest(req: Request): ZtUserRole {
   // 演示模式下，沿用 demo role
   return parseZtUserRole(req.headers.get("x-demo-role"));
 }
+
+/** 会话模式下由中间件注入的 userId；演示模式返回 null */
+export function sessionUserIdFromRequest(req: Request): string | null {
+  if (!isSessionAuthMode()) return null;
+  const id = (req.headers.get("x-profit-session-user-id") ?? "").trim();
+  return id.length > 0 ? id : null;
+}
