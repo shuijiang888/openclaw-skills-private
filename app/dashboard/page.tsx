@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
+import { DashboardAnalytics } from "@/components/DashboardAnalytics";
 import { PageContainer } from "@/components/PageContainer";
+import { QuickActionPanel } from "@/components/QuickActionPanel";
 import { RoleHomePanel } from "@/components/RoleHomePanel";
 import { SystemHero } from "@/components/SystemHero";
 import { computePortfolioMetrics } from "@/lib/metrics";
@@ -67,6 +69,7 @@ export default async function DashboardPage({
           演示模式请将右上角「试点角色」切换为「总经理」或「管理员」；登录模式请使用具备后台权限的账号。
         </div>
       ) : null}
+      <QuickActionPanel />
       <RoleHomePanel />
       <SystemHero
         badge="经营简报"
@@ -274,6 +277,7 @@ export default async function DashboardPage({
         </div>
         <span className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-bold text-white backdrop-blur">进入大屏 →</span>
       </Link>
+      <DashboardAnalytics />
       <p className="text-xs text-slate-500">
         设计文档 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">docs/DESIGN.md</code>
         ；战略打包{" "}

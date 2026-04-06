@@ -22,6 +22,8 @@ import {
 } from "@/lib/demo-role-modules";
 import type { CoeffPatch } from "@/lib/quote-natural-language";
 import { parseTimeline } from "@/lib/timeline";
+import { ApprovalFlowChart } from "@/components/charts/ApprovalFlowChart";
+import { CustomerProfileCard } from "@/components/CustomerProfileCard";
 import { withClientBasePath } from "@/lib/client-url";
 
 type EnrichedQuote = {
@@ -65,6 +67,7 @@ type ProjectDTO = {
   name: string;
   status: string;
   productName: string;
+  customerId: string;
   quantity: number;
   leadDays: number;
   isStandard: boolean;
@@ -348,6 +351,7 @@ export function Workbench({ projectId }: { projectId: string }) {
 
       <div className="xl:grid xl:grid-cols-[1fr_minmax(300px,380px)] xl:items-start xl:gap-8">
         <div className="min-w-0 space-y-6">
+          <CustomerProfileCard customerId={data.customerId} />
           <div className="grid gap-4 lg:grid-cols-3">
         <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-1">
           <h2 className="text-sm font-medium text-zinc-500">项目摘要</h2>
@@ -735,6 +739,16 @@ export function Workbench({ projectId }: { projectId: string }) {
               : " · 请在右上角将「试点角色」切换为不低于该档后再审批（登录模式请换具备权限的账号）"}
           </p>
         ) : null}
+        <div className="mt-4 rounded-lg border border-zinc-100 bg-zinc-50/60 p-3 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <h3 className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+            审批流程可视化
+          </h3>
+          <ApprovalFlowChart
+            currentRole={q.pendingRole}
+            approvedPrice={q.approvedPrice}
+            status={data.status}
+          />
+        </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
             type="button"
