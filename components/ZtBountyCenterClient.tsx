@@ -497,14 +497,37 @@ export function ZtBountyCenterClient() {
     setError("");
     setMessage("");
     try {
+      const requiredFields = selectedIntelDef?.requiredFields ?? [];
+      const requiredFieldSet = new Set(requiredFields);
+      const normalizedQuick = normalizeByIntelDef(intelDefs, form.intelDefId, {
+        signalType: form.signalType,
+        format: form.format,
+      });
       const payloadBody = quickMode
-        ? {
-            intelDefId: form.intelDefId,
-            title: form.title.trim(),
-            content: form.content.trim(),
-            taskId: form.taskId || undefined,
-            extraFields: form.extraFields,
-          }
+        ? (() => {
+            const extraFields = { ...form.extraFields };
+            for (const field of requiredFields) {
+              if (BUILTIN_SUBMISSION_FIELDS.has(field)) continue;
+              const value = String(extraFields[field] ?? "").trim();
+              if (!value) {
+                // 极速模式允许先上报主线索，结构化字段可后续补全。
+                extraFields[field] = "极速上报-待补充";
+              }
+            }
+            const quickRegion = form.region.trim();
+            return {
+              intelDefId: form.intelDefId,
+              title: form.title.trim(),
+              content: form.content.trim(),
+              taskId: form.taskId || undefined,
+              region:
+                quickRegion ||
+                (requiredFieldSet.has("region") ? "极速上报-待补充" : ""),
+              signalType: normalizedQuick.signalType,
+              format: normalizedQuick.format,
+              extraFields,
+            };
+          })()
         : {
             ...form,
             taskId: form.taskId || undefined,
