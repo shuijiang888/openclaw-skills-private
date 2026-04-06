@@ -226,6 +226,7 @@ npm run rollback:zt
 - `release:profit`：`release:preflight` → `smoke:profit` → `gate:nginx` → 部署 → `gate:sha` → `smoke:profit`。
 - `release:zt`：`gate:nginx` → `release:preflight` → `smoke:zt` → `prisma db push`（可关）→ 部署 → `gate:sha`。
 - `rollback:*`：执行远端 `git reset --hard <target>` + 更新 bare `main` 引用，再做 SHA 与对应系统 smoke 校验。
+- `gate:nginx` 新增硬门禁：`nginx.conf` 必须包含 `include /etc/nginx/default.d/*.conf;`，否则直接失败，防止 `/profit/*` 路由失效造成“看似回滚”。
 
 关键环境变量：
 - `BASE_URL`（默认 `http://119.45.205.137`）
