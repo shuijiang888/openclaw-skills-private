@@ -10,6 +10,45 @@ const ROLE_BASE_POINTS: Record<string, number> = {
   ADMIN: 220,
 };
 
+const DEFAULT_INTEL_DEFINITIONS = [
+  {
+    code: "COMPETITOR_PRICE",
+    name: "竞品价格异动",
+    category: "MARKET",
+    description: "采集竞品折扣、促销与报价异常，辅助任务悬赏与行动卡策略。",
+    requiredFields: ["title", "content", "region", "competitor", "evidence"],
+    allowedSignalTypes: ["tactical", "strategic"],
+    allowedFormats: ["text", "image", "link"],
+    taskTemplateHint: "请附竞品名称、报价变化、来源链接/截图与影响客户。",
+    defaultRewardPoints: 8,
+    sortOrder: 10,
+  },
+  {
+    code: "DECISION_CHANGE",
+    name: "决策链异动",
+    category: "CUSTOMER",
+    description: "识别关键岗位变动、预算窗口变化、组织重组等决策链情报。",
+    requiredFields: ["title", "content", "region", "customerName", "nextAction"],
+    allowedSignalTypes: ["strategic", "forecast"],
+    allowedFormats: ["text", "voice", "link"],
+    taskTemplateHint: "重点标注岗位变动时间、影响范围和建议下一步动作。",
+    defaultRewardPoints: 10,
+    sortOrder: 20,
+  },
+  {
+    code: "DELIVERY_RISK",
+    name: "交付风险预警",
+    category: "DELIVERY",
+    description: "跟踪交付延期、质量事件、核心器件风险等战情热点。",
+    requiredFields: ["title", "content", "region", "impactLevel", "evidence"],
+    allowedSignalTypes: ["risk", "tactical"],
+    allowedFormats: ["text", "image", "video", "link"],
+    taskTemplateHint: "需明确风险等级、影响客户和建议缓解动作。",
+    defaultRewardPoints: 12,
+    sortOrder: 30,
+  },
+] as const;
+
 export async function ensureZt007Seed(prisma: PrismaClient) {
   await prisma.ztSystemConfig.upsert({
     where: { id: "default" },
@@ -40,6 +79,42 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
       },
     });
   }
+
+  for (const def of DEFAULT_INTEL_DEFINITIONS) {
+    await prisma.ztIntelDefinition.upsert({
+      where: { code: def.code },
+      update: {
+        name: def.name,
+        category: def.category,
+        description: def.description,
+        requiredFieldsJson: JSON.stringify(def.requiredFields),
+        allowedSignalTypesJson: JSON.stringify(def.allowedSignalTypes),
+        allowedFormatsJson: JSON.stringify(def.allowedFormats),
+        taskTemplateHint: def.taskTemplateHint,
+        defaultRewardPoints: def.defaultRewardPoints,
+        isActive: true,
+        sortOrder: def.sortOrder,
+      },
+      create: {
+        code: def.code,
+        name: def.name,
+        category: def.category,
+        description: def.description,
+        requiredFieldsJson: JSON.stringify(def.requiredFields),
+        allowedSignalTypesJson: JSON.stringify(def.allowedSignalTypes),
+        allowedFormatsJson: JSON.stringify(def.allowedFormats),
+        taskTemplateHint: def.taskTemplateHint,
+        defaultRewardPoints: def.defaultRewardPoints,
+        isActive: true,
+        sortOrder: def.sortOrder,
+      },
+    });
+  }
+  const intelDefs = await prisma.ztIntelDefinition.findMany({
+    where: { isActive: true },
+    select: { id: true, code: true },
+  });
+  const intelDefIdByCode = new Map(intelDefs.map((x) => [x.code, x.id]));
 
   const roleWallets = await prisma.ztPointWallet.findMany({
     where: { userId: null, actorRole: { not: null } },
@@ -88,6 +163,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
     await prisma.ztBountyTask.createMany({
       data: [
         {
+          intelDefId: intelDefIdByCode.get("DECISION_CHANGE") ?? null,
           title: "华南制造业 CIO 人事变动线索征集",
           description: "聚焦广州/深圳制造企业，提交来源链接、截图与变动时间。",
           taskType: "strategic",
@@ -96,6 +172,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
           deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         },
         {
+          intelDefId: intelDefIdByCode.get("COMPETITOR_PRICE") ?? null,
           title: "华东竞品降价策略监测",
           description: "收集上海/苏州/杭州重点客户相关竞品折扣、促销与投标动作。",
           taskType: "tactical",
@@ -104,6 +181,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
           deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
         },
         {
+          intelDefId: intelDefIdByCode.get("DELIVERY_RISK") ?? null,
           title: "新能源车厂供应链风险情报",
           description: "追踪交付延期、核心器件短缺、质量事故等风险点并标注影响客户。",
           taskType: "risk",
@@ -112,6 +190,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
           deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10),
         },
         {
+          intelDefId: intelDefIdByCode.get("DECISION_CHANGE") ?? null,
           title: "医疗行业标杆案例话术沉淀",
           description: "提交可复用赢单话术模板，需包含场景、突破点、提问脚本。",
           taskType: "knowledge",
@@ -120,6 +199,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
           deadlineAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
         },
         {
+          intelDefId: intelDefIdByCode.get("DECISION_CHANGE") ?? null,
           title: "西南区域重点客户预算窗口预判",
           description: "围绕成都/重庆目标客户，提交预算释放周期与决策链线索。",
           taskType: "forecast",
@@ -159,6 +239,7 @@ export async function ensureZt007Seed(prisma: PrismaClient) {
   }
 
   return {
+    intelDefinitions: await prisma.ztIntelDefinition.count(),
     wallets: await prisma.ztPointWallet.count(),
     actionCards: await prisma.ztActionCard.count(),
     tasks: await prisma.ztBountyTask.count(),

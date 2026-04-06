@@ -46,13 +46,18 @@ export function ZtSystemConfigEditor({
   }, [data]);
 
   useEffect(() => {
+    if (initial) return;
     let cancelled = false;
     (async () => {
       try {
         const r = await fetch(withClientBasePath("/api/console/zt/system-config"), {
+          credentials: "include",
           headers: { ...demoHeaders() },
         });
-        if (!r.ok) throw new Error("加载失败");
+        if (!r.ok) {
+          const j = (await r.json().catch(() => ({}))) as { error?: string };
+          throw new Error(j.error ?? "加载失败");
+        }
         const j = (await r.json()) as ZtSystemConfig;
         if (!cancelled) setData(j);
       } catch (e) {
@@ -62,7 +67,7 @@ export function ZtSystemConfigEditor({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initial]);
 
   async function save() {
     if (!data) return;

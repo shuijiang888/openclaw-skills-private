@@ -20,7 +20,7 @@ const ALLOWED_STATUSES = new Set([
 
 export async function GET(req: Request) {
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const rows = await prisma.ztRedemption.findMany({
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const body = (await req.json().catch(() => null)) as PatchPayload | null;

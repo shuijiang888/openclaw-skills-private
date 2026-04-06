@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { CoverGate } from "@/components/CoverGate";
+import { SystemHero } from "@/components/SystemHero";
 import { PLATFORM_AUTH_COOKIE } from "@/lib/session-cookie";
 import { verifyGateAuthToken } from "@/lib/gate-auth";
 
@@ -15,11 +16,11 @@ type PortalCard = {
 
 const portalCards: PortalCard[] = [
   {
-    title: "首页门户",
-    subtitle: "Home Portal",
-    description: "统一入口与任务导航，支持多系统快速切换与状态总览。",
-    href: "/",
-    cta: "当前页",
+    title: "健康检查",
+    subtitle: "Health Check",
+    description: "全体 Agent 共享能力入口：统一检查接口状态、关键依赖与可用性。",
+    href: "/health-check",
+    cta: "进入健康检查",
   },
   {
     title: "智能盈利管理系统",
@@ -37,10 +38,10 @@ const portalCards: PortalCard[] = [
     cta: "进入智探007",
   },
   {
-    title: "CRM连接型管理",
-    subtitle: "CRM Connector",
-    description: "CRM 协同能力预留模块，待后续对接后启用。",
-    href: "/crm",
+    title: "SKILL大市场（高价值、好生态、等你来）",
+    subtitle: "SKILL Marketplace",
+    description: "高价值能力与生态协同预留模块，后续将逐步开放入驻与连接。",
+    href: "/profit/crm",
     cta: "即将上线",
   },
 ];
@@ -55,34 +56,12 @@ export default async function LandingPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-10 sm:space-y-10 sm:pb-14">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-700/40 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-5 py-10 text-white shadow-xl shadow-slate-900/20 sm:px-8 sm:py-12 lg:px-10">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_60%_-10%,rgba(56,189,248,0.18),transparent)]" />
-        <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="relative z-10">
-          <p className="inline-flex rounded-full border border-cyan-300/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-cyan-100">
-            Unified Entry Portal
-          </p>
-          <h1 className="mt-4 text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl">
-            AI价值服务作战平台
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            统一门户集中管理盈利系统、智探007与后续 CRM 连接能力，
-            支持多端访问与清晰分层导航。
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-300">
-            {["Mobile Ready", "Pad Ready", "Desktop Ready", "Role-aware"].map(
-              (tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1"
-                >
-                  {tag}
-                </span>
-              ),
-            )}
-          </div>
-        </div>
-      </section>
+      <SystemHero
+        eyebrow="Unified Entry Portal"
+        title="AI价值服务作战平台"
+        description="统一门户集中管理盈利系统、智探007与后续 CRM 连接能力，支持多端访问与清晰分层导航。"
+        tags={["Mobile Ready", "Pad Ready", "Desktop Ready", "Role-aware"]}
+      />
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">

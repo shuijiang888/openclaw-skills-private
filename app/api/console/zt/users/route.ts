@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const rows = await prisma.user.findMany({
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const body = (await req.json().catch(() => null)) as
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const ctx = getRequestUserContext(req);
-  if (!ctx.isAdminLike) {
+  if (!ctx.isZtManager) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const config = await getZtSystemConfig();

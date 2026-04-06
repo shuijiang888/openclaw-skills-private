@@ -123,22 +123,22 @@ export function ZtHonorCenterClient() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+      <section className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-950/90 via-slate-900/85 to-cyan-950/40 p-4 shadow-lg shadow-cyan-900/10">
         <h2 className="text-lg font-semibold text-cyan-200">荣誉积分中心</h2>
         <div className="mt-2 grid gap-2 sm:grid-cols-3">
-          <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+          <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-3">
             <p className="text-xs text-slate-400">当前军衔</p>
             <p className="mt-1 text-base font-semibold text-slate-100">
               {overview?.rank ?? "-"}
             </p>
           </div>
-          <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+          <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-3">
             <p className="text-xs text-slate-400">当前积分</p>
             <p className="mt-1 text-base font-semibold text-slate-100">
               {overview?.points ?? 0}
             </p>
           </div>
-          <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+          <div className="rounded-xl border border-slate-700/80 bg-slate-950/60 p-3">
             <p className="text-xs text-slate-400">升级还需</p>
             <p className="mt-1 text-base font-semibold text-slate-100">
               {overview?.nextRankAt ? overview.progressToNext : "已最高"}
@@ -148,7 +148,7 @@ export function ZtHonorCenterClient() {
       </section>
 
       <form
-        className="grid gap-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4 sm:grid-cols-3"
+        className="grid gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/70 p-4 shadow-lg shadow-slate-900/15 sm:grid-cols-3"
         onSubmit={redeem}
       >
         <select
@@ -195,7 +195,7 @@ export function ZtHonorCenterClient() {
         {items.map((r) => (
           <div
             key={r.id}
-            className="rounded-lg border border-slate-700 bg-slate-950/60 p-3"
+            className="rounded-xl border border-slate-700/80 bg-slate-950/70 p-3 transition hover:border-cyan-500/40"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium text-slate-100">{r.item}</p>

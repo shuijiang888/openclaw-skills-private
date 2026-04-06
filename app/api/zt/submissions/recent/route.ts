@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const ctx = getRequestUserContext(req);
     const role = ztRoleFromRequest(req);
     const rows = await prisma.ztSubmission.findMany({
-      where: ctx.isAdminLike
+      where: ctx.isZtManager
         ? undefined
         : ctx.userId
           ? { userId: ctx.userId }

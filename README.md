@@ -176,6 +176,24 @@ npm run db:seed:reference
 curl -s http://127.0.0.1:3000/api/health
 ```
 
+### 发布防事故 + 验收脚本（P2）
+
+```bash
+# 本机预检（默认会构建 + 门禁校验 + 关键接口 smoke）
+npm run release:preflight
+
+# 若只做接口预检可跳过构建
+SKIP_BUILD=1 npm run release:preflight
+
+# 智探007验收脚本（默认线上地址，可传自定义 BASE_URL）
+npm run zt:acceptance
+npm run zt:acceptance -- http://127.0.0.1:3000
+```
+
+脚本要点：
+- `release:preflight`：检查分支祖先关系、工作区洁净、构建、门禁认证、关键 API 200、监控非 critical。
+- `zt:acceptance`：覆盖门禁、总览、行动卡、悬赏、提交反馈、个人工作台、作战大屏、监控、维护后台接口。
+
 ### Docker 部署（生产发布）
 
 仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
 import { PageContainer } from "@/components/PageContainer";
 import { RoleHomePanel } from "@/components/RoleHomePanel";
+import { SystemHero } from "@/components/SystemHero";
 import { computePortfolioMetrics } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
 
@@ -67,17 +68,11 @@ export default async function DashboardPage({
         </div>
       ) : null}
       <RoleHomePanel />
-      <div className="rounded-2xl border border-slate-200/90 bg-white/80 px-5 py-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
-        <p className="text-[11px] font-semibold tracking-wide text-amber-800 dark:text-amber-400">
-          经营简报
-        </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          工作台 · 经营概览
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          一眼看到利润风险池、自动化潜力与审批队列。对外汇报时可配合「战略全文」中的价值叙事使用。
-        </p>
-      </div>
+      <SystemHero
+        badge="经营简报"
+        title="工作台 · 经营概览"
+        description="一眼看到利润风险池、自动化潜力与审批队列。对外汇报时可配合「战略全文」中的价值叙事使用。"
+      />
 
       <BossBriefingCard />
 
@@ -189,6 +184,38 @@ export default async function DashboardPage({
           ),
         )}
       </div>
+
+      <section className="rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/95 via-white to-slate-50/90 p-5 shadow-sm dark:border-cyan-900/30 dark:from-cyan-950/35 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              共享能力 · Agent工具卡
+            </h2>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              以下能力为所有 agent 通用，可用于发布前检查与联调验收。
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            href="/health-check"
+            className="rounded-xl border border-cyan-200/90 bg-white/95 p-4 shadow-sm transition hover:border-cyan-300 hover:shadow dark:border-cyan-800/60 dark:bg-slate-950/50 dark:hover:border-cyan-700"
+          >
+            <p className="text-xs font-semibold tracking-wide text-cyan-700 dark:text-cyan-300">
+              SHARED CAPABILITY
+            </p>
+            <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+              健康检查
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+              统一检查系统接口、服务状态与关键依赖，建议在发布前与回归后各执行一次。
+            </p>
+            <p className="mt-3 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+              打开健康检查 →
+            </p>
+          </Link>
+        </div>
+      </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">

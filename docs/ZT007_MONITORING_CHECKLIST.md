@@ -1,6 +1,7 @@
 # 智探007监控与告警清单（P2）
 
 ## 关键接口（每5分钟）
+- `GET /api/zt/monitoring`（聚合探针 + 一致性 + 告警结论）
 - `GET /api/zt/overview`
 - `GET /api/zt/action-cards`
 - `GET /api/zt/bounty-tasks`
@@ -21,4 +22,8 @@
 1. 执行：`scripts/release-preflight.sh`
 2. 执行：`scripts/zt-acceptance.sh`
 3. 打开：`/health-check`，确认智探模块全部通过
+
+## 自动化命令
+- `npm run release:preflight`
+- `npm run zt:acceptance`
 

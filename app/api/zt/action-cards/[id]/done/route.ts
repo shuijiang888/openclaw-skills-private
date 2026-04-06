@@ -13,11 +13,20 @@ export async function POST(req: Request, { params }: Params) {
     await ensureZtBootstrap();
     const { id } = await params;
     const actorRole = ztRoleFromRequest(req);
-    const candidateRoles = actorRoleCandidatesForZt(actorRole);
     const userCtx = getRequestUserContext(req);
+    const candidateRoles = actorRoleCandidatesForZt(actorRole);
+    const isAdminLikeRole =
+      actorRole === "ADMIN" || actorRole === "SUPERADMIN" || actorRole === "GENERAL";
+    const assigneeRoles = userCtx.userId
+      ? actorRoleCandidatesForZt(userCtx.ztRole)
+      : isAdminLikeRole
+        ? undefined
+        : candidateRoles;
 
     const card = await prisma.ztActionCard.findFirst({
-      where: { id, assignedRole: { in: candidateRoles } },
+      where: assigneeRoles
+        ? { id, assignedRole: { in: assigneeRoles } }
+        : { id },
     });
     if (!card) {
       return NextResponse.json(

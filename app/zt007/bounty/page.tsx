@@ -1,4 +1,5 @@
 import { PageContainer } from "@/components/PageContainer";
+import { SystemHero } from "@/components/SystemHero";
 import { ZtBountyCenterClient } from "@/components/ZtBountyCenterClient";
 
 export const dynamic = "force-dynamic";
@@ -6,14 +7,11 @@ export const dynamic = "force-dynamic";
 export default function ZtBountyPage() {
   return (
     <PageContainer className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          智探007 · 悬赏任务
-        </h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          选择悬赏任务，提交情报，形成可追踪的任务闭环。
-        </p>
-      </div>
+      <SystemHero
+        eyebrow="Bounty Intelligence Workflow"
+        title="智探007 · 悬赏任务"
+        description="在统一商情定义下进行任务众包、情报提交与状态流转，确保每条线索都可追踪、可复盘。"
+      />
       <ZtBountyCenterClient />
     </PageContainer>
   );
