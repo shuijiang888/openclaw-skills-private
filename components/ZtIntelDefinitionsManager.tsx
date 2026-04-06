@@ -65,6 +65,14 @@ export function ZtIntelDefinitionsManager({
     [items],
   );
 
+  function normalizeErrorMessage(err: unknown, fallback: string): string {
+    const raw = err instanceof Error ? err.message : fallback;
+    if (/forbidden/i.test(raw)) {
+      return "当前角色无权限查看或维护商业情报定义，请切换为管理员/超超级管理员后重试。";
+    }
+    return raw || fallback;
+  }
+
   const reload = useCallback(async () => {
     const r = await fetch(withClientBasePath("/api/console/zt/intel-definitions"), {
       cache: "no-store",
@@ -77,7 +85,7 @@ export function ZtIntelDefinitionsManager({
   }, []);
 
   useEffect(() => {
-    void reload().catch((e) => setMessage(e instanceof Error ? e.message : "加载失败"));
+    void reload().catch((e) => setMessage(normalizeErrorMessage(e, "加载失败")));
   }, [reload]);
 
   function parseCommaList(raw: string): string[] {
@@ -122,7 +130,7 @@ export function ZtIntelDefinitionsManager({
       setForm((prev) => ({ ...prev, code: "", name: "", description: "", taskTemplateHint: "" }));
       await reload();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "创建失败");
+      setMessage(normalizeErrorMessage(e, "创建失败"));
     } finally {
       setBusy(null);
     }
@@ -146,7 +154,7 @@ export function ZtIntelDefinitionsManager({
       setMessage("已更新商业情报定义");
       await reload();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "更新失败");
+      setMessage(normalizeErrorMessage(e, "更新失败"));
     } finally {
       setBusy(null);
     }
