@@ -126,6 +126,51 @@ function priorityBadge(priority: string) {
   return "bg-emerald-500/15 text-emerald-200 border-emerald-500/40";
 }
 
+function explainSubmissionError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : "提交失败";
+  if (/signalType not allowed/i.test(raw)) {
+    const expected = raw.split("expected:")[1]?.trim() ?? "";
+    return expected
+      ? `当前情报类型与商情定义不匹配，请改为：${expected.replace(/\//g, " / ")}`
+      : "当前情报类型与商情定义不匹配，请重新选择。";
+  }
+  if (/format not allowed/i.test(raw)) {
+    const expected = raw.split("expected:")[1]?.trim() ?? "";
+    return expected
+      ? `当前提交格式与商情定义不匹配，请改为：${expected.replace(/\//g, " / ")}`
+      : "当前提交格式与商情定义不匹配，请重新选择。";
+  }
+  if (/missing required fields:/i.test(raw)) {
+    const fields = (raw.split(":")[1] ?? "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .map((x) => prettyFieldLabel(x));
+    return fields.length > 0
+      ? `仍有必填项未填写：${fields.join("、")}`
+      : "仍有必填项未填写，请检查后重试。";
+  }
+  return raw;
+}
+
+function normalizeByIntelDef(
+  intelDefs: IntelDef[],
+  intelDefId: string,
+  current: { signalType: string; format: string },
+) {
+  const def = intelDefs.find((x) => x.id === intelDefId) ?? null;
+  const allowedSignalTypes =
+    def?.allowedSignalTypes?.length ? def.allowedSignalTypes : ["strategic", "tactical", "knowledge"];
+  const allowedFormats =
+    def?.allowedFormats?.length ? def.allowedFormats : ["text", "voice", "image", "video", "link"];
+  return {
+    signalType: allowedSignalTypes.includes(current.signalType)
+      ? current.signalType
+      : allowedSignalTypes[0],
+    format: allowedFormats.includes(current.format) ? current.format : allowedFormats[0],
+  };
+}
+
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(withClientBasePath(path), {
     ...init,
@@ -219,9 +264,16 @@ export function Zt007System() {
         setIntelDefs(idf.value.items);
         setSubmissionForm((prev) => {
           const currentValid = idf.value.items.some((x) => x.id === prev.intelDefId);
+          const nextIntelDefId = currentValid ? prev.intelDefId : (idf.value.items[0]?.id ?? "");
+          const normalized = normalizeByIntelDef(idf.value.items, nextIntelDefId, {
+            signalType: prev.signalType,
+            format: prev.format,
+          });
           return {
             ...prev,
-            intelDefId: currentValid ? prev.intelDefId : (idf.value.items[0]?.id ?? ""),
+            intelDefId: nextIntelDefId,
+            signalType: normalized.signalType,
+            format: normalized.format,
           };
         });
       } else {
@@ -359,7 +411,7 @@ export function Zt007System() {
       });
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "submit failed");
+      setError(explainSubmissionError(err));
     }
   }
 
@@ -659,11 +711,17 @@ export function Zt007System() {
                     className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                     value={submissionForm.intelDefId}
                     onChange={(e) =>
-                      setSubmissionForm((p) => ({
-                        ...p,
-                        intelDefId: e.target.value,
-                        extraFields: {},
-                      }))
+                      setSubmissionForm((p) => {
+                        const nextIntelDefId = e.target.value;
+                        const normalized = normalizeByIntelDef(intelDefs, nextIntelDefId, p);
+                        return {
+                          ...p,
+                          intelDefId: nextIntelDefId,
+                          signalType: normalized.signalType,
+                          format: normalized.format,
+                          extraFields: {},
+                        };
+                      })
                     }
                     required
                   >
@@ -748,10 +806,14 @@ export function Zt007System() {
                       setSubmissionForm((p) => {
                         const nextTaskId = e.target.value;
                         const task = tasks.find((t) => t.id === nextTaskId);
+                        const nextIntelDefId = task?.intelDefId ?? p.intelDefId;
+                        const normalized = normalizeByIntelDef(intelDefs, nextIntelDefId, p);
                         return {
                           ...p,
                           taskId: nextTaskId,
-                          intelDefId: task?.intelDefId ?? p.intelDefId,
+                          intelDefId: nextIntelDefId,
+                          signalType: normalized.signalType,
+                          format: normalized.format,
                           extraFields:
                             task?.intelDefId && task.intelDefId !== p.intelDefId
                               ? {}

@@ -46,6 +46,48 @@ function prettyFieldLabel(field: string): string {
     .replace(/\b\w/g, (s) => s.toUpperCase());
 }
 
+function normalizeSubmissionError(raw: string): string {
+  const msg = String(raw ?? "").trim();
+  if (!msg) return "提交失败，请稍后重试。";
+  if (/signalType not allowed/i.test(msg)) {
+    return "当前“情报类型”不符合该商情定义要求，请重新选择情报类型后再提交。";
+  }
+  if (/format not allowed/i.test(msg)) {
+    return "当前“提交格式”不符合该商情定义要求，请重新选择提交格式后再提交。";
+  }
+  if (/missing required fields:/i.test(msg)) {
+    const rawFields = msg.split(":")[1] ?? "";
+    const fields = rawFields
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .map((x) => prettyFieldLabel(x));
+    return `仍有必填项未填写：${fields.join("、")}。请补充后再提交。`;
+  }
+  if (/intelDefId required|invalid intelDefId/i.test(msg)) {
+    return "商情定义无效或未启用，请重新选择商情定义后提交。";
+  }
+  return msg;
+}
+
+function normalizeByIntelDef(
+  intelDefs: IntelDef[],
+  intelDefId: string,
+  current: { signalType: string; format: string },
+) {
+  const def = intelDefs.find((x) => x.id === intelDefId) ?? null;
+  const allowedSignalTypes =
+    def?.allowedSignalTypes?.length ? def.allowedSignalTypes : ["strategic", "tactical", "knowledge"];
+  const allowedFormats =
+    def?.allowedFormats?.length ? def.allowedFormats : ["text", "image", "video", "voice", "link"];
+  return {
+    signalType: allowedSignalTypes.includes(current.signalType)
+      ? current.signalType
+      : allowedSignalTypes[0],
+    format: allowedFormats.includes(current.format) ? current.format : allowedFormats[0],
+  };
+}
+
 export function ZtBountyCenterClient() {
   const [tasks, setTasks] = useState<BountyTask[]>([]);
   const [intelDefs, setIntelDefs] = useState<IntelDef[]>([]);
@@ -104,9 +146,19 @@ export function ZtBountyCenterClient() {
     setIntelDefs(defs);
     setForm((prev) => {
       const currentValid = defs.some((x) => x.id === prev.intelDefId);
+      const nextIntelDefId = currentValid ? prev.intelDefId : (defs[0]?.id ?? "");
+      const matched = defs.find((x) => x.id === nextIntelDefId) ?? null;
+      const allowedSignalTypes =
+        matched?.allowedSignalTypes?.length ? matched.allowedSignalTypes : ["strategic", "tactical", "knowledge"];
+      const allowedFormats =
+        matched?.allowedFormats?.length ? matched.allowedFormats : ["text", "image", "video", "voice", "link"];
       return {
         ...prev,
-        intelDefId: currentValid ? prev.intelDefId : defs[0]?.id ?? "",
+        intelDefId: nextIntelDefId,
+        signalType: allowedSignalTypes.includes(prev.signalType)
+          ? prev.signalType
+          : allowedSignalTypes[0],
+        format: allowedFormats.includes(prev.format) ? prev.format : allowedFormats[0],
       };
     });
   }
@@ -171,7 +223,7 @@ export function ZtBountyCenterClient() {
       });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "提交失败");
+      setError(normalizeSubmissionError(err instanceof Error ? err.message : "提交失败"));
     } finally {
       setBusy(false);
     }
@@ -212,6 +264,14 @@ export function ZtBountyCenterClient() {
               setForm((p) => ({
                 ...p,
                 intelDefId: e.target.value,
+                signalType: (
+                  intelDefs.find((x) => x.id === e.target.value)?.allowedSignalTypes?.[0] ??
+                  p.signalType
+                ),
+                format: (
+                  intelDefs.find((x) => x.id === e.target.value)?.allowedFormats?.[0] ??
+                  p.format
+                ),
                 extraFields: {},
               }))
             }
@@ -276,10 +336,14 @@ export function ZtBountyCenterClient() {
               setForm((p) => {
                 const nextTaskId = e.target.value;
                 const task = tasks.find((t) => t.id === nextTaskId);
+                const nextIntelDefId = task?.intelDefId ?? p.intelDefId;
+                const normalized = normalizeByIntelDef(intelDefs, nextIntelDefId, p);
                 return {
                   ...p,
                   taskId: nextTaskId,
-                  intelDefId: task?.intelDefId ?? p.intelDefId,
+                  intelDefId: nextIntelDefId,
+                  signalType: normalized.signalType,
+                  format: normalized.format,
                 };
               })
             }
