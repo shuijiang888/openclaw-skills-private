@@ -18,6 +18,7 @@ export function Nav() {
   const role = parseDemoRole(useDemoRole());
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isPortalContext = pathname === "/";
   const isZtContext =
     pathname.startsWith("/zt007") ||
     pathname.startsWith("/personal") ||
@@ -26,6 +27,13 @@ export function Nav() {
     pathname.startsWith("/console/zt-system") ||
     pathname.startsWith("/console/zt-users");
 
+  const portalLinks = [
+    { href: "/", label: "门户" },
+    { href: "/health-check", label: "健康检查" },
+    { href: "/profit/dashboard", label: "盈利系统模块" },
+    { href: "/zt007", label: "智探007模块" },
+    { href: "/zt007/strategist", label: "AI大军师" },
+  ];
   const ztLinks = [
     { href: "/", label: "门户" },
     { href: "/zt007", label: "智探007总览" },
@@ -41,7 +49,11 @@ export function Nav() {
         ]
       : []),
   ];
-  const links = isZtContext ? ztLinks : filterNavLinksForRole(role);
+  const links = isPortalContext
+    ? portalLinks
+    : isZtContext
+      ? ztLinks
+      : filterNavLinksForRole(role);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -56,12 +68,18 @@ export function Nav() {
               <BrandMark />
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
-                  {isZtContext ? "智探007 作战协同系统" : "智能盈利管理系统"}
+                  {isPortalContext
+                    ? "AI价值服务作战平台 · 公共门户"
+                    : isZtContext
+                      ? "智探007 作战协同系统"
+                      : "智能盈利管理系统"}
                 </div>
                 <div className="truncate text-[11px] font-medium tracking-wide text-amber-800/90 dark:text-amber-400/90">
-                  {isZtContext
-                    ? "情报 · 行动 · 积分 · 组织"
-                    : "报价 · 审批 · 盈利结构"}
+                  {isPortalContext
+                    ? "多系统统一入口 · 公共导航"
+                    : isZtContext
+                      ? "情报 · 行动 · 积分 · 组织"
+                      : "报价 · 审批 · 盈利结构"}
                 </div>
               </div>
             </Link>
@@ -69,7 +87,7 @@ export function Nav() {
               className="hidden h-9 w-px shrink-0 bg-slate-200 sm:block dark:bg-slate-700"
               aria-hidden
             />
-            {!isZtContext ? (
+            {!isZtContext && !isPortalContext ? (
               <div className="flex min-w-0 flex-col gap-1">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   联合呈现
@@ -101,10 +119,10 @@ export function Nav() {
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
           <Link
-            href={isZtContext ? "/zt007" : "/dashboard"}
+            href={isPortalContext ? "/dashboard" : isZtContext ? "/zt007" : "/dashboard"}
             className="hidden rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:inline-flex dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
           >
-            {isZtContext ? "进入智探007" : "进入系统"}
+            {isPortalContext ? "进入工作台" : isZtContext ? "进入智探007" : "进入系统"}
           </Link>
           <RoleSwitcher />
           <button
