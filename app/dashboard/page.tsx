@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BossBriefingCard } from "@/components/BossBriefingCard";
+import { DashboardAnalytics } from "@/components/DashboardAnalytics";
 import { PageContainer } from "@/components/PageContainer";
+import { QuickActionPanel } from "@/components/QuickActionPanel";
 import { RoleHomePanel } from "@/components/RoleHomePanel";
 import { buildBossBriefingFromProjects } from "@/lib/boss-briefing";
 import { computePortfolioMetrics } from "@/lib/metrics";
@@ -49,6 +51,7 @@ export default async function DashboardPage({
           演示模式请将右上角「试点角色」切换为「总经理」或「管理员」；登录模式请使用具备后台权限的账号。
         </div>
       ) : null}
+      <QuickActionPanel />
       <RoleHomePanel />
       <div className="rounded-2xl border border-slate-200/90 bg-white/80 px-5 py-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
         <p className="text-[11px] font-semibold tracking-wide text-amber-800 dark:text-amber-400">
@@ -204,6 +207,9 @@ export default async function DashboardPage({
           )}
         </ul>
       </section>
+
+      {/* 数据分析看板 */}
+      <DashboardAnalytics />
 
       <p className="text-xs text-slate-500">
         设计文档 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">docs/DESIGN.md</code>

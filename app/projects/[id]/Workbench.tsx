@@ -24,6 +24,8 @@ import { describeCoefficients } from "@/lib/coefficient-descriptions";
 import { APPROVAL_DISCOUNT_BANDS } from "@/lib/business-config";
 import { RadarChart } from "@/components/charts/RadarChart";
 import { GaugeChart } from "@/components/charts/GaugeChart";
+import { ApprovalFlowChart } from "@/components/charts/ApprovalFlowChart";
+import { CustomerProfileCard } from "@/components/CustomerProfileCard";
 
 type EnrichedQuote = {
   id: string;
@@ -376,6 +378,9 @@ export function Workbench({ projectId }: { projectId: string }) {
 
       <div className="xl:grid xl:grid-cols-[1fr_minmax(300px,380px)] xl:items-start xl:gap-8">
         <div className="min-w-0 space-y-6">
+          {/* 客户画像 */}
+          <CustomerProfileCard customerId={data.customer.name} />
+
           {/* ==================== 图2：成本基准 + 系数引擎 + 参考对比 + 胜率 ==================== */}
 
           {/* 顶部：项目信息卡 + 成本基准 */}
@@ -880,7 +885,13 @@ export function Workbench({ projectId }: { projectId: string }) {
               </div>
             </div>
 
-            {/* 操作按钮——对应图2底部 */}
+            {/* 审批流程可视化 */}
+            <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/20">
+              <h3 className="mb-3 text-xs font-semibold text-slate-700 dark:text-slate-300">审批流程</h3>
+              <ApprovalFlowChart currentRole={q.pendingRole} approvedPrice={q.approvedPrice} status={data.status} />
+            </div>
+
+            {/* 操作按钮 */}
             <div className="mt-4 flex flex-wrap gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
               <button
                 type="button"
