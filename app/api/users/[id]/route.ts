@@ -28,6 +28,11 @@ export async function PATCH(req: Request, { params }: Params) {
     data.passwordHash = await bcrypt.hash(body.password.trim(), 10);
   }
 
+  const before = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, email: true, name: true, role: true, teamId: true },
+  });
+
   const user = await prisma.user.update({
     where: { id },
     data,
@@ -41,6 +46,20 @@ export async function PATCH(req: Request, { params }: Params) {
     },
   });
 
+  await prisma.agentAuditLog.create({
+    data: {
+      requestId: crypto.randomUUID(),
+      route: "PATCH /api/users/[id]",
+      action: "user_update",
+      actorRole: role,
+      actorId: "",
+      reason: `修改用户 ${user.email}`,
+      beforeJson: JSON.stringify(before),
+      afterJson: JSON.stringify({ id: user.id, name: user.name, role: user.role, teamId: user.teamId }),
+      metaJson: JSON.stringify({ changedFields: Object.keys(data) }),
+    },
+  });
+
   return NextResponse.json(user);
 }
 
@@ -51,6 +70,26 @@ export async function DELETE(req: Request, { params }: Params) {
   }
 
   const { id } = await params;
+  const before = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, email: true, name: true, role: true },
+  });
+
   await prisma.user.delete({ where: { id } });
+
+  await prisma.agentAuditLog.create({
+    data: {
+      requestId: crypto.randomUUID(),
+      route: "DELETE /api/users/[id]",
+      action: "user_delete",
+      actorRole: role,
+      actorId: "",
+      reason: `删除用户 ${before?.email ?? id}`,
+      beforeJson: JSON.stringify(before),
+      afterJson: "{}",
+      metaJson: "{}",
+    },
+  });
+
   return NextResponse.json({ ok: true });
 }

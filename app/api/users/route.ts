@@ -75,5 +75,19 @@ export async function POST(req: Request) {
     },
   });
 
+  await prisma.agentAuditLog.create({
+    data: {
+      requestId: crypto.randomUUID(),
+      route: "POST /api/users",
+      action: "user_create",
+      actorRole: role,
+      actorId: "",
+      reason: `创建用户 ${body.email}`,
+      beforeJson: "{}",
+      afterJson: JSON.stringify({ id: user.id, email: user.email, role: user.role }),
+      metaJson: JSON.stringify({ email: user.email, role: user.role }),
+    },
+  });
+
   return NextResponse.json(user);
 }

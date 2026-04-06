@@ -45,7 +45,7 @@ export const DEMO_CONSOLE_SIDEBAR_LINKS = [
     roles: ["ADMIN"] as DemoRole[],
   },
   {
-    href: "/console/users",
+    href: "/console/user-admin",
     label: "用户管理",
     roles: ["ADMIN"] as DemoRole[],
   },
