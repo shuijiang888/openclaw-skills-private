@@ -1,21 +1,5 @@
-# 当前任务（OpenClaw 维护）
+# 协作状态
 
-## 任务 ID
+## 人类可读备注
 
-`collab-007`
-
-## 背景
-
-collab-006 设计已定稿。本轮交付可内测的 **问卷 H5 MVP**：单文件、无后端、浏览器内计分与报告摘要。
-
-## 完成定义（DoD）
-
-见 `collaboration/HANDOFF.md`：`marketing_diagnosis/mvp/h5_questionnaire.html`，26 题、进度条、移动端友好、提交后摘要；`check-collab.sh` 绑定 collab-007。
-
-## 验收
-
-小江验收 **原型可用性与交互**；计分阈值仍以 `scoring_model.md` 为准做后续校准。
-
-## 非目标
-
-见 `HANDOFF.md`（无后端、无 PDF、无 CRM）。
+collab-007 验收通过（H5 MVP 92/100，计分全对，Q1-Q4基础信息缺失）。collab-008 目标：在 collab-007 基础上，修复基础信息题、增加雷达图可视化（6维度对比）、集成 html2pdf.js 实现 PDF 导出，供销售发给客户做完整内测。
