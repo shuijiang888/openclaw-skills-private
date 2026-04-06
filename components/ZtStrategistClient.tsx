@@ -127,9 +127,15 @@ export function ZtStrategistClient() {
                 type="button"
                 disabled={busy}
                 onClick={() => void ask()}
-                className="rounded-lg border border-amber-400/60 bg-amber-500/20 px-3 py-2 text-sm font-semibold text-amber-100 disabled:opacity-60"
+                className="group relative inline-flex min-h-11 min-w-[122px] items-center justify-center rounded-xl border border-amber-300/85 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 px-4 py-2 text-sm font-extrabold tracking-wide text-slate-950 shadow-[0_8px_24px_-10px_rgba(251,191,36,0.95)] ring-1 ring-amber-200/75 transition-all duration-200 hover:-translate-y-0.5 hover:from-amber-300 hover:via-yellow-200 hover:to-amber-300 hover:shadow-[0_14px_30px_-10px_rgba(251,191,36,0.98)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none dark:border-amber-300/70 dark:from-amber-300 dark:via-amber-200 dark:to-yellow-300"
               >
-                {busy ? "研判中…" : "请军师解读"}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_18%_20%,rgba(255,255,255,0.5),transparent_55%)] opacity-90"
+                />
+                <span className="relative z-10 whitespace-nowrap">
+                  {busy ? "研判中…" : "请军师解读"}
+                </span>
               </button>
             </div>
             {error ? (
