@@ -1,23 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import { useDemoRole } from "@/components/RoleSwitcher";
 import {
   filterConsoleSidebarForRole,
   filterZtConsoleSidebarForRole,
 } from "@/lib/demo-role-modules";
 import { parseDemoRole } from "@/lib/approval";
-import { normalizeNavPath } from "@/lib/nav-path";
+import {
+  isZtConsolePath,
+  isZtConsoleSegment,
+  normalizeNavPath,
+} from "@/lib/nav-path";
 
 export function ConsoleSidebar() {
   const pathname = normalizeNavPath(usePathname() ?? "/");
+  const segment = useSelectedLayoutSegment();
   const role = parseDemoRole(useDemoRole());
   const isZtConsoleContext =
-    pathname.startsWith("/console/system") ||
-    pathname.startsWith("/console/users") ||
-    pathname.startsWith("/console/zt-system") ||
-    pathname.startsWith("/console/zt-users");
+    isZtConsoleSegment(segment) || isZtConsolePath(pathname);
   const items = isZtConsoleContext
     ? filterZtConsoleSidebarForRole(role)
     : filterConsoleSidebarForRole(role);

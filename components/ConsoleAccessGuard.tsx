@@ -10,6 +10,7 @@ import {
 import { parseDemoRole } from "@/lib/approval";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { normalizeNavPath } from "@/lib/nav-path";
 
 export function ConsoleAccessGuard({
   children,
@@ -17,7 +18,7 @@ export function ConsoleAccessGuard({
   children: React.ReactNode;
 }) {
   const role = parseDemoRole(useDemoRole());
-  const pathname = usePathname();
+  const pathname = normalizeNavPath(usePathname() ?? "/");
   const router = useRouter();
 
   useEffect(() => {

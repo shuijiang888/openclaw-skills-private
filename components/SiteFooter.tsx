@@ -6,7 +6,7 @@ import { parseDemoRole, type DemoRole } from "@/lib/approval";
 import { canAccessConsole } from "@/lib/demo-role-modules";
 import { APP_VERSION } from "@/lib/app-release";
 import { usePathname } from "next/navigation";
-import { normalizeNavPath } from "@/lib/nav-path";
+import { isZtPath, normalizeNavPath } from "@/lib/nav-path";
 
 function roleMaySeeStrategy(role: DemoRole): boolean {
   return role !== "SALES_MANAGER";
@@ -14,14 +14,9 @@ function roleMaySeeStrategy(role: DemoRole): boolean {
 
 export function SiteFooter() {
   const role = parseDemoRole(useDemoRole());
-  const pathname = normalizeNavPath(usePathname() ?? "/");
-  const isZtContext =
-    pathname.startsWith("/zt007") ||
-    pathname.startsWith("/personal") ||
-    pathname.startsWith("/console/system") ||
-    pathname.startsWith("/console/users") ||
-    pathname.startsWith("/console/zt-system") ||
-    pathname.startsWith("/console/zt-users");
+  const rawPathname = usePathname();
+  const pathname = normalizeNavPath(rawPathname ?? "/");
+  const isZtContext = isZtPath(rawPathname);
   const isPortalPage = pathname === "/";
 
   return (

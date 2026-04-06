@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { withClientBasePath } from "@/lib/client-url";
 import { parseDemoRole } from "@/lib/approval";
 import { parseZtUserRole } from "@/lib/zt-ranks";
-import { normalizeNavPath } from "@/lib/nav-path";
+import { isZtPath, normalizeNavPath } from "@/lib/nav-path";
 
 export const DEMO_ROLE_STORAGE_KEY = "profit_demo_role";
 
@@ -136,13 +136,7 @@ export function RoleSwitcher() {
   const pathname = normalizeNavPath(usePathname() ?? "/");
   const role = useDemoRole();
   const sessionMode = isClientSessionAuth();
-  const isZtContext =
-    pathname.startsWith("/zt007") ||
-    pathname.startsWith("/personal") ||
-    pathname.startsWith("/console/system") ||
-    pathname.startsWith("/console/users") ||
-    pathname.startsWith("/console/zt-system") ||
-    pathname.startsWith("/console/zt-users");
+  const isZtContext = isZtPath(pathname);
   const visibleOptions = isZtContext ? ZT_ROLE_OPTIONS : PROFIT_ROLE_OPTIONS;
   const [sessionInfo, setSessionInfo] = useState<
     | { status: "loading" }
