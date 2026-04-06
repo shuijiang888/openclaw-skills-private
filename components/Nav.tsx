@@ -1,75 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrandMark } from "./BrandMark";
 import { FxiaokeBrandBadge } from "./FxiaokeBrandBadge";
 import { RoleSwitcher, useDemoRole } from "./RoleSwitcher";
-import { canAccessConsole, filterNavLinksForRole } from "@/lib/demo-role-modules";
 import { parseDemoRole } from "@/lib/approval";
 import { usePathname } from "next/navigation";
-
-const PROFIT_BASE_PATH = "/profit";
-
-function normalizeNavPath(pathname: string): string {
-  if (pathname === PROFIT_BASE_PATH) return "/";
-  if (pathname.startsWith(`${PROFIT_BASE_PATH}/`)) {
-    return pathname.slice(PROFIT_BASE_PATH.length);
-  }
-  return pathname;
-}
+import { PORTAL_NAV_SHELL } from "@/components/nav-shells/portal-shell";
+import { PROFIT_NAV_SHELL } from "@/components/nav-shells/profit-shell";
+import { getZtShellLinks } from "@/components/nav-shells/zt-shell";
+import { isZtPath, resolveClientPathname } from "@/lib/nav-path";
 
 function isLinkActive(pathname: string, href: string): boolean {
-  const activePath = normalizeNavPath(pathname);
-  const activeHref = normalizeNavPath(href);
+  const activePath = resolveClientPathname(pathname);
+  const activeHref = resolveClientPathname(href);
   if (activeHref === "/") return activePath === "/";
   return activePath === activeHref || activePath.startsWith(`${activeHref}/`);
 }
 
 export function Nav() {
   const role = parseDemoRole(useDemoRole());
-  const pathname = normalizeNavPath(usePathname() ?? "/");
+  const pathname = resolveClientPathname(usePathname() ?? "/");
   const [mobileOpen, setMobileOpen] = useState(false);
   const isPortalContext = pathname === "/";
   const isWorkbenchContext = isPortalContext || pathname.startsWith("/dashboard");
-  const isZtContext =
-    pathname.startsWith("/zt007") ||
-    pathname.startsWith("/personal") ||
-    pathname.startsWith("/console/system") ||
-    pathname.startsWith("/console/users") ||
-    pathname.startsWith("/console/zt-system") ||
-    pathname.startsWith("/console/zt-users");
+  const isZtContext = isZtPath(pathname);
 
-  const portalLinks = [
-    { href: "/", label: "门户" },
-    { href: "/health-check", label: "健康检查" },
-    { href: "/profit/dashboard", label: "盈利系统模块" },
-    { href: "/profit/zt007", label: "智探007模块" },
-  ];
-  const workbenchLinks = [
-    { href: "/", label: "门户" },
-    { href: "/health-check", label: "健康检查" },
-    { href: "/profit/dashboard", label: "盈利系统模块" },
-    { href: "/profit/zt007", label: "智探007模块" },
-  ];
-  const ztLinks = [
-    { href: "/", label: "门户" },
-    { href: "/profit/zt007", label: "智探007总览" },
-    { href: "/profit/zt007/strategist", label: "AI大军师" },
-    { href: "/profit/zt007/linkage", label: "情报联动看板" },
-    { href: "/profit/zt007/war-room", label: "作战指挥大屏" },
-    { href: "/profit/zt007/action", label: "行动中心" },
-    { href: "/profit/zt007/bounty", label: "悬赏任务" },
-    { href: "/profit/zt007/honor", label: "荣誉积分" },
-    { href: "/profit/personal", label: "我的战情台" },
-    ...(canAccessConsole(role)
-      ? [
-          { href: "/profit/console/system", label: "系统维护" },
-          { href: "/profit/console/users", label: "用户组织" },
-        ]
-      : []),
-  ];
-  const profitLinks = filterNavLinksForRole(role);
+  const portalLinks = PORTAL_NAV_SHELL.links;
+  const workbenchLinks = PORTAL_NAV_SHELL.links;
+  const ztLinks = getZtShellLinks(role);
+  const profitLinks = PROFIT_NAV_SHELL;
   const links = isPortalContext
     ? portalLinks
     : isWorkbenchContext
@@ -77,10 +38,6 @@ export function Nav() {
       : isZtContext
         ? ztLinks
         : profitLinks;
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">

@@ -16,6 +16,7 @@ const NO_JUNIOR_SALES: DemoRole[] = [
 ];
 /** 管控台：总经理 + 管理员 */
 const BACKOFFICE: DemoRole[] = ["GM", "ADMIN"];
+const ADMIN_ONLY: DemoRole[] = ["ADMIN"];
 
 export const DEMO_NAV_LINKS = [
   { href: "/", label: "门户", roles: ALL },
@@ -27,6 +28,7 @@ export const DEMO_NAV_LINKS = [
   { href: "/roadmap", label: "AI交付与价值服务", roles: NO_JUNIOR_SALES },
   { href: "/data-screen", label: "数据大屏", roles: ALL },
   { href: "/console", label: "管理后台", roles: BACKOFFICE },
+  { href: "/console/user-admin", label: "用户管理", roles: ADMIN_ONLY },
 ] as const;
 
 export const DEMO_CONSOLE_SIDEBAR_LINKS = [
