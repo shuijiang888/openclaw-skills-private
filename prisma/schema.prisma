@@ -12,6 +12,8 @@ model Customer {
   name      String
   tier      String    @default("NORMAL")
   arDays    Int       @default(30)
+  /// 数据权限：创建者 userId
+  ownerId   String    @default("legacy_owner")
   createdAt DateTime  @default(now())
   projects  Project[]
 }
@@ -27,6 +29,8 @@ model Project {
   isStandard   Boolean  @default(true)
   isSmallOrder Boolean  @default(true)
   status       String   @default("DRAFT")
+  /// 数据权限：创建者 userId（历史数据回填为 legacy_owner）
+  ownerId      String   @default("legacy_owner")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   quote        Quote?
@@ -90,27 +94,46 @@ model CompassAlertRule {
   sortOrder       Int    @default(0)
 }
 
-/// A2：助手/审批等关键操作的轻量审计（演示；生产可迁日志管道）
+/// A2：助手/审批等关键操作的审计日志（5字段标准：who/when/what/why/requestId）
 model AgentAuditLog {
   id         String   @id @default(cuid())
   requestId  String
   route      String
   action     String
   actorRole  String   @default("")
+  /// who：操作人 userId（非角色）
+  actorId    String   @default("")
+  /// why：操作原因/备注（可选）
+  reason     String   @default("")
+  /// before-after：操作前后状态快照（JSON）
+  beforeJson String   @default("{}")
+  afterJson  String   @default("{}")
   metaJson   String   @default("{}")
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
+  @@index([actorId])
 }
 
-/// 会话登录（PROFIT_AUTH_MODE=session）；仅新增表，db push 不破坏既有业务数据
+/// 团队（Manager 数据域隔离的基础）
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  managerId String
+  createdAt DateTime @default(now())
+  members   User[]
+}
+
+/// 会话登录（PROFIT_AUTH_MODE=session）
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String   @default("")
   passwordHash String
-  /// 业务角色：SALES_MANAGER | SALES_DIRECTOR | SALES_VP | GM | ADMIN
+  /// 业务角色：SALES_MANAGER | SALES_DIRECTOR | SALES_VP | GM | ADMIN | SUPER_ADMIN
   role         String   @default("SALES_DIRECTOR")
+  teamId       String?
+  team         Team?    @relation(fields: [teamId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
