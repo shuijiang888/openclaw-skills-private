@@ -1,21 +1,5 @@
-# 当前任务（OpenClaw 维护）
+# 协作状态
 
-## 任务 ID
+## 人类可读备注
 
-`collab-004`
-
-## 背景
-
-验证 OpenClaw → Cursor 协议能否承载真实业务：从商机洞察出发，梳理「线索到赢单」路径，区分 AI / 销售 / 客户侧价值。
-
-## 完成定义（DoD）
-
-见 `collaboration/HANDOFF.md`；交付物为 `collaboration/opportunity_insight_report.md`（六章），`STATUS` 回写，`check-collab.sh` 通过。
-
-## 验收
-
-由小江对报告 **内容质量** 做人工验收（事实、行业贴切度、可落地性）。
-
-## 非目标
-
-见 `HANDOFF.md`（含不实际客户接触、不生成 PPT、不调用 API 等）。
+collab-004 验收通过（汇川技术商机洞察报告 88/100）。collab-005 目标：将汇川报告精炼成一线销售能直接用的"问答话术"，形成可培训的实战素材。完成后由小江验收内容质量。

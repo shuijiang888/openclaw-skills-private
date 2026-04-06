@@ -21,3 +21,9 @@
 - 改进：`CURRENT_TASK.md` 保持纯人类可读叙述，不含 YAML 状态块
 - 改进：写 HANDOFF 前先过 HEALTH_CHECKLIST（必填项必填）
 - 新增：collab-004 引入真实业务任务，验证协议对复杂场景的承载能力
+- 改进：collab-004-non-goal-vs-dod.md 记录「非目标」与 DoD 冲突问题，下轮 HANDOFF 规范措辞
+
+## v1.4（collab-005）
+
+- 改进：「非目标」字段措辞规范为「不修改与本任务无关的脚本逻辑」，避免与 DoD/验收冲突
+- 新增：HANDOFF 明确标注「如需更新 check-collab.sh 须在任务内说明」，避免隐式修改
