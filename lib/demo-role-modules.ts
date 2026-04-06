@@ -19,7 +19,6 @@ const BACKOFFICE: DemoRole[] = ["GM", "ADMIN"];
 
 export const DEMO_NAV_LINKS = [
   { href: "/", label: "门户", roles: ALL },
-  { href: "/zt007/strategist", label: "AI大军师", roles: ALL },
   { href: "/about", label: "价值主张", roles: ALL },
   { href: "/dashboard", label: "工作台", roles: ALL },
   { href: "/projects", label: "项目", roles: ALL },
