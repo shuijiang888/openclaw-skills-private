@@ -12,6 +12,7 @@ CHANGELOG="$ROOT/collaboration/PROTOCOL_CHANGELOG.md"
 REPORT="$ROOT/collaboration/opportunity_insight_report.md"
 TALKTRACK="$ROOT/collaboration/huichuan_sales_talktrack.md"
 MD_DIR="$ROOT/collaboration/marketing_diagnosis"
+H5_MVP="$ROOT/collaboration/marketing_diagnosis/mvp/h5_questionnaire.html"
 
 err() { echo "check-collab: $*" >&2; exit 1; }
 
@@ -22,7 +23,7 @@ for heading in "目标对齐" "指令下发" "Cursor 执行" "过程管理" "质
 done
 
 [[ -f "$STATUS" ]] || err "missing collaboration/STATUS.md"
-grep -q "^task_id: collab-006" "$STATUS" || err "STATUS task_id must be collab-006"
+grep -q "^task_id: collab-007" "$STATUS" || err "STATUS task_id must be collab-007"
 grep -q "^state: done" "$STATUS" || err "STATUS state must be done (YAML block)"
 
 [[ -f "$RETRO" ]] || err "missing collaboration/retrospectives/collab-001-20260406.md"
@@ -44,6 +45,7 @@ grep -q "v1.1" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.1"
 grep -q "v1.2" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.2"
 grep -q "v1.4" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.4"
 grep -q "v1.5" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.5"
+grep -q "v1.6" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.6"
 
 [[ -f "$REPORT" ]] || err "missing collaboration/opportunity_insight_report.md"
 [[ -s "$REPORT" ]] || err "opportunity_insight_report.md is empty"
@@ -70,5 +72,12 @@ grep -q "weighted" "$MD_DIR/scoring_model.md" || err "scoring_model should defin
 grep -q "{{total_score}}" "$MD_DIR/report_template.md" || err "report_template placeholders"
 grep -q "Submit API" "$MD_DIR/system_design.md" || err "system_design API section"
 grep -q "阶段 1" "$MD_DIR/user_flow.md" || err "user_flow stages"
+
+[[ -f "$H5_MVP" ]] || err "missing mvp/h5_questionnaire.html"
+[[ -s "$H5_MVP" ]] || err "empty mvp/h5_questionnaire.html"
+grep -q "computeScores" "$H5_MVP" || err "h5 must contain scoring engine"
+grep -q "viewport" "$H5_MVP" || err "h5 must set viewport"
+grep -q "企业营销能力快速诊断" "$H5_MVP" || err "h5 title/header"
+grep -q "rep-top3" "$H5_MVP" || err "h5 report TOP3 section"
 
 echo "check-collab: OK"
