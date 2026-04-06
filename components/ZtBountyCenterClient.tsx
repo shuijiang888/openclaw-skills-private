@@ -11,6 +11,7 @@ type BountyTask = {
   description: string;
   rewardPoints: number;
   status: string;
+  createdAt?: string;
   taskType?: string;
   deadlineAt?: string | null;
   reviewNote?: string;
@@ -216,6 +217,36 @@ export function ZtBountyCenterClient() {
         .slice(0, 12),
     [tasks],
   );
+  const managerMetrics = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    let createdToday = 0;
+    let reviewingCount = 0;
+    let reviewedCount = 0;
+    let rejectedCount = 0;
+    for (const task of tasks) {
+      const createdAt = "createdAt" in task ? (task as { createdAt?: string }).createdAt : "";
+      if (createdAt && !Number.isNaN(new Date(createdAt).getTime())) {
+        if (new Date(createdAt) >= start) createdToday += 1;
+      }
+      if (task.status === "REVIEWING") reviewingCount += 1;
+      if (task.status === "APPROVED" || task.status === "REJECTED") {
+        reviewedCount += 1;
+        if (task.status === "REJECTED") rejectedCount += 1;
+      }
+    }
+    return {
+      createdToday,
+      reviewingCount,
+      rejectRatePct: reviewedCount > 0 ? Math.round((rejectedCount / reviewedCount) * 100) : 0,
+    };
+  }, [tasks]);
+  const [bulkResult, setBulkResult] = useState<{
+    at: string;
+    status: string;
+    succeeded: string[];
+    failed: Array<{ taskId: string; reason: string }>;
+  } | null>(null);
   async function load() {
     const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
       cache: "no-store",
@@ -335,9 +366,12 @@ export function ZtBountyCenterClient() {
     setBulkBusy(true);
     setError("");
     setMessage("");
+    setBulkResult(null);
     try {
       let okCount = 0;
       let failCount = 0;
+      const succeeded: string[] = [];
+      const failed: Array<{ taskId: string; reason: string }> = [];
       const needReviewNote = bulkStatus === "APPROVED" || bulkStatus === "REJECTED";
       const reviewNote = needReviewNote
         ? window.prompt("可选：本次批量操作审核备注（可留空）", "") ?? ""
@@ -353,15 +387,33 @@ export function ZtBountyCenterClient() {
           },
           body: JSON.stringify({ taskId, status: bulkStatus, reviewNote }),
         });
+        const payload = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          message?: string;
+        };
         if (res.ok) {
           okCount += 1;
+          succeeded.push(taskId);
         } else {
           failCount += 1;
+          failed.push({
+            taskId,
+            reason:
+              payload.message ??
+              payload.error ??
+              `HTTP ${res.status}`,
+          });
         }
       }
       setMessage(
         `批量处理完成：成功 ${okCount} 条，失败 ${failCount} 条（可能因状态不匹配或权限限制）。`,
       );
+      setBulkResult({
+        at: new Date().toISOString(),
+        status: bulkStatus,
+        succeeded,
+        failed,
+      });
       setSelectedTaskIds([]);
       await load();
     } catch (err) {
@@ -635,6 +687,21 @@ export function ZtBountyCenterClient() {
                 {bulkBusy ? "处理中..." : `执行批量操作（${selectedTaskIds.length}）`}
               </button>
             </div>
+            {bulkResult ? (
+              <div className="mt-2 rounded-md border border-slate-700 bg-slate-900/50 p-2">
+                <p className="text-[11px] text-cyan-200">
+                  最近批量：{bulkResult.status} · 成功 {bulkResult.succeeded.length} · 失败{" "}
+                  {bulkResult.failed.length} · {new Date(bulkResult.at).toLocaleString("zh-CN")}
+                </p>
+                {bulkResult.failed.length > 0 ? (
+                  <div className="mt-1 max-h-24 overflow-auto pr-1 text-[11px] text-rose-200">
+                    {bulkResult.failed.map((x) => (
+                      <p key={`${x.taskId}-${x.reason}`}>#{x.taskId.slice(-6)}：{x.reason}</p>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
         <div className="mt-3 space-y-2">
@@ -747,6 +814,20 @@ export function ZtBountyCenterClient() {
         {isManager ? (
           <div className="mb-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3">
             <h3 className="text-sm font-semibold text-cyan-200">任务管理（管理员）</h3>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="rounded-md border border-slate-700 bg-slate-900/40 px-2.5 py-2">
+                <p className="text-[11px] text-slate-400">今日创建</p>
+                <p className="mt-1 text-lg font-bold text-cyan-100">{managerMetrics.createdToday}</p>
+              </div>
+              <div className="rounded-md border border-slate-700 bg-slate-900/40 px-2.5 py-2">
+                <p className="text-[11px] text-slate-400">待审核</p>
+                <p className="mt-1 text-lg font-bold text-amber-100">{managerMetrics.reviewingCount}</p>
+              </div>
+              <div className="rounded-md border border-slate-700 bg-slate-900/40 px-2.5 py-2">
+                <p className="text-[11px] text-slate-400">驳回率</p>
+                <p className="mt-1 text-lg font-bold text-rose-100">{managerMetrics.rejectRatePct}%</p>
+              </div>
+            </div>
             <div className="mt-2 grid gap-2">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {TASK_TEMPLATES.map((tpl) => (
@@ -980,6 +1061,11 @@ export function ZtBountyCenterClient() {
         ) : null}
         <h2 className="text-lg font-semibold text-cyan-200">提交情报</h2>
         <form className="mt-3 space-y-2" onSubmit={submitSignal}>
+          {quickMode ? (
+            <p className="rounded-md border border-cyan-500/35 bg-cyan-950/20 px-2.5 py-1.5 text-[11px] text-cyan-200">
+              极速模式已开启：仅保留最少输入，适合手机端快速上报。
+            </p>
+          ) : null}
           <select
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             value={form.intelDefId}
