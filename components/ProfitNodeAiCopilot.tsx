@@ -18,12 +18,18 @@ type Baseline = {
 };
 
 type ParseApiResponse = {
-  source: "ollama" | "rules";
+  source: "ollama" | "minimax" | "rules";
   model?: string;
   fallbackReason?: string;
   summary: string[];
   hints: string[];
   patch: CoeffPatch;
+};
+
+type ParseApiError = {
+  error?: string;
+  code?: string;
+  requestId?: string;
 };
 
 type NodeId = "customer" | "bom" | "engine" | "quote" | "approval";
@@ -88,6 +94,45 @@ function pickNodeInstruction(id: NodeId): string {
 
 function hasPatch(patch: CoeffPatch): boolean {
   return Object.keys(patch).length > 0;
+}
+
+function isParseApiResponse(value: unknown): value is ParseApiResponse {
+  if (!value || typeof value !== "object") return false;
+  const body = value as Record<string, unknown>;
+  const source = body.source;
+  return (
+    (source === "ollama" || source === "minimax" || source === "rules") &&
+    Array.isArray(body.summary) &&
+    Array.isArray(body.hints) &&
+    body.patch !== null &&
+    typeof body.patch === "object"
+  );
+}
+
+function normalizeErrorResult(
+  status: number,
+  body: unknown,
+  requestId: string | null,
+): NodeResult {
+  const apiError = (body ?? {}) as ParseApiError;
+  const errorText =
+    typeof apiError.error === "string" && apiError.error.trim().length > 0
+      ? apiError.error.trim()
+      : `服务调用失败（HTTP ${status}）`;
+  return {
+    source: "rules",
+    summary: ["该节点 AI 建议暂不可用，已降级为提示模式。"],
+    hints: [errorText],
+    patch: {},
+    requestId: requestId ?? apiError.requestId ?? null,
+    fallbackReason: "请检查 AI 服务配置或联系管理员。",
+  };
+}
+
+function sourceLabel(source: ParseApiResponse["source"]): string {
+  if (source === "ollama") return "Ollama 大模型";
+  if (source === "minimax") return "MiniMax 大模型";
+  return "规则引擎";
 }
 
 export function ProfitNodeAiCopilot({
@@ -190,12 +235,25 @@ export function ProfitNodeAiCopilot({
           },
           body: JSON.stringify({ text: buildPrompt(node), baseline }),
         });
-        const body = (await res.json()) as ParseApiResponse;
+        const requestId = res.headers.get("x-request-id");
+        let body: unknown = null;
+        try {
+          body = await res.json();
+        } catch {
+          body = null;
+        }
+        const nextResult: NodeResult = !res.ok
+          ? normalizeErrorResult(res.status, body, requestId)
+          : isParseApiResponse(body)
+            ? {
+                ...body,
+                requestId,
+              }
+            : normalizeErrorResult(res.status, body, requestId);
         setResultMap((prev) => ({
           ...prev,
           [node.id]: {
-            ...body,
-            requestId: res.headers.get("x-request-id"),
+            ...nextResult,
           },
         }));
       } catch {
@@ -260,7 +318,7 @@ export function ProfitNodeAiCopilot({
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded bg-cyan-100 px-1.5 py-0.5 text-[10px] font-medium text-cyan-900 dark:bg-cyan-900/40 dark:text-cyan-200">
-                来源：{activeResult.source === "ollama" ? "大模型" : "规则引擎"}
+                来源：{sourceLabel(activeResult.source)}
               </span>
               {activeResult.requestId ? (
                 <span className="text-[10px] text-zinc-500">
