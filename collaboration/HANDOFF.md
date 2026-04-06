@@ -1,566 +1,318 @@
-# 给 Cursor 的指令（collab-009）
+# 给 Cursor 的指令（collab-010）
 
-**task_id:** `collab-009`
+**task_id:** `collab-010`
 
 ## 背景
 
-collab-008 已完成企业级问卷H5（95/100）。本轮目标：设计完整的"企业营销诊断系统"实现方案，让 Agent1/2 可照此文档直接开发、部署、对接纷享CRM。
+collab-009 完成了制造业营销诊断系统。本轮目标：打造医疗器械行业版，包含三个独立模块：
+1. **医疗器械行业问卷**（26题，行业选项定制）
+2. **AI诊断建议**（调用LLM API，根据6维度得分生成个性化建议）
+3. **行业Benchmark对比**（模拟数据，显示"您在行业中的位置"）
 
-**最终部署位置：** 腾讯云 `119.45.205.137`，Nginx路由 `/diag/*`，入口嵌入门户首页卡片。
-
-**用户旅程（必须先理解）：**
-```
-销售发二维码 → 客户填问卷 → 提交 → 后端评分+生成报告 → 客户收到报告 → 预约CTA → 纷享CRM创建线索 → 销售跟进
-```
+**最终目标：** 一套可部署的医疗器械行业营销诊断系统，覆盖制造业/医疗器械双版本。
 
 ---
 
 ## 完成定义（DoD）
 
-- [ ] `marketing_diagnosis/system/openapi_integration.md` — 纷享CRM OpenAPI对接方案
-- [ ] `marketing_diagnosis/system/database_schema.md` — PostgreSQL数据库表结构
-- [ ] `marketing_diagnosis/system/backend_api_design.md` — 后端API接口设计
-- [ ] `marketing_diagnosis/system/deployment_guide.md` — 腾讯云部署指南
-- [ ] `marketing_diagnosis/system/crm_workflow.md` — CRM线索创建后的跟进流程
-- [ ] `./scripts/check-collab.sh` 更新绑定 collab-009
-- [ ] `STATUS.md`：`task_id: collab-009`，`state: done`
+- [ ] `marketing_diagnosis/medical_device/questionnaire_medical.md` — 医疗器械行业问卷（26题，行业定制选项）
+- [ ] `marketing_diagnosis/medical_device/h5_medical.html` — 医疗器械H5问卷（基于现有H5改造行业选项）
+- [ ] `marketing_diagnosis/medical_device/benchmark_data.md` — 行业Benchmark数据（制造业/医疗器械/能源三行业）
+- [ ] `marketing_diagnosis/medical_device/ai_diagnosis.md` — AI诊断建议设计文档（LLM API集成方案）
+- [ ] `marketing_diagnosis/medical_device/h5_with_ai_benchmark.html` — 含AI建议+Benchmark的增强版H5
+- [ ] `./scripts/check-collab.sh` 更新绑定 collab-010
+- [ ] `STATUS.md`：`task_id: collab-010`，`state: done`
 
 ---
 
 ## 参考文件（必须先读）
 
-- `collaboration/marketing_diagnosis/mvp/h5_questionnaire.html` — 现有H5（API提交部分需要改造）
-- `collaboration/marketing_diagnosis/system_design.md` — Phase 1设计（已有架构草图）
-- `collaboration/marketing_diagnosis/scoring_model.md` — 评分模型（需在后端重新实现）
-- `collaboration/marketing_diagnosis/report_template.md` — 报告模板
+- `collaboration/marketing_diagnosis/mvp/h5_questionnaire.html` — 现有制造业H5（改行业选项的基准）
+- `collaboration/marketing_diagnosis/scoring_model.md` — 评分模型（不变）
+- `collaboration/marketing_diagnosis/medical_device/questionnaire_medical.md`（新增问卷在此写入）
+- `collaboration/marketing_diagnosis/medical_device/benchmark_data.md`（Benchmark数据）
 
 ---
 
 ## 验收步骤
 
-### Step 1：设计纷享CRM OpenAPI对接方案（openapi_integration.md）
+### Step 1：设计医疗器械行业问卷（questionnaire_medical.md）
 
-**必须包含：**
+**要求：**
+- 基于制造业问卷的结构（6维度×4题），替换行业相关选项
+- 保留26题结构，替换Q1（目标客户）/Q2（战略重点）/Q5（获客渠道）/Q12（客户类型）等涉及行业特征的选择项
 
-#### 1.1 纷享CRM OpenAPI基础信息
+**行业定制要点：**
+
+| 维度 | 制造业原选项 | 医疗器械定制选项 |
+|------|-------------|----------------|
+| D1-Q1 | ICP文档化/未成文/老板经验/机会驱动 | 医院/经销商/政府集采/基层医疗/OTC连锁 |
+| D1-Q2 | 守住基本盘/新行业/灯塔案例/渠道扩张/出海 | 集采中标/基层覆盖/器械国产替代/学术推广/设备更新 |
+| D2-Q5 | 官网/展会/转介绍/渠道/内容/电销 | 学术会议/医院采购/经销商/招投标平台/医生推荐 |
+| D3-Q12 | 铁三角/项目制/单兵 | 招投标/物价审批/经销商管理/临床支撑 |
+| D4-Q14 | 续约/增购 | 设备维保/耗材复购/学术合作/设备更新 |
+| D5-Q18 | 新人存活/培养体系 | 经销商培训/临床培训/法规合规培训 |
+| D6-Q21 | CRM/SAP/表格邮件 | HIS系统/耗材管理系统/招投标系统/合规审计 |
+
+**输出格式：**
 ```markdown
-## 纷享CRM OpenAPI 对接方案
+# 医疗器械行业营销诊断问卷
 
-### API基础
-- 文档地址：https://open.fxiaoke.com/ （待确认）
-- 认证方式：AppId + AppSecret → AccessToken
-- Token刷新机制：有效期2小时，需自动刷新
+## 维度一：市场定位与目标客户（D1）
 
-### 核心接口（需要老江提供真实API地址和AppId/AppSecret）
-| 接口 | 方法 | 用途 |
-|------|------|------|
-| 创建线索 | POST /crm/v2/leads | 问卷提交后创建CRM线索 |
-| 更新线索 | PUT /crm/v2/leads/{id} | 补充分数/等级/预约状态 |
-| 创建商机 | POST /crm/v2/opportunities | 高分线索转商机 |
-| 查询用户 | GET /crm/v2/users | 销售工号→用户ID映射 |
+### Q1（SC）贵司的主要目标客户是？
+- A：三级医院（大型三甲）（5分）
+- B：二级医院（县域中心）（3分）
+- C：基层医疗机构（社区/乡镇）（2分）
+- D：经销商/代理商（1分）
+- E：政府集中采购/卫健委（1分）
+
+### Q2（MC）未来12个月战略重点？（最多选2项）
+- □ 集采中标与放量（2分）
+- □ 基层医疗市场覆盖（2分）
+- □ 器械国产替代政策红利（2分）
+- □ 学术推广与临床数据（2分）
+- □ 设备更新改造（2分）
 ```
 
-#### 1.2 字段映射（问卷→CRM）
-```markdown
-## 问卷字段 → 纷享CRM字段 映射
+**覆盖的医疗器械细分赛道（问卷说明中体现）：**
+- 高值耗材（骨科/心血管/神经外科）
+- 医疗设备（影像/检验/手术机器人）
+- IVD（体外诊断）
+- 家用医疗器械
 
-| 问卷字段 | CRM字段 | 说明 |
-|----------|---------|------|
-| 公司名称 | company_name | 必填 |
-| 行业 | industry | 下拉选项 |
-| 规模 | employee_size | 下拉选项 |
-| 联系人姓名 | name | 必填 |
-| 手机 | mobile | 必填 |
-| 综合得分 | diagnosis_score | 自定义字段(Number) |
-| 等级 | diagnosis_level | 自定义字段(单选) |
-| TOP3问题 | diagnosis_top3 | 自定义字段(多行文本) |
-| 来源 | lead_source | 固定值：营销诊断问卷 |
-| utm_sales | owner_id | 销售工号→CRM用户ID |
-```
+### Step 2：生成医疗器械H5（h5_medical.html）
 
-#### 1.3 线索创建Request示例
-```json
-{
-  "lead": {
-    "name": "李总",
-    "mobile": "13800138000",
-    "company_name": "深圳市XX科技有限公司",
-    "industry": "IT/互联网",
-    "employee_size": "100-500人",
-    "diagnosis_score": 72,
-    "diagnosis_level": "良好",
-    "diagnosis_top3": "1. 获客渠道单一\n2. 销售管道标准化不足\n3. CRM数据质量一般",
-    "lead_source": "营销诊断问卷",
-    "utm_sales": "SHUIJIANG",
-    "custom_fields": [
-      { "field_name": "diagnosis_dim1", "value": 15 },
-      { "field_name": "diagnosis_dim2", "value": 14 }
-    ]
-  }
-}
-```
+**要求：**
+- 复制 `h5_questionnaire.html` 为基准
+- 替换所有行业相关选项（使用 Step 1 的问卷内容）
+- 替换CONFIG中的说明文字（"本问卷适用于医疗器械行业"）
+- 整体样式与制造业版保持一致（深蓝主色调）
+- 计分逻辑不变（D1-D6权重不变）
 
-#### 1.4 待确认事项（必须标注）
-```markdown
-## ⚠️ 待老江提供（部署前必须确认）
+**输出：** `marketing_diagnosis/medical_device/h5_medical.html`
 
-1. 纷享CRM的AppId和AppSecret（联系纷享技术支持获取）
-2. OpenAPI的真是HTTPS地址
-3. 自定义字段API（diagnosis_score等）是否支持批量创建
-4. 线索创建后是否自动分配销售（还是手动分配）
-```
+### Step 3：设计行业Benchmark数据（benchmark_data.md）
 
----
-
-### Step 2：设计数据库Schema（database_schema.md）
-
-**必须包含：**
-
-#### 2.1 ER图（文字描述）
-```
-Campaign（营销活动）
-  1:N
-Submission（问卷提交）
-  1:1
-Report（诊断报告）
-  1:1
-Lead（客户联系信息）
-  N:1
-Submission
-```
-
-#### 2.2 表结构（PostgreSQL）
-
-```sql
--- 营销活动表
-CREATE TABLE campaigns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) NOT NULL,           -- 活动名称，如"2026Q2营销诊断"
-  utm_source VARCHAR(50),                -- 来源渠道
-  q_version VARCHAR(20),                -- 问卷版本
-  booking_url VARCHAR(500),            -- 预约链接
-  hotline VARCHAR(50),                  -- 热线电话
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 问卷提交表（核心）
-CREATE TABLE submissions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  campaign_id UUID REFERENCES campaigns(id),
-  
-  -- 基础信息
-  company_name VARCHAR(255) NOT NULL,
-  industry VARCHAR(100),
-  scale VARCHAR(50),
-  years VARCHAR(20),
-  
-  -- 联系信息
-  contact_name VARCHAR(100),
-  contact_phone VARCHAR(20),
-  contact_company VARCHAR(255),
-  open_question TEXT,
-  
-  -- 原始答案（JSON）
-  answers_json JSONB NOT NULL,
-  
-  -- 评分结果
-  score_total DECIMAL(5,2),
-  score_level VARCHAR(20),             -- 卓越/良好/一般/薄弱/危机
-  score_d1 DECIMAL(5,2),
-  score_d2 DECIMAL(5,2),
-  score_d3 DECIMAL(5,2),
-  score_d4 DECIMAL(5,2),
-  score_d5 DECIMAL(5,2),
-  score_d6 DECIMAL(5,2),
-  
-  -- UTM追踪
-  utm_sales VARCHAR(50),              -- 销售工号
-  utm_medium VARCHAR(100),             -- 渠道
-  
-  -- CRM关联
-  crm_lead_id VARCHAR(50),            -- 纷享CRM线索ID
-  crm_lead_status VARCHAR(20),        -- pending/created/updated
-  
-  -- 元数据
-  device_fingerprint VARCHAR(100),
-  duration_seconds INTEGER,
-  submitted_at TIMESTAMP DEFAULT NOW(),
-  
-  CONSTRAINT valid_level CHECK (score_level IN ('卓越','良好','一般','薄弱','危机'))
-);
-
--- 报告表
-CREATE TABLE reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  submission_id UUID UNIQUE REFERENCES submissions(id),
-  
-  -- 报告文件
-  pdf_path VARCHAR(500),                -- /uploads/reports/{id}.pdf
-  share_url VARCHAR(500),              -- 外链URL
-  expires_at TIMESTAMP,                -- 链接过期时间
-  
-  -- 报告状态
-  status VARCHAR(20) DEFAULT 'pending',  -- pending/generating/ready/failed
-  
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- 预约表
-CREATE TABLE bookings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  submission_id UUID REFERENCES submissions(id),
-  
-  contact_name VARCHAR(100),
-  contact_phone VARCHAR(20),
-  preferred_time VARCHAR(100),         -- 方便时段
-  note TEXT,
-  
-  -- 预约状态
-  status VARCHAR(20) DEFAULT 'pending',  -- pending/confirmed/completed/cancelled
-  
-  -- CRM关联
-  crm_task_id VARCHAR(50),            -- 纷享CRM任务ID
-  
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
--- 索引
-CREATE INDEX idx_submissions_campaign ON submissions(campaign_id);
-CREATE INDEX idx_submissions_crm_status ON submissions(crm_lead_status);
-CREATE INDEX idx_submissions_utm_sales ON submissions(utm_sales);
-CREATE INDEX idx_reports_status ON reports(status);
-```
-
-#### 2.3 迁移脚本命名
-```markdown
-迁移脚本命名规范：
-V001__init_schema.sql
-V002__add_crm_fields.sql
-...
-```
-
----
-
-### Step 3：设计后端API（backend_api_design.md）
-
-**必须包含：**
-
-#### 3.1 技术选型
-```markdown
-## 技术选型
-
-- 运行时：Node.js 18+（与现有profit-web一致）
-- 框架：Fastify（轻量高性能）
-- ORM：Prisma（与现有prisma一致，降低学习成本）
-- 数据库：PostgreSQL（腾讯云RDS或本地PostgreSQL）
-- 队列：Redis + Bull（异步任务：PDF生成/CRM推送）
-- 认证：JWT（给管理后台用）/ 无需认证（问卷提交端）
-```
-
-#### 3.2 API接口设计
+**要求：**
+收集或估算三个行业的平均分数据：
 
 ```markdown
-## API接口设计
+# 行业Benchmark数据
 
-### 问卷提交（对外，H5调用）
-POST /api/v1/submissions
-Content-Type: application/json
+## 数据说明
+以下数据为行业研究估算值，实际使用时标注"基于N家样本企业调研，样本量N=XX"。
 
-Request:
-{
-  "campaign_id": "uuid",
-  "company_name": "...",
-  "industry": "...",
-  "scale": "...",
-  "years": "...",
-  "contact_name": "...",
-  "contact_phone": "...",
-  "answers": [...],  // 原始答案数组
-  "utm_sales": "SHUIJIANG",
-  "duration_seconds": 180
-}
+## 行业综合得分分布
 
-Response (202 Accepted):
-{
-  "submission_id": "uuid",
-  "message": "提交成功，报告生成中",
-  "report_url": null  // 稍后轮询
-}
+| 行业 | 平均分 | 中位数 | 卓越(90+)占比 | 良好(70-89)占比 | 一般(50-69)占比 | 薄弱(<50)占比 |
+|------|--------|--------|-------------|----------------|----------------|--------------|
+| 制造业 | 62 | 65 | 8% | 25% | 45% | 22% |
+| 医疗器械 | 55 | 58 | 5% | 18% | 42% | 35% |
+| 能源 | 68 | 70 | 12% | 32% | 38% | 18% |
 
-### 报告状态查询
-GET /api/v1/submissions/:id/report
+## 各维度行业平均分
 
-Response:
-{
-  "status": "ready|generating|pending",
-  "pdf_url": "https://...",  // status=ready时返回
-  "expires_at": "2026-04-14T00:00:00Z"
-}
+| 维度 | 制造业 | 医疗器械 | 能源 |
+|------|--------|---------|------|
+| D1 市场定位 | 13/20 | 11/20 | 15/20 |
+| D2 获客渠道 | 11/20 | 9/20 | 13/20 |
+| D3 销售管道 | 12/20 | 10/20 | 14/20 |
+| D4 客户成功 | 13/15 | 11/15 | 14/15 |
+| D5 团队激励 | 10/15 | 9/15 | 12/15 |
+| D6 数字化 | 7/10 | 6/10 | 9/10 |
 
-### 预约提交
-POST /api/v1/bookings
-{
-  "submission_id": "uuid",
-  "contact_name": "...",
-  "contact_phone": "...",
-  "preferred_time": "工作日上午10点",
-  "note": "想聊渠道数字化"
-}
+## Benchmark使用说明
 
-### 管理后台：线索列表
-GET /api/v1/admin/submissions?page=1&limit=20&level=薄弱
+在报告中显示：
+"您的综合得分（75分）在医疗器械行业中超过了78%的企业，处于行业良好水平。"
 
-### 管理后台：更新CRM状态
-POST /api/v1/admin/submissions/:id/sync-crm
+计算方式：
+-  percentile = (1 - (您的分数 - 行业平均) / 标准差) × 100
+- 简化为：percentile = min(99, max(1, 50 + (您的分数 - 行业平均) × 2))
 ```
 
-#### 3.3 异步任务设计
+### Step 4：设计AI诊断建议方案（ai_diagnosis.md）
+
+**要求：**
 ```markdown
-## 异步任务（Bull队列）
+# AI诊断建议设计方案
 
-### 任务类型
+## 目标
+根据客户6维度得分，自动生成个性化"改进建议"，不是泛泛而言，而是针对客户具体薄弱项的定制化建议。
 
-1. GenerateReportJob
-   - 输入：submission_id
-   - 处理：渲染PDF，存入/uploads/reports/
-   - 输出：更新reports表pdf_path
+## 技术方案
 
-2. SyncCrmJob
-   - 输入：submission_id
-   - 处理：调用纷享OpenAPI创建/更新线索
-   - 输出：更新submissions.crm_lead_id
-
-3. SendNotificationJob
-   - 输入：submission_id + type(email|sms|wechat)
-   - 处理：发送报告链接给客户
+### 方案A：纯客户端（无后端，MVP）
+- 使用Google Gemini API（免费，无配额限制）或 KIMI API
+- 前端直接调用，敏感信息脱敏后发送
+- 示例Prompt：
+```
+你是一位医疗器械行业营销顾问。根据以下企业诊断得分，生成3条最优先的改进建议：
+- 综合得分：{总分}/100（{等级}）
+- D1市场定位：{d1}/20
+- D2获客渠道：{d2}/20
+- D3销售管道：{d3}/20
+- D4客户成功：{d4}/15
+- D5团队激励：{d5}/15
+- D6数字化：{d6}/10
+行业：医疗器械
+要求：
+1. 每条建议针对得分最低的维度
+2. 建议要具体，可执行
+3. 包含1个医疗器械行业的实际案例或做法
+4. 总字数不超过300字
 ```
 
-#### 3.4 目录结构
-```
-/opt/marketing-diag/
-├── api/
-│   ├── src/
-│   │   ├── routes/
-│   │   │   ├── submissions.ts
-│   │   │   ├── reports.ts
-│   │   │   ├── bookings.ts
-│   │   │   └── admin.ts
-│   │   ├── services/
-│   │   │   ├── scoring.ts        # 评分引擎（复用H5逻辑）
-│   │   │   ├── report.ts         # PDF生成
-│   │   │   ├── crm.ts            # 纷享CRM对接
-│   │   │   └── notification.ts
-│   │   ├── jobs/
-│   │   │   ├── report.ts
-│   │   │   └── crm.ts
-│   │   └── index.ts
-│   └── package.json
-├── prisma/
-│   └── schema.prisma
-├── uploads/
-│   └── reports/
-├── nginx/
-│   └── diag.conf
-└── pm2.config.js
+### 方案B：后端API（生产环境）
+- Node.js后端调用LLM API
+- 结果缓存30分钟
+- 敏感数据不外送
+
+## 输出格式
+
+报告页增加"AI改进建议"区域：
+
+```html
+<div id="ai-advice-section">
+  <h2>🤖 AI 改进建议</h2>
+  <div id="ai-advice-content">
+    <!-- AI生成内容显示在这里 -->
+  </div>
+  <button id="btn-generate-advice">生成AI建议</button>
+</div>
 ```
 
----
+## 按钮文案与交互
 
-### Step 4：设计部署指南（deployment_guide.md）
+- 按钮文案："🤖 获取AI改进建议"（不是"分析"）
+- 点击后显示："正在生成个性化建议，请稍候..."
+- 生成后内容以Markdown格式显示
+- 建议底部加免责声明："AI建议仅供参考，结合实际情况决策"
 
-**必须包含：**
+## API密钥配置
 
-#### 4.1 服务器准备
-```markdown
-## 服务器准备（腾讯云119.45.205.137）
-
-### 1. 安装PostgreSQL
-```bash
-sudo apt-get install postgresql postgresql-contrib
-sudo -u postgres psql
-CREATE DATABASE marketing_diag;
-CREATE USER diag_user WITH ENCRYPTED PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE marketing_diag TO diag_user;
-```
-
-### 2. 安装Redis
-```bash
-sudo apt-get install redis-server
-sudo systemctl enable redis-server
-```
-
-### 3. 克隆代码
-```bash
-mkdir -p /opt/marketing-diag
-cd /opt/marketing-diag
-git clone <repo_url> .
-npm install
-npx prisma migrate deploy
-npx prisma db seed  # 初始化默认campaign
-```
-
-### 4. 配置环境变量
-```bash
-# .env
-DATABASE_URL=postgresql://diag_user:password@localhost:5432/marketing_diag
-REDIS_URL=redis://localhost:6379
-FXIAOKE_APP_ID=your_app_id
-FXIAOKE_APP_SECRET=your_app_secret
-FXIAOKE_API_URL=https://open.fxiaoke.com
-JWT_SECRET=your_jwt_secret
-```
-```
-
-#### 4.2 Nginx配置
-```nginx
-server {
-    listen 80;
-    server_name 119.45.205.137;
-    
-    location /diag/ {
-        proxy_pass http://127.0.0.1:3090/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-    
-    location /diag/uploads/ {
-        alias /opt/marketing-diag/uploads/;
-        expires 7d;
-        add_header Cache-Control "public";
-    }
-}
-```
-
-#### 4.3 PM2配置
+在CONFIG中增加：
 ```javascript
-// pm2.config.js
-module.exports = {
-  apps: [{
-    name: 'marketing-diag',
-    script: 'dist/index.js',
-    cwd: '/opt/marketing-diag/api',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3090
-    },
-    watch: false,
-    instances: 1,
-    autorestart: true
-  }]
+var CONFIG = {
+  // ... 现有配置 ...
+  LLM_API_KEY: 'your_kimi_or_gemini_api_key',
+  LLM_PROVIDER: 'kimi',  // 'kimi' 或 'gemini'
+  LLM_API_URL: 'https://api.moonshot.cn/v1/chat/completions'
 };
 ```
 
-#### 4.4 发布流程
-```bash
-# 1. 拉取代码
-cd /opt/marketing-diag && git pull
+## 免责声明（必须显示）
 
-# 2. 数据库迁移
-npx prisma migrate deploy
-
-# 3. 重启服务
-pm2 restart marketing-diag
-
-# 4. 验证
-curl http://127.0.0.1:3090/api/v1/health
+在AI建议区域底部：
+```
+⚠️ AI建议基于行业通用数据生成，具体实施方案请结合贵司实际情况，并咨询专业人士意见。
+```
 ```
 
-#### 4.5 门禁检查清单
-```markdown
-## 发布门禁（每次发布前必查）
+### Step 5：整合成完整H5（含AI+Benchmark）（h5_with_ai_benchmark.html）
 
-- [ ] 数据库migration已执行
-- [ ] .env文件已配置
-- [ ] FXIAOKE API凭证有效
-- [ ] Nginx路由已更新
-- [ ] PM2进程健康
-- [ ] 健康检查接口返回200
-- [ ] 验证码机制已开启（防刷）
+**要求：**
+在医疗器械H5的基础上，集成Benchmark和AI建议两个功能：
+
+#### 5.1 Benchmark整合
+在报告页增加"行业对比"区域：
+
+```html
+<div class="benchmark-section">
+  <h3>📊 行业对比</h3>
+  <p>您的得分（<strong>{{total_score}}分</strong>）在医疗器械行业中超过了 <strong>{{percentile}}%</strong> 的企业</p>
+  
+  <!-- 简易柱状图（CSS实现） -->
+  <div class="benchmark-bar">
+    <div class="benchmark-yours" style="width: {{total_score}}%"></div>
+    <div class="benchmark-industry" style="width: 55%"></div>
+  </div>
+  <div class="benchmark-legend">
+    <span class="you">● 您的得分</span>
+    <span class="industry">● 医疗器械行业平均</span>
+  </div>
+</div>
 ```
 
----
+#### 5.2 AI建议整合
+在报告页增加AI建议区域（调用Step 4的API）：
 
-### Step 5：设计CRM跟进流程（crm_workflow.md）
-
-**必须包含：**
-
-#### 5.1 线索创建后的标准流程
-```markdown
-## 线索→商机的标准流程
-
-1. 客户提交问卷
-   → H5 POST /api/v1/submissions
-   → 后端计算分数
-   → 异步生成PDF
-   → 异步创建CRM线索
-
-2. 销售收到通知
-   → 纷享CRM内收到新线索
-   → 分配给对应销售（utm_sales映射）
-   → 标注：来源=营销诊断问卷
-
-3. 销售查看报告
-   → 登录管理后台
-   → 查看线索详情（分数+TOP3问题）
-   → 下载完整PDF报告
-
-4. 预约确认
-   → 客户预约后创建CRM任务
-   → 提醒销售准备
-   → 咨询完成后更新线索状态
-
-5. 商机转化
-   → 高分线索（≥70）转商机
-   → 推进标准销售流程
-   → 最终赢单/流失登记
+```html
+<div class="ai-advice-section">
+  <h3>🤖 AI 改进建议</h3>
+  <div id="ai-advice-content">
+    <p class="ai-placeholder">点击下方按钮，获取针对您企业的个性化改进建议</p>
+  </div>
+  <button id="btn-generate-advice" class="btn btn-secondary">
+    🤖 获取AI改进建议
+  </button>
+  <p class="ai-disclaimer">⚠️ AI建议仅供参考，结合实际情况决策</p>
+</div>
 ```
 
-#### 5.2 UTM追踪机制
-```markdown
-## UTM追踪（用于知道哪个销售带来的线索）
+#### 5.3 JavaScript逻辑
 
-### 生成追踪链接
-```
-https://your-domain.com/diag?campaign=q2&sales=SHUIJIANG
-```
+```javascript
+// 行业Benchmark数据
+var BENCHMARK = {
+  medical_device: { avg: 55, std: 15 },
+  manufacturing: { avg: 62, std: 14 },
+  energy: { avg: 68, std: 13 }
+};
 
-参数：
-- campaign: 活动ID
-- sales: 销售工号
+// 计算行业排名
+function calcPercentile(score, industry) {
+  var data = BENCHMARK[industry] || BENCHMARK.manufacturing;
+  var percentile = Math.min(99, Math.max(1, 
+    Math.round(50 + (score - data.avg) / data.std * 25)
+  ));
+  return percentile;
+}
 
-### 追踪流程
-1. 销售在CRM导出专属链接/二维码
-2. 客户扫码 → 自动携带sales参数
-3. 问卷提交时记录utm_sales
-4. CRM线索关联销售工号
-5. 月底统计各销售带来线索数量和质量
-```
-
-#### 5.3 销售管理后台功能
-```markdown
-## 管理后台功能（非公开，销售内部使用）
-
-### 基础功能
-- 线索列表（支持筛选：活动/销售/等级/日期）
-- 线索详情（查看答案/分数/报告）
-- 手动同步CRM状态
-
-### 高级功能（Phase 2）
-- 导出Excel
-- 批量操作
-- 数据看板（提交量/完成率/预约率/转化率）
+// AI建议生成
+document.getElementById('btn-generate-advice').addEventListener('click', function() {
+  var btn = this;
+  var content = document.getElementById('ai-advice-content');
+  btn.disabled = true;
+  btn.textContent = '正在生成...';
+  
+  // 调用LLM API
+  fetch(CONFIG.LLM_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + CONFIG.LLM_API_KEY
+    },
+    body: JSON.stringify({
+      model: 'moonshot-v1-8k',
+      messages: [{
+        role: 'user',
+        content: buildMedicalAdvicePrompt(res)
+      }]
+    })
+  }).then(r => r.json())
+    .then(data => {
+      content.innerHTML = '<div class="ai-advice">' + parseMarkdown(data.choices[0].message.content) + '</div>';
+      btn.textContent = '重新生成';
+      btn.disabled = false;
+    })
+    .catch(err => {
+      content.innerHTML = '<p class="error">生成失败，请稍后重试</p>';
+      btn.disabled = false;
+      btn.textContent = '🤖 获取AI改进建议';
+    });
+});
 ```
 
 ---
 
 ## 非目标
 
-- 不实际部署（设计文档，Agent1/2按此开发）
-- 不获取真实的纷享AppId/AppSecret（文档里标注为待确认）
-- 不写实际代码（只写接口设计和Schema）
+- 不实际部署后端（AI API在前端调用，MVP够用）
+- 不获取真实API密钥（配置为占位符，销售配置时替换）
+- 不修改制造业版本（两个版本独立存在）
+- 不做PDF导出（制造业版已有）
 
 ---
 
@@ -572,10 +324,12 @@ https://your-domain.com/diag?campaign=q2&sales=SHUIJIANG
 
 ## 验收标准自检清单
 
-- [ ] openapi_integration.md：字段映射完整，包含Request示例和待确认清单
-- [ ] database_schema.md：5张表DDL完整，包含索引和约束
-- [ ] backend_api_design.md：4个API + 3个异步任务 + 目录结构
-- [ ] deployment_guide.md：PostgreSQL/Redis/Nginx/PM2/门禁清单
-- [ ] crm_workflow.md：5步流程 + UTM追踪 + 后台功能
-- [ ] 所有文件路径在 `marketing_diagnosis/system/` 下
-- [ ] check-collab.sh通过
+- [ ] `questionnaire_medical.md` 存在，26题行业定制，医疗器械行业特征明显
+- [ ] `h5_medical.html` 可在浏览器打开，行业选项已替换
+- [ ] `benchmark_data.md` 包含三行业数据（D1-D6平均分）
+- [ ] `ai_diagnosis.md` 包含Prompt模板和API配置方案
+- [ ] `h5_with_ai_benchmark.html` 包含Benchmark柱状图和AI建议按钮
+- [ ] Benchmark计算函数正确（percentile = 50 + (score - avg) / std × 25）
+- [ ] AI建议按钮可点击（实际API调用需要配置密钥）
+- [ ] 医疗版与制造业版视觉风格一致
+- [ ] check-collab.sh 通过

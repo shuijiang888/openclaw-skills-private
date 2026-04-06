@@ -55,3 +55,11 @@
 - 输出：openapi_integration + database_schema + backend_api + deployment_guide + crm_workflow
 - 目标：从H5→完整系统，Agent1/2可照此直接开发部署
 - 里程碑：腾讯云部署，/diag/*路由，纷享CRM OpenAPI对接
+
+## v1.9（collab-010）
+
+- 新增：医疗器械行业版营销诊断系统
+- 包含1：行业定制问卷（26题，医疗器械特征选项）
+- 包含2：行业Benchmark数据（制造业/医疗器械/能源三行业）
+- 包含3：AI诊断建议（LLM API集成，KIMI/Gemini）
+- 里程碑：从单一制造业→双行业覆盖+AI增强+Benchmark对比
