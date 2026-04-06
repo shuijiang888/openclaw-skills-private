@@ -47,7 +47,7 @@ if [[ "${CHECK_ORIGIN}" == "1" ]]; then
 fi
 
 BARE_SHA="$(ssh "${DEPLOY_SSH}" "git --git-dir='${BARE_GIT_DIR}' rev-parse main")"
-WORKTREE_SHA="$(ssh "${DEPLOY_SSH}" "git -C '${WORKTREE_DIR}' rev-parse HEAD")"
+WORKTREE_SHA="$(ssh "${DEPLOY_SSH}" "git --git-dir='${BARE_GIT_DIR}' --work-tree='${WORKTREE_DIR}' rev-parse HEAD")"
 
 echo "[sha-gate] bare main: ${BARE_SHA}"
 echo "[sha-gate] worktree:  ${WORKTREE_SHA}"
