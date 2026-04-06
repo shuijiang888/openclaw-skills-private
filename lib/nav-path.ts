@@ -1,5 +1,14 @@
 const PROFIT_BASE_PATH = "/profit";
 
+function hasZtConsoleMarker(path: string): boolean {
+  return (
+    path.includes("/console/system") ||
+    path.includes("/console/users") ||
+    path.includes("/console/zt-system") ||
+    path.includes("/console/zt-users")
+  );
+}
+
 export function normalizeNavPath(pathname: string | null | undefined): string {
   const p = pathname ?? "/";
   if (p === PROFIT_BASE_PATH) return "/";
@@ -22,13 +31,9 @@ export function resolveClientPathname(pathname: string | null | undefined): stri
 }
 
 export function isZtConsolePath(pathname: string | null | undefined): boolean {
-  const p = normalizeNavPath(pathname);
-  return (
-    p.startsWith("/console/system") ||
-    p.startsWith("/console/users") ||
-    p.startsWith("/console/zt-system") ||
-    p.startsWith("/console/zt-users")
-  );
+  const raw = pathname ?? "/";
+  const normalized = normalizeNavPath(pathname);
+  return hasZtConsoleMarker(raw) || hasZtConsoleMarker(normalized);
 }
 
 export function isZtPath(pathname: string | null | undefined): boolean {

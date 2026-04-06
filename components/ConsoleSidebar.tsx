@@ -11,11 +11,11 @@ import { parseDemoRole } from "@/lib/approval";
 import {
   isZtConsolePath,
   isZtConsoleSegment,
-  normalizeNavPath,
+  resolveClientPathname,
 } from "@/lib/nav-path";
 
 export function ConsoleSidebar() {
-  const pathname = normalizeNavPath(usePathname() ?? "/");
+  const pathname = resolveClientPathname(usePathname() ?? "/");
   const segment = useSelectedLayoutSegment();
   const role = parseDemoRole(useDemoRole());
   const isZtConsoleContext =
