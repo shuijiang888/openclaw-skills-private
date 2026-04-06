@@ -1,5 +1,1 @@
-import { redirect } from "next/navigation";
-
-export default function ConsoleUserAdminAliasPage() {
-  redirect("/console");
-}
+export { default } from "@/app/console/users/page";

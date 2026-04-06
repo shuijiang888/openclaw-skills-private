@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { canPerformAction, type RbacRole } from "@/lib/rbac";
-import { demoRoleFromRequest } from "@/lib/http";
+import { demoRoleFromRequest, sessionUserIdFromRequest } from "@/lib/http";
 import { isSessionAuthMode } from "@/lib/auth-mode";
 import { parseDemoRole } from "@/lib/approval";
 import bcrypt from "bcryptjs";
@@ -10,11 +10,13 @@ export const dynamic = "force-dynamic";
 
 function requestRbacRole(req: Request): RbacRole {
   if (isSessionAuthMode()) {
-    const role = parseDemoRole(req.headers.get("x-profit-session-role"));
-    return role === "ADMIN" ? "ADMIN" : role;
+    const raw = (req.headers.get("x-profit-session-role") ?? "")
+      .trim()
+      .toUpperCase();
+    if (raw === "SUPER_ADMIN" || raw === "SUPERADMIN") return "SUPER_ADMIN";
+    return parseDemoRole(raw);
   }
-  const role = demoRoleFromRequest(req);
-  return role === "ADMIN" ? "ADMIN" : role;
+  return demoRoleFromRequest(req);
 }
 
 export async function GET(req: Request) {
@@ -45,6 +47,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const role = requestRbacRole(req);
+  const actorId = sessionUserIdFromRequest(req) ?? "__demo__";
   if (!canPerformAction(role, "user:manage")) {
     return NextResponse.json({ error: "无权限创建用户" }, { status: 403 });
   }
@@ -83,6 +86,20 @@ export async function POST(req: Request) {
       role: true,
       teamId: true,
       createdAt: true,
+    },
+  });
+
+  await prisma.agentAuditLog.create({
+    data: {
+      requestId: crypto.randomUUID(),
+      route: "POST /api/users",
+      action: "user_create",
+      actorRole: role,
+      actorId,
+      reason: `创建用户 ${body.email}`,
+      beforeJson: "{}",
+      afterJson: JSON.stringify({ id: user.id, email: user.email, role: user.role }),
+      metaJson: JSON.stringify({ email: user.email, role: user.role }),
     },
   });
 
