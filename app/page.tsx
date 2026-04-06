@@ -16,13 +16,6 @@ type PortalCard = {
 
 const portalCards: PortalCard[] = [
   {
-    title: "健康检查",
-    subtitle: "Health Check",
-    description: "全体 Agent 共享能力入口：统一检查接口状态、关键依赖与可用性。",
-    href: "/health-check",
-    cta: "进入健康检查",
-  },
-  {
     title: "智能盈利管理系统",
     subtitle: "Profit Management",
     description: "报价、审批、项目与盈利罗盘的一体化经营管理入口。",
@@ -43,6 +36,42 @@ const portalCards: PortalCard[] = [
     description: "高价值能力与生态协同预留模块，后续将逐步开放入驻与连接。",
     href: "/profit/crm",
     cta: "即将上线",
+  },
+];
+
+type SharedToolCard = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+  tone: "cyan" | "amber" | "violet";
+};
+
+const sharedToolCards: SharedToolCard[] = [
+  {
+    eyebrow: "SHARED CAPABILITY",
+    title: "健康检查",
+    description: "统一检查系统接口、服务状态与关键依赖，建议在发布前与回归后各执行一次。",
+    href: "/health-check",
+    cta: "打开健康检查",
+    tone: "cyan",
+  },
+  {
+    eyebrow: "MARKETING DIAG H5",
+    title: "制造业企业营销诊断",
+    description: "面向制造业企业的一页式营销诊断问卷，支持快速评估增长瓶颈与优先改进方向。",
+    href: "/diag-manufacturing.html",
+    cta: "打开制造业诊断",
+    tone: "amber",
+  },
+  {
+    eyebrow: "MARKETING DIAG H5",
+    title: "医疗器械企业营销诊断",
+    description: "面向医疗器械企业的一页式营销诊断问卷，聚焦渠道合规、学术推广与成交效率。",
+    href: "/diag-medical.html",
+    cta: "打开医疗器械诊断",
+    tone: "violet",
   },
 ];
 
@@ -71,7 +100,7 @@ export default async function LandingPage() {
           点击对应卡片进入独立系统模块；各模块相互隔离，避免内容串台。
         </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {portalCards.map((card) => (
             <article
               key={card.title}
@@ -109,6 +138,59 @@ export default async function LandingPage() {
               </Link>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 sm:text-xl">
+          共享能力 · Agent工具卡
+        </h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          面向多系统的通用能力入口，便于快速诊断、联调与发布验收。
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {sharedToolCards.map((card) => {
+            const toneClass =
+              card.tone === "cyan"
+                ? {
+                    border: "border-cyan-200/90 dark:border-cyan-800/60",
+                    eyebrow: "text-cyan-700 dark:text-cyan-300",
+                    cta: "text-cyan-700 dark:text-cyan-300",
+                  }
+                : card.tone === "amber"
+                  ? {
+                      border: "border-amber-200/90 dark:border-amber-800/60",
+                      eyebrow: "text-amber-700 dark:text-amber-300",
+                      cta: "text-amber-700 dark:text-amber-300",
+                    }
+                  : {
+                      border: "border-violet-200/90 dark:border-violet-800/60",
+                      eyebrow: "text-violet-700 dark:text-violet-300",
+                      cta: "text-violet-700 dark:text-violet-300",
+                    };
+
+            return (
+              <Link
+                key={card.title}
+                href={card.href}
+                className={`rounded-xl border bg-white/95 p-4 shadow-sm transition hover:shadow-md dark:bg-slate-950/50 ${toneClass.border}`}
+              >
+                <p className={`text-xs font-semibold tracking-wide ${toneClass.eyebrow}`}>
+                  {card.eyebrow}
+                </p>
+                <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+                  {card.title}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                  {card.description}
+                </p>
+                <p className={`mt-3 text-xs font-semibold ${toneClass.cta}`}>
+                  {card.cta} →
+                </p>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </div>
