@@ -2,4 +2,4 @@
 
 ## 人类可读备注
 
-collab-009 验收通过（系统设计 92/100）。collab-010 目标：打造医疗器械行业版"企业营销诊断系统"，包含：行业问卷（26题）、AI诊断建议（LLM生成）、行业Benchmark对比（制造业/医疗器械/能源）。完成后可直接作为医疗行业CRM诊断工具。
+**collab-010 已完成。** 交付物见 `collaboration/marketing_diagnosis/medical_device/`：`questionnaire_medical.md`、`benchmark_data.md`、`ai_diagnosis.md`、`h5_medical.html`（PDF）、`h5_with_ai_benchmark.html`（Benchmark + AI，无 PDF）。协议见 `PROTOCOL_CHANGELOG.md` v1.9。

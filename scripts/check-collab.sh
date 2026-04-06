@@ -13,6 +13,9 @@ REPORT="$ROOT/collaboration/opportunity_insight_report.md"
 TALKTRACK="$ROOT/collaboration/huichuan_sales_talktrack.md"
 MD_DIR="$ROOT/collaboration/marketing_diagnosis"
 H5_MVP="$ROOT/collaboration/marketing_diagnosis/mvp/h5_questionnaire.html"
+MED_DIR="$ROOT/collaboration/marketing_diagnosis/medical_device"
+H5_MED="$MED_DIR/h5_medical.html"
+H5_MED_AI="$MED_DIR/h5_with_ai_benchmark.html"
 SYS_DIR="$ROOT/collaboration/marketing_diagnosis/system"
 
 err() { echo "check-collab: $*" >&2; exit 1; }
@@ -24,7 +27,7 @@ for heading in "目标对齐" "指令下发" "Cursor 执行" "过程管理" "质
 done
 
 [[ -f "$STATUS" ]] || err "missing collaboration/STATUS.md"
-grep -q "^task_id: collab-009" "$STATUS" || err "STATUS task_id must be collab-009"
+grep -q "^task_id: collab-010" "$STATUS" || err "STATUS task_id must be collab-010"
 grep -q "^state: done" "$STATUS" || err "STATUS state must be done (YAML block)"
 
 [[ -f "$RETRO" ]] || err "missing collaboration/retrospectives/collab-001-20260406.md"
@@ -49,6 +52,7 @@ grep -q "v1.5" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.5"
 grep -q "v1.6" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.6"
 grep -q "v1.7" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.7"
 grep -q "v1.8" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.8"
+grep -q "v1.9" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.9"
 
 [[ -f "$REPORT" ]] || err "missing collaboration/opportunity_insight_report.md"
 [[ -s "$REPORT" ]] || err "opportunity_insight_report.md is empty"
@@ -86,6 +90,23 @@ grep -q "var CONFIG" "$H5_MVP" || err "h5 must expose CONFIG"
 grep -q "basic-name-inp" "$H5_MVP" || err "h5 must have QB1 company field"
 grep -q "TOTAL_STEPS = 30" "$H5_MVP" || err "h5 must use 30 steps"
 grep -q "report-page" "$H5_MVP" || err "h5 report-page for PDF"
+
+[[ -d "$MED_DIR" ]] || err "missing marketing_diagnosis/medical_device/"
+for f in questionnaire_medical.md benchmark_data.md ai_diagnosis.md; do
+  [[ -f "$MED_DIR/$f" ]] || err "missing medical_device/$f"
+  [[ -s "$MED_DIR/$f" ]] || err "empty medical_device/$f"
+done
+grep -q "calcPercentile" "$CHANGELOG" || err "PROTOCOL v1.9 changelog should mention calcPercentile or medical benchmark"
+[[ -f "$H5_MED" ]] || err "missing medical_device/h5_medical.html"
+[[ -s "$H5_MED" ]] || err "empty medical_device/h5_medical.html"
+grep -q "computeScores" "$H5_MED" || err "h5_medical must contain scoring engine"
+grep -q "高值耗材" "$H5_MED" || err "h5_medical must contain medical segment options"
+grep -q "html2pdf" "$H5_MED" || err "h5_medical must reference html2pdf"
+[[ -f "$H5_MED_AI" ]] || err "missing medical_device/h5_with_ai_benchmark.html"
+[[ -s "$H5_MED_AI" ]] || err "empty medical_device/h5_with_ai_benchmark.html"
+grep -q "calcPercentile" "$H5_MED_AI" || err "h5_with_ai_benchmark must define calcPercentile"
+grep -q "btn-generate-advice" "$H5_MED_AI" || err "h5_with_ai_benchmark must have AI button"
+grep -q "var BENCHMARK" "$H5_MED_AI" || err "h5_with_ai_benchmark must define BENCHMARK"
 
 [[ -d "$SYS_DIR" ]] || err "missing marketing_diagnosis/system/"
 for f in openapi_integration database_schema backend_api_design deployment_guide crm_workflow; do

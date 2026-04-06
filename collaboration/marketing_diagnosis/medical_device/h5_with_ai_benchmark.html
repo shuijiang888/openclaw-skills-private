@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>医疗器械营销诊断（Benchmark + AI）</title>
+  <style>
+    :root {
+      --primary: #0a2540;
+      --primary-mid: #123a5c;
+      --accent: #2e8bc0;
+      --bg: #e6edf5;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --muted: #5c6b7a;
+      --danger: #c0392b;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(10, 37, 64, 0.1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wrap { max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; }
+    .wrap.report-wide { max-width: 640px; }
+    header.hero { text-align: center; padding: 20px 0 12px; }
+    header.hero h1 { margin: 0; font-size: 1.35rem; color: var(--primary); font-weight: 800; letter-spacing: -0.02em; }
+    header.hero p { margin: 10px 0 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
+    #screen-welcome { text-align: center; }
+    #screen-welcome .card { margin-top: 8px; }
+    .welcome-list { text-align: left; margin: 16px 0; padding-left: 20px; color: var(--muted); font-size: 15px; line-height: 1.7; }
+    .progress-outer { height: 8px; background: #c5d4e3; border-radius: 4px; overflow: hidden; margin: 16px 0; }
+    .progress-inner { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; transition: width 0.25s ease; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 18px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(10, 37, 64, 0.06);
+    }
+    .section-label { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
+    .dim-tag {
+      display: inline-block; font-size: 12px; color: var(--accent);
+      background: rgba(46, 139, 192, 0.12); padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; font-weight: 600;
+    }
+    .q-title { font-size: 17px; font-weight: 600; line-height: 1.45; margin: 0 0 16px; }
+    .hint { font-size: 13px; color: var(--muted); margin: -8px 0 14px; }
+    .opt {
+      display: block; width: 100%; text-align: left; padding: 14px 16px; min-height: 44px; margin-bottom: 10px;
+      border: 2px solid #d0dbe6; border-radius: 10px; background: #fafbfc; font-size: 16px; color: var(--text);
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .opt:active { transform: scale(0.99); }
+    .opt.selected { border-color: var(--primary); background: rgba(10, 37, 64, 0.06); font-weight: 500; }
+    .opt.multi.selected { border-color: var(--accent); background: rgba(46, 139, 192, 0.1); }
+    .nav-row { display: flex; gap: 12px; margin-top: 20px; }
+    .btn {
+      flex: 1; min-height: 48px; font-size: 18px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-ghost { background: #eef2f6; color: var(--primary); }
+    .err { color: var(--danger); font-size: 14px; margin-top: 10px; display: none; }
+    .err.show { display: block; }
+    input.inp, textarea.inp {
+      width: 100%; padding: 14px; font-size: 16px; border: 2px solid #d0dbe6; border-radius: 10px; margin-bottom: 12px;
+    }
+    textarea.inp { min-height: 88px; resize: vertical; }
+    .label { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
+    #screen-quiz, #screen-report { display: none; }
+    #screen-quiz.visible, #screen-report.visible { display: block; }
+    #screen-welcome.hidden { display: none; }
+
+    /* —— 专业报告页 —— */
+    #report-page {
+      background: #fff;
+      color: #1a1a2e;
+      padding: 28px 22px 32px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(10, 37, 64, 0.08);
+      box-shadow: var(--shadow);
+    }
+    .report-header { border-bottom: 3px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px; }
+    .report-header h1 { margin: 0; font-size: 1.35rem; color: var(--primary); font-weight: 800; }
+    .report-meta { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 16px; }
+    .report-meta span { background: #f0f4f8; padding: 4px 10px; border-radius: 6px; }
+    .score-hero { text-align: center; padding: 20px 0 8px; }
+    .score-number { font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .score-label { font-size: 14px; color: var(--muted); margin-top: 6px; }
+    .score-level {
+      display: inline-block; margin-top: 12px; padding: 8px 20px; border-radius: 24px;
+      font-weight: 700; font-size: 16px; background: var(--accent); color: #fff;
+    }
+    .radar-section { margin: 28px 0; }
+    .radar-section h2 { font-size: 1.05rem; color: var(--primary); margin: 0 0 12px; }
+    .radar-box {
+      background: #f4f7fb; border-radius: 12px; padding: 16px; text-align: center;
+      border: 1px solid #dde5ee;
+    }
+    #radar-chart { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+    .radar-legend { margin-top: 16px; text-align: left; font-size: 14px; }
+    .radar-legend li { margin: 6px 0; padding-left: 4px; }
+    .dim-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+    .dim-table th, .dim-table td { border: 1px solid #dde5ee; padding: 10px 8px; text-align: left; }
+    .dim-table th { background: #f0f4f8; color: var(--primary); font-weight: 600; }
+    .top3-section h2 { font-size: 1.05rem; color: var(--primary); margin: 24px 0 12px; }
+    .top3-section ol { margin: 0; padding-left: 20px; }
+    .top3-section li { margin: 12px 0; line-height: 1.55; }
+    .cta-section {
+      margin-top: 28px; padding: 20px; background: linear-gradient(135deg, #f0f6fc, #e8f0f8);
+      border-radius: 12px; text-align: center; border: 1px solid #d0dbe6;
+    }
+    .cta-section p { margin: 0 0 14px; font-size: 15px; color: var(--text); }
+    .btn-book {
+      display: inline-block; min-height: 52px; line-height: 52px; padding: 0 28px; font-size: 18px; font-weight: 700;
+      background: var(--primary); color: #fff !important; text-decoration: none; border-radius: 10px;
+    }
+    .btn-book:active { opacity: 0.92; }
+    .report-footnote { font-size: 12px; color: var(--muted); margin-top: 20px; line-height: 1.5; }
+    .report-actions { margin-top: 16px; }
+    .report-actions .btn { width: 100%; margin-bottom: 10px; }
+    .btn-export { background: var(--primary-mid); color: #fff; }
+    .btn-export.loading { pointer-events: none; opacity: 0.75; }
+    .lead-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e0e6ed; }
+    .hotline-note { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+    .bench-section { margin: 24px 0; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #dde5ee; }
+    .bench-section h2 { font-size: 1.05rem; color: var(--primary); margin: 0 0 12px; }
+    .bench-row { margin-bottom: 6px; }
+    .bench-row .bench-cap { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+    .bench-bars { position: relative; height: 32px; background: #e8edf3; border-radius: 8px; overflow: hidden; }
+    .bench-bar-avg { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(92, 107, 122, 0.38); border-radius: 8px 0 0 8px; min-width: 2px; z-index: 1; }
+    .bench-bar-you { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 8px 0 0 8px; min-width: 2px; z-index: 2; opacity: 0.92; }
+    .bench-legend { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+    .ai-section { margin: 24px 0; padding: 16px; background: #fafcff; border-radius: 12px; border: 1px solid #d0dbe6; }
+    .ai-section h2 { font-size: 1.05rem; color: var(--primary); margin: 0 0 10px; }
+    .ai-content { font-size: 14px; line-height: 1.65; color: var(--text); margin-top: 12px; }
+    .btn-ai { width: 100%; margin-bottom: 0; background: linear-gradient(135deg, #123a5c, #2e8bc0); color: #fff; border: none; }
+    .btn-ai:disabled { opacity: 0.65; cursor: wait; }
+    .ai-disclaimer { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="main-wrap">
+    <header class="hero">
+      <h1 id="app-title">医疗器械营销能力诊断</h1>
+      <p id="app-sub">约 6–10 分钟 · 适用于高值耗材、医疗设备、IVD、家用器械等细分 · 提交后生成专业摘要（得分需真实样本校准）</p>
+    </header>
+
+    <div id="screen-welcome">
+      <div class="card">
+        <p style="margin:0 0 12px;font-weight:600;color:var(--primary);">欢迎使用医疗器械行业营销能力快速诊断</p>
+        <ul class="welcome-list">
+          <li>共 <strong>30</strong> 题（企业与细分赛道信息 4 题 + 能力自评 26 题），<strong>计分规则</strong>与通用版一致</li>
+          <li>Q_B2 为「主要产品细分赛道」，便于与集采、入院、渠道等场景对齐</li>
+          <li>结果含 <strong>行业 Benchmark 对比</strong>（制造业 / 医疗器械 / 能源估算值）与 <strong>AI 改进建议</strong>（可配置密钥；失败时展示演示文案）</li>
+          <li>本增强版 <strong>不提供 PDF 导出</strong>（制造业通用版 H5 可导出 PDF）</li>
+        </ul>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-start">开始答题</button>
+      </div>
+    </div>
+
+    <div id="screen-quiz">
+      <div class="progress-meta">
+        <span id="dim-label">企业基本信息</span>
+        <span id="step-label">1 / 30</span>
+      </div>
+      <div class="progress-outer"><div class="progress-inner" id="progress-bar"></div></div>
+      <div class="card" id="question-card"></div>
+      <p class="err" id="err-msg">请完成本题后再继续</p>
+      <div class="nav-row">
+        <button type="button" class="btn btn-ghost" id="btn-prev">上一题</button>
+        <button type="button" class="btn btn-primary" id="btn-next">下一题</button>
+      </div>
+    </div>
+
+    <div id="screen-report">
+      <div class="wrap report-wide" style="padding-top:0">
+        <div id="report-page">
+          <header class="report-header">
+            <h1 id="rep-doc-title">《医疗器械营销能力诊断报告》</h1>
+            <div class="report-meta">
+              <span id="rep-company">—</span>
+              <span id="rep-date">—</span>
+              <span id="rep-sid">问卷编号：—</span>
+              <span id="rep-duration" style="display:none"></span>
+            </div>
+          </header>
+
+          <div class="score-hero">
+            <div class="score-number" id="rep-total">—</div>
+            <div class="score-label">综合得分 / 100</div>
+            <div class="score-level" id="rep-level">—</div>
+          </div>
+
+          <div class="radar-section">
+            <h2>六维度能力雷达</h2>
+            <div class="radar-box">
+              <svg id="radar-chart" width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="雷达图"></svg>
+              <ul class="radar-legend" id="radar-legend"></ul>
+            </div>
+          </div>
+
+          <h2 style="font-size:1.05rem;color:var(--primary);margin:20px 0 10px;">各维度得分（加权）</h2>
+          <table class="dim-table" id="rep-dim-table"></table>
+
+          <div class="bench-section">
+            <h2>行业 Benchmark（估算）</h2>
+            <p style="font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5;">以下为样本估算值，仅供参考；正式环境请用自有样本校准。当前对比行业：<strong id="rep-bench-ind-label">医疗器械</strong>。另可参考 <code>benchmark_data.md</code> 中制造业、能源对照。</p>
+            <p id="rep-bench-percentile" style="font-size:15px;margin:0 0 14px;color:var(--text);line-height:1.5;"></p>
+            <div class="bench-row">
+              <div class="bench-cap"><span>综合得分（满分 100）</span><span id="rep-bench-nums"></span></div>
+              <div class="bench-bars">
+                <div class="bench-bar-avg" id="bench-bar-ind-avg" style="width:0%"></div>
+                <div class="bench-bar-you" id="bench-bar-you" style="width:0%"></div>
+              </div>
+            </div>
+            <p class="bench-legend">浅色条：行业估算平均分；深色条：您的得分。分位：<code>percentile = clamp(round(50 + (score − avg) / std × 25), 1, 99)</code>。</p>
+          </div>
+
+          <div class="ai-section">
+            <h2>AI 改进建议</h2>
+            <p style="font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5;">在 <code>CONFIG.LLM_API_KEY</code> 中填入密钥后尝试调用兼容 OpenAI 的 Chat API（浏览器直连常遇 <strong>CORS</strong> 限制，生产请走<strong>后端代理</strong>）。未配置或请求失败时展示演示建议。</p>
+            <button type="button" class="btn btn-primary btn-ai" id="btn-generate-advice">🤖 获取 AI 改进建议</button>
+            <div class="ai-content" id="ai-advice-content" style="display:none"></div>
+            <p class="ai-disclaimer">⚠️ AI 建议基于行业通用经验与自评分数生成，不构成医疗、投资或法律意见；具体方案请结合贵司实际并咨询专业人士。</p>
+          </div>
+
+          <div class="top3-section">
+            <h2>核心问题 TOP3</h2>
+            <ol id="rep-top3"></ol>
+          </div>
+
+          <div class="cta-section">
+            <p>基于本次诊断，建议与营销专家进行 30 分钟一对一交流，深入拆解短板与落地路径。</p>
+            <a href="#" class="btn-book" id="rep-book-link" target="_blank" rel="noopener noreferrer">立即预约专家咨询</a>
+            <p class="hotline-note">服务热线：<span id="rep-hotline">—</span></p>
+          </div>
+
+          <p class="report-footnote">本报告由自评问卷自动生成，不构成投资或法律意见；量化结论请在 POC 或顾问尽调后校准。</p>
+        </div>
+
+        <div class="report-actions">
+          <button type="button" class="btn btn-ghost" id="cta-reset" style="background:#fff;border:2px solid #d0dbe6;width:100%">重新填写</button>
+        </div>
+
+        <div class="card lead-form">
+          <p style="font-weight:600;margin:0 0 12px;">留下联系方式（便于回访）</p>
+          <label class="label">姓名</label>
+          <input class="inp" id="lead-name" placeholder="必填" />
+          <label class="label">手机</label>
+          <input class="inp" id="lead-phone" type="tel" inputmode="tel" placeholder="必填" />
+          <label class="label">公司</label>
+          <input class="inp" id="lead-co" placeholder="必填" />
+          <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="lead-save">保存线索（演示）</button>
+          <p style="font-size:13px;color:var(--muted);margin:10px 0 0;">Phase 2 接入 CRM；当前为本地演示。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+/* ========== 销售可修改：预约链接 / 热线 / 报告标题 ========== */
+var CONFIG = {
+  companyName: '纷享销客·中西南',
+  bookingUrl: 'https://www.fxiaoke.com/',
+  hotline: '400-000-0000',
+  reportTitle: '医疗器械营销能力诊断报告',
+  industryEdition: 'medical_device',
+  industryEditionLabel: '医疗器械行业版（问卷结构对齐通用计分模型 v1.9）',
+  LLM_API_KEY: '',
+  LLM_PROVIDER: 'kimi',
+  LLM_API_URL: 'https://api.moonshot.cn/v1/chat/completions',
+  LLM_MODEL: 'moonshot-v1-8k'
+};
+
+(function () {
+  'use strict';
+
+  var RADAR_LABELS = ['市场定位', '获客渠道', '销售管道', '客户成功', '团队激励', '数字化'];
+  var MAX_W = [20, 20, 20, 15, 15, 10];
+
+  var BENCHMARK = {
+    medical_device: { avg: 55, std: 15, label: '医疗器械' },
+    manufacturing: { avg: 62, std: 14, label: '制造业' },
+    energy: { avg: 68, std: 13, label: '能源' }
+  };
+  var INDUSTRY_KEY = 'medical_device';
+  var LAST_RES = null;
+
+  var DIMS = [
+    { id: 'D1', name: '市场定位与目标客户', maxW: 20, issues: '医院层级/集采语境下的目标叙事与准入故事线可能不一致，市场 KPI 难闭环。' },
+    { id: 'D2', name: '获客渠道与线索质量', maxW: 20, issues: '学术、招采、经销商、数字化等路径治理薄弱，入院线索与销售对齐不足。' },
+    { id: 'D3', name: '销售管道与赢单率', maxW: 20, issues: '招投标/多科室/渠道协同下的管道语言与复盘不足，复杂项目铁三角弱。' },
+    { id: 'D4', name: '客户成功与续费/复购', maxW: 15, issues: '设备使用、耗材复购、维保与回款健康度跟踪不足。' },
+    { id: 'D5', name: '团队架构与激励机制', maxW: 15, issues: '代表/经销商培养、合规过程考核与跨部门（医学/注册）协同待加强。' },
+    { id: 'D6', name: '数字化工具与数据应用', maxW: 10, issues: 'CRM、招采信息、入院过程数据分散，看板与 SOP 在线化不足。' }
+  ];
+
+  var BASIC_INDUSTRY = [
+    { v: 1, t: '高值耗材（骨科/心血管/神经外科等）' },
+    { v: 2, t: '医疗设备（影像/手术/监护等）' },
+    { v: 3, t: 'IVD / 体外诊断' },
+    { v: 4, t: '家用医疗器械' },
+    { v: 5, t: '其他医疗器械' }
+  ];
+  var BASIC_SCALE = [
+    { v: 1, t: '50人以下' }, { v: 2, t: '50-200人' }, { v: 3, t: '200-1000人' }, { v: 4, t: '1000人以上' }
+  ];
+  var BASIC_YEARS = [
+    { v: 1, t: '3年以下' }, { v: 2, t: '3-10年' }, { v: 3, t: '10年以上' }
+  ];
+
+  var TOTAL_STEPS = 30;
+  var submissionId = '';
+
+  var state = {
+    qIndex: 0,
+    startedAt: null,
+    basic: { name: '', industry: null, scale: null, years: null },
+    single: {},
+    multi: {},
+    text: { q25: {}, q26: '' }
+  };
+
+  function setMulti(qid, key, toggle) {
+    if (!state.multi[qid]) state.multi[qid] = [];
+    var arr = state.multi[qid];
+    var i = arr.indexOf(key);
+    if (toggle) {
+      if (i >= 0) arr.splice(i, 1); else arr.push(key);
+    } else state.multi[qid] = [key];
+  }
+
+  function scoreQ2(keys) {
+    var sum = 0;
+    keys.forEach(function () { sum += 2; });
+    return Math.min(5, sum);
+  }
+  function scoreQ5(keys) {
+    var MAIN = ['ch1','ch2','ch3','ch4','ch5','ch6'];
+    var n = keys.filter(function (k) { return MAIN.indexOf(k) >= 0; }).length;
+    var onlyNone = keys.length === 1 && keys[0] === 'none';
+    if (onlyNone) return 1;
+    if (n === 0 && keys.indexOf('none') < 0) return 0;
+    return Math.min(5, n + 1);
+  }
+  function scoreQ8(keys) { return Math.max(0, 5 - keys.length); }
+  function scoreQ11(keys) {
+    var s = 5;
+    if (keys.indexOf('mismatch') >= 0) s -= 1;
+    if (keys.indexOf('relation') >= 0) s -= 1;
+    if (keys.indexOf('slow') >= 0) s -= 1;
+    if (keys.indexOf('nosum') >= 0) s -= 1;
+    return Math.max(0, s);
+  }
+  function scoreQ15(keys) { return Math.max(0, 5 - keys.length); }
+  function scoreQ19(keys) { return Math.max(0, 5 - keys.length); }
+  function scoreQ23(keys) {
+    var n = keys.length;
+    if (n <= 0) return 0;
+    if (n === 1) return 3;
+    return 5;
+  }
+
+  function computeScores() {
+    var r = [0,0,0,0,0,0];
+    r[0] = (state.single.q1||0) + scoreQ2(state.multi.q2||[]) + (state.single.q3||0) + (state.single.q4||0);
+    r[1] = scoreQ5(state.multi.q5||[]) + (state.single.q6||0) + (state.single.q7||0) + scoreQ8(state.multi.q8||[]);
+    r[2] = (state.single.q9||0) + (state.single.q10||0) + scoreQ11(state.multi.q11||[]) + (state.single.q12||0);
+    r[3] = (state.single.q13||0) + (state.single.q14||0) + scoreQ15(state.multi.q15||[]) + (state.single.q16||0);
+    r[4] = (state.single.q17||0) + (state.single.q18||0) + scoreQ19(state.multi.q19||[]) + (state.single.q20||0);
+    r[5] = (state.single.q21||0) + (state.single.q22||0) + scoreQ23(state.multi.q23||[]) + (state.single.q24||0);
+    var w = r.map(function (raw, i) {
+      return (raw / 20) * DIMS[i].maxW;
+    });
+    var total = w.reduce(function (a,b) { return a+b; }, 0);
+    return { raw: r, weighted: w, total: Math.round(total * 10) / 10 };
+  }
+
+  function levelOf(t) {
+    if (t >= 90) return '卓越';
+    if (t >= 70) return '良好';
+    if (t >= 50) return '一般';
+    if (t >= 30) return '薄弱';
+    return '危机';
+  }
+
+  function calcPercentile(score, key) {
+    var b = BENCHMARK[key] || BENCHMARK.medical_device;
+    var p = 50 + (score - b.avg) / b.std * 25;
+    return Math.round(Math.max(1, Math.min(99, p)));
+  }
+
+  function buildMedicalAdvicePrompt(res) {
+    var lv = levelOf(res.total);
+    return [
+      '你是一位医疗器械行业营销与准入顾问。根据以下企业自评得分，输出 3 条「最优先改进建议」：',
+      '',
+      '- 综合得分：' + res.total + '/100（等级：' + lv + '）',
+      '- D1 市场定位（加权/20）：' + (Math.round(res.weighted[0] * 10) / 10),
+      '- D2 获客渠道（加权/20）：' + (Math.round(res.weighted[1] * 10) / 10),
+      '- D3 销售管道（加权/20）：' + (Math.round(res.weighted[2] * 10) / 10),
+      '- D4 客户成功（加权/15）：' + (Math.round(res.weighted[3] * 10) / 10),
+      '- D5 团队激励（加权/15）：' + (Math.round(res.weighted[4] * 10) / 10),
+      '- D6 数字化（加权/10）：' + (Math.round(res.weighted[5] * 10) / 10),
+      '',
+      '要求：每条建议对应一个得分偏低维度，标题用「维度：」开头；每条含动作、负责角色（销售/市场/医学/渠道）、30 天或 90 天内周期；至少一条涉及集采、入院、招投标、经销商、学术或合规；总字数不超过 350 字，简体中文，分三条编号。不要索取患者隐私或未公开商务条款。'
+    ].join('\n');
+  }
+
+  function renderSimpleMd(s) {
+    var esc = function (t) {
+      return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    };
+    return esc(s).split(/\n/).map(function (line) {
+      return line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }).join('<br/>');
+  }
+
+  function offlineDemoAdvice(res) {
+    var idxs = [0, 1, 2, 3, 4, 5].sort(function (a, b) { return res.weighted[a] - res.weighted[b]; });
+    var d0 = DIMS[idxs[0]], d1 = DIMS[idxs[1]], d2 = DIMS[idxs[2]];
+    var lv = levelOf(res.total);
+    return '**（演示）**未调用大模型或网络/CORS 不可用，以下为基于得分快照的静态建议：\n\n' +
+      '1. **' + d0.name + '**：30 天内召开市场-销售-医学联席会，对齐入院/招投标里程碑与对外叙事，避免挂网与临床话术冲突。\n\n' +
+      '2. **' + d1.name + '**：90 天内沉淀 1 条可复制路径（学术/招采/经销商任选其一打样），并写入 CRM 必填字段与周复盘。\n\n' +
+      '3. **' + d2.name + '**：结合等级「' + lv + '」，启动渠道/代表培训认证与入院转化看板试运行。\n\n' +
+      '生产环境请配置 LLM_API_KEY 并经由后端代理调用模型。';
+  }
+
+  var QUESTIONS = [
+    { id: 'q1', dim: 0, type: 'sc', title: '贵司的主要目标客户类型是？（医疗器械）', opts: [
+        { k: 'a', t: '三级医院（大型三甲）', s: 5 },
+        { k: 'b', t: '二级医院（县域中心）', s: 3 },
+        { k: 'c', t: '基层医疗机构（社区/乡镇）', s: 2 },
+        { k: 'd', t: '经销商/代理商为主', s: 1 },
+        { k: 'e', t: '政府集中采购 / 卫健体系项目为主', s: 1 }
+    ]},
+    { id: 'q2', dim: 0, type: 'mc2', title: '未来 12 个月战略重点？（最多选 2 项）', hint: '每项 2 分，合计封顶 5 分', opts: [
+        { k: 'm1', t: '集采中标与院内放量' }, { k: 'm2', t: '基层医疗市场覆盖' },
+        { k: 'm3', t: '器械国产替代与政策窗口' }, { k: 'm4', t: '学术推广与循证/临床数据' }, { k: 'm5', t: '设备更新改造与以旧换新机会' }
+    ]},
+    { id: 'q3', dim: 0, type: 'sc', title: '与主要竞品相比，挂网价、适应症表述、推广材料等对外叙事是否一致？', opts: [
+        { k: 'a', t: '挂网价、适应症、DA 等跨团队一致', s: 5 },
+        { k: 'b', t: '大体一致，区域或产品线有差异', s: 3 },
+        { k: 'c', t: '各区域/代理各说各话', s: 1 }
+    ]},
+    { id: 'q4', dim: 0, type: 'sc', title: '品牌与医学市场投入是否有可衡量目标（会议、线索、入院等）？', opts: [
+        { k: 'a', t: '有明确 KPI（覆盖医院数、会议、有效线索等）并复盘', s: 5 },
+        { k: 'b', t: '有预算但效果难量化', s: 3 },
+        { k: 'c', t: '以曝光为主，与销售入院脱节', s: 1 }
+    ]},
+    { id: 'q5', dim: 1, type: 'mc', title: '当前可复制的获客/入院路径？（可多选）', hint: '前 6 项：得分=min(5,N+1)；仅选「暂无可复制渠道」为 1 分', opts: [
+        { k: 'ch1', t: '学术会议、卫星会、赞助项目' }, { k: 'ch2', t: '医院采购办 / 招采平台线索' }, { k: 'ch3', t: '经销商开发与协同打单' },
+        { k: 'ch4', t: '政府/医院招投标平台' }, { k: 'ch5', t: '医生推荐与 KOL 背书' }, { k: 'ch6', t: '数字化推广（线上会、医学内容、私域）' },
+        { k: 'none', t: '暂无可复制渠道' }
+    ]},
+    { id: 'q6', dim: 1, type: 'sc', title: '线索到商机（入院/中标/进院）转化率与历史对比？', opts: [
+        { k: 'a', t: '优于历史与竞品区域', s: 5 }, { k: 'b', t: '持平', s: 3 },
+        { k: 'c', t: '低于预期，原因未复盘', s: 2 }, { k: 'd', t: '无统计', s: 1 }
+    ]},
+    { id: 'q7', dim: 1, type: 'sc', title: '市场部与销售对「合格线索 / 有效入院机会」定义是否一致？', opts: [
+        { k: 'a', t: '书面一致并在 CRM 落地', s: 5 }, { k: 'b', t: '会议对齐，执行偏差大', s: 3 }, { k: 'c', t: '无统一标准', s: 1 }
+    ]},
+    { id: 'q8', dim: 1, type: 'mc', title: '线索质量问题表现？（多选，每项扣 1 分，基础 5 分）', opts: [
+        { k: 'a', t: '挂网/集采信息跟踪滞后、撞单多' }, { k: 'b', t: '假终端、渠道压货虚报' },
+        { k: 'c', t: '跟进优先级靠关系而非规则' }, { k: 'd', t: '线上留资质量差或刷量' }
+    ]},
+    { id: 'q9', dim: 2, type: 'sc', title: '入院/中标/代理签约等阶段与赢率是否标准化？', opts: [
+        { k: 'a', t: '阶段、必填字段、退出标准清晰', s: 5 }, { k: 'b', t: '有阶段但执行松散', s: 3 }, { k: 'c', t: '无统一管道语言', s: 1 }
+    ]},
+    { id: 'q10', dim: 2, type: 'sc', title: '年度/季度目标到代表/代理商动作的分解与复盘？', opts: [
+        { k: 'a', t: '工具 + 复盘闭环', s: 5 }, { k: 'b', t: '有分解，落地走样', s: 3 }, { k: 'c', t: '老板拍板或走过场', s: 1 }
+    ]},
+    { id: 'q11', dim: 2, type: 'mc', title: '丢单/丢标主要原因？（多选，见计分规则）', hint: '产品/关系/协同各 -1；未总结再 -1；价格/竞品不扣分', opts: [
+        { k: 'price', t: '价格/商务政策' }, { k: 'mismatch', t: '产品/适应证/循证不足' }, { k: 'relation', t: '关系/决策链失守' },
+        { k: 'slow', t: '内部协同慢（医学、注册、交付）' }, { k: 'comp', t: '竞品强力抢标' }, { k: 'nosum', t: '未总结原因' }
+    ]},
+    { id: 'q12', dim: 2, type: 'sc', title: '复杂项目（招采、多科室、渠道）协作机制？', opts: [
+        { k: 'a', t: '招投标+医学+渠道常态化协同', s: 5 }, { k: 'b', t: '大项目临时组队', s: 3 }, { k: 'c', t: '主要依赖单兵或单经销商', s: 1 }
+    ]},
+    { id: 'q13', dim: 3, type: 'sc', title: '设备/耗材入院后使用、不良事件、回款是否可度量？', opts: [
+        { k: 'a', t: '有健康度或红黄绿', s: 5 }, { k: 'b', t: '数据分散在 HIS/经销商报表', s: 3 }, { k: 'c', t: '几乎不跟踪', s: 1 }
+    ]},
+    { id: 'q14', dim: 3, type: 'sc', title: '维保合同、耗材复购、学术合作是否流程化、可预测？', opts: [
+        { k: 'a', t: '有续约清单与节奏（维保/耗材）', s: 5 }, { k: 'b', t: '主要靠客情维护', s: 3 }, { k: 'c', t: '被动响应', s: 1 }
+    ]},
+    { id: 'q15', dim: 3, type: 'mc', title: '回款与合规风险？（多选，每项扣 1 分，基础 5 分）', opts: [
+        { k: 'a', t: '医院/经销商应收账款周期长' }, { k: 'b', t: '合同与发货/验收单据不全' },
+        { k: 'c', t: '授信随意' }, { k: 'd', t: '验收或开票拖延导致挂账' }
+    ]},
+    { id: 'q16', dim: 3, type: 'sc', title: '售后成本与客户满意是否与销售/渠道考核挂钩？', opts: [
+        { k: 'a', t: '有机制', s: 5 }, { k: 'b', t: '部分挂钩', s: 3 }, { k: 'c', t: '不挂钩，售后成短板', s: 1 }
+    ]},
+    { id: 'q17', dim: 4, type: 'sc', title: '考核是否含过程质量（入院、会议、合规）不仅是销售额？', opts: [
+        { k: 'a', t: '多维度且可解释', s: 5 }, { k: 'b', t: '以业绩为主，少量过程项', s: 3 }, { k: 'c', t: '几乎只看回款/出货', s: 1 }
+    ]},
+    { id: 'q18', dim: 4, type: 'sc', title: '经销商、一线代表的培养与认证体系？', opts: [
+        { k: 'a', t: '标准化培训（产品+临床+合规）+ 认证', s: 5 }, { k: 'b', t: '有培训效果一般', s: 3 }, { k: 'c', t: '人员流动大、复制难', s: 1 }
+    ]},
+    { id: 'q19', dim: 4, type: 'mc', title: '团队管理痛点？（多选，每项扣 1 分，基础 5 分）', opts: [
+        { k: 'a', t: '老代表/老代理躺平在少数大医院' }, { k: 'b', t: '管理者弱，只会自己跑医院' },
+        { k: 'c', t: '激励不公平、渠道冲突多' }, { k: 'd', t: '会议表格多无闭环' }
+    ]},
+    { id: 'q20', dim: 4, type: 'sc', title: '跨部门协作（医学、注册、供应链、财务）效率？', opts: [
+        { k: 'a', t: '流程清晰 SLA 明确', s: 5 }, { k: 'b', t: '常需老板拍板', s: 3 }, { k: 'c', t: '内耗严重', s: 1 }
+    ]},
+    { id: 'q21', dim: 5, type: 'sc', title: 'CRM / 渠道系统 / 招采信息使用情况？', opts: [
+        { k: 'a', t: '主数据统一，入院与商机过程必填、报表可信', s: 5 }, { k: 'b', t: '在用但数据质量一般', s: 3 }, { k: 'c', t: '表格/微信为主', s: 1 }
+    ]},
+    { id: 'q22', dim: 5, type: 'sc', title: '是否有管道、入院转化、人效的可运营看板？', opts: [
+        { k: 'a', t: '实时或 T+1', s: 5 }, { k: 'b', t: '月度手工统计', s: 3 }, { k: 'c', t: '无', s: 1 }
+    ]},
+    { id: 'q23', dim: 5, type: 'mc', title: '入院/跟台/招投标 SOP、合同审批、培训资料是否在线化？（多选）', hint: 'N=0→0 分；N=1→3 分；N≥2→5 分', opts: [
+        { k: 'a', t: '入院/跟台/招投标 SOP' }, { k: 'b', t: '合同与特价/返利审批在线' },
+        { k: 'c', t: '培训与话术/DA 在线库' }, { k: 'd', t: '与企微/钉钉协同' }
+    ]},
+    { id: 'q24', dim: 5, type: 'sc', title: '对 AI（纪要、文献摘要、线索优先级等）态度与试点？', opts: [
+        { k: 'a', t: '已试点或规划清晰', s: 5 }, { k: 'b', t: '观望', s: 3 }, { k: 'c', t: '无计划', s: 1 }
+    ]},
+    { id: 'q25', dim: -1, type: 'contact', title: '方便回访的联系方式', hint: '不计入得分；公司默认可与 QB1 一致' },
+    { id: 'q26', dim: -1, type: 'open', title: '当前最想解决的一个营销/入院问题（可选）', hint: '一句话即可' }
+  ];
+
+  var card = document.getElementById('question-card');
+  var errEl = document.getElementById('err-msg');
+  var bar = document.getElementById('progress-bar');
+  var stepLabel = document.getElementById('step-label');
+  var dimLabel = document.getElementById('dim-label');
+  var btnPrev = document.getElementById('btn-prev');
+  var btnNext = document.getElementById('btn-next');
+
+  function showErr(msg) {
+    errEl.textContent = msg || '请完成本题后再继续';
+    errEl.classList.add('show');
+  }
+  function hideErr() { errEl.classList.remove('show'); }
+
+  function basicIndustryLabel() {
+    var x = BASIC_INDUSTRY.find(function (o) { return o.v === state.basic.industry; });
+    return x ? x.t : '—';
+  }
+
+  function validateCurrent() {
+    hideErr();
+    var qi = state.qIndex;
+    if (qi === 0) {
+      if (!state.basic.name || !state.basic.name.trim()) { showErr('请填写公司全称'); return false; }
+      return true;
+    }
+    if (qi === 1) {
+      if (state.basic.industry == null) { showErr('请选择主要产品细分赛道'); return false; }
+      return true;
+    }
+    if (qi === 2) {
+      if (state.basic.scale == null) { showErr('请选择企业规模'); return false; }
+      return true;
+    }
+    if (qi === 3) {
+      if (state.basic.years == null) { showErr('请选择成立年限'); return false; }
+      return true;
+    }
+    var q = QUESTIONS[qi - 4];
+    if (q.type === 'sc') {
+      if (state.single[q.id] == null) { showErr(); return false; }
+      return true;
+    }
+    if (q.type === 'mc' || q.type === 'mc2') {
+      var arr = state.multi[q.id] || [];
+      if (q.id === 'q2' && arr.length < 1) { showErr('请至少选择 1 项战略重点'); return false; }
+      if (q.id === 'q5' && arr.length < 1) { showErr('请至少选择一项'); return false; }
+      return true;
+    }
+    if (q.type === 'contact') {
+      var t = state.text.q25;
+      if (!t.name || !t.name.trim()) { showErr('请填写姓名'); return false; }
+      if (!t.phone || !t.phone.trim()) { showErr('请填写手机'); return false; }
+      if (!t.company || !t.company.trim()) { showErr('请填写公司'); return false; }
+      return true;
+    }
+    return true;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  }
+
+  function render() {
+    var qi = state.qIndex;
+    var pct = ((qi + 1) / TOTAL_STEPS) * 100;
+    bar.style.width = pct + '%';
+    stepLabel.textContent = (qi + 1) + ' / ' + TOTAL_STEPS;
+
+    if (qi <= 3) {
+      dimLabel.textContent = '企业与细分赛道（必填）';
+      var html = '';
+      if (qi === 0) {
+        html += '<div class="section-label">📋 Q_B1</div><div class="q-title">贵司名称是？</div>';
+        html += '<input type="text" class="inp" id="basic-name-inp" placeholder="请输入公司全称" value="' + esc(state.basic.name) + '" />';
+      } else if (qi === 1) {
+        html += '<div class="section-label">📋 Q_B2</div><div class="q-title">主要产品细分赛道？</div>';
+        BASIC_INDUSTRY.forEach(function (o) {
+          var sel = state.basic.industry === o.v ? ' selected' : '';
+          html += '<button type="button" class="opt' + sel + '" data-basic="industry" data-v="' + o.v + '">' + o.t + '</button>';
+        });
+      } else if (qi === 2) {
+        html += '<div class="section-label">📋 Q_B3</div><div class="q-title">企业规模？</div>';
+        BASIC_SCALE.forEach(function (o) {
+          var sel = state.basic.scale === o.v ? ' selected' : '';
+          html += '<button type="button" class="opt' + sel + '" data-basic="scale" data-v="' + o.v + '">' + o.t + '</button>';
+        });
+      } else {
+        html += '<div class="section-label">📋 Q_B4</div><div class="q-title">成立年限？</div>';
+        BASIC_YEARS.forEach(function (o) {
+          var sel = state.basic.years === o.v ? ' selected' : '';
+          html += '<button type="button" class="opt' + sel + '" data-basic="years" data-v="' + o.v + '">' + o.t + '</button>';
+        });
+      }
+      card.innerHTML = html;
+      var bn = document.getElementById('basic-name-inp');
+      if (bn) bn.addEventListener('input', function () { state.basic.name = bn.value; });
+      card.querySelectorAll('[data-basic]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var f = btn.getAttribute('data-basic');
+          var v = parseInt(btn.getAttribute('data-v'), 10);
+          state.basic[f] = v;
+          render();
+        });
+      });
+    } else {
+      var q = QUESTIONS[qi - 4];
+      var di = q.dim;
+      if (di >= 0) dimLabel.textContent = DIMS[di].id + ' ' + DIMS[di].name;
+      else dimLabel.textContent = '联系信息';
+
+      var html2 = '';
+      var dispNum = qi - 3;
+      html2 += '<div class="dim-tag">Q' + dispNum + '</div>';
+      html2 += '<div class="q-title">' + q.title + '</div>';
+      if (q.hint) html2 += '<p class="hint">' + q.hint + '</p>';
+
+      if (q.type === 'sc') {
+        q.opts.forEach(function (o) {
+          var sel = state.single[q.id] === o.s ? ' selected' : '';
+          html2 += '<button type="button" class="opt' + sel + '" data-sc="' + o.s + '">' + o.t + '</button>';
+        });
+      } else if (q.type === 'mc') {
+        var selArr = state.multi[q.id] || [];
+        q.opts.forEach(function (o) {
+          var sel = selArr.indexOf(o.k) >= 0 ? ' multi selected' : ' multi';
+          html2 += '<button type="button" class="opt' + sel + '" data-mc="' + o.k + '">' + o.t + '</button>';
+        });
+      } else if (q.type === 'mc2') {
+        var s2 = state.multi[q.id] || [];
+        q.opts.forEach(function (o) {
+          var sel = s2.indexOf(o.k) >= 0 ? ' multi selected' : ' multi';
+          html2 += '<button type="button" class="opt' + sel + '" data-mc2="' + o.k + '">' + o.t + '</button>';
+        });
+      } else if (q.type === 'contact') {
+        var t = state.text.q25;
+        if (!t.company && state.basic.name) t.company = state.basic.name;
+        html2 += '<label class="label">姓名</label><input class="inp" data-f="name" value="' + esc(t.name||'') + '" />';
+        html2 += '<label class="label">手机</label><input class="inp" data-f="phone" value="' + esc(t.phone||'') + '" type="tel" />';
+        html2 += '<label class="label">公司</label><input class="inp" data-f="company" value="' + esc(t.company||'') + '" />';
+        html2 += '<label class="label">职位（选填）</label><input class="inp" data-f="title" value="' + esc(t.title||'') + '" />';
+        html2 += '<p class="hint">咨询热线（顾问）：' + esc(CONFIG.hotline) + '</p>';
+      } else if (q.type === 'open') {
+        html2 += '<textarea class="inp" id="open-ta" placeholder="选填">' + esc(state.text.q26||'') + '</textarea>';
+      }
+      card.innerHTML = html2;
+
+      card.querySelectorAll('.opt[data-sc]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          state.single[q.id] = parseInt(btn.getAttribute('data-sc'), 10);
+          render();
+        });
+      });
+      card.querySelectorAll('.opt[data-mc]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setMulti(q.id, btn.getAttribute('data-mc'), true);
+          render();
+        });
+      });
+      card.querySelectorAll('.opt[data-mc2]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var k = btn.getAttribute('data-mc2');
+          var arr = state.multi[q.id] || [];
+          var i = arr.indexOf(k);
+          if (i >= 0) arr.splice(i, 1);
+          else {
+            if (arr.length >= 2) arr.shift();
+            arr.push(k);
+          }
+          state.multi[q.id] = arr;
+          render();
+        });
+      });
+      card.querySelectorAll('.inp[data-f]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          state.text.q25[inp.getAttribute('data-f')] = inp.value;
+        });
+      });
+      var ta = document.getElementById('open-ta');
+      if (ta) ta.addEventListener('input', function () { state.text.q26 = ta.value; });
+    }
+
+    btnPrev.style.visibility = qi === 0 ? 'hidden' : 'visible';
+    btnNext.textContent = qi === TOTAL_STEPS - 1 ? '提交并生成报告' : '下一题';
+  }
+
+  /** 纯 SVG 雷达图：6 轴、按各维度满分归一化；网格 25/50/75/100% */
+  function drawRadar(svg, weighted, animate) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var W = 300, H = 300, cx = 150, cy = 150, R = 88;
+    var n = 6;
+    var angles = [];
+    for (var k = 0; k < n; k++) angles.push(-Math.PI / 2 + (k * 2 * Math.PI) / n);
+
+    function pt(angle, dist) {
+      return { x: cx + dist * Math.cos(angle), y: cy + dist * Math.sin(angle) };
+    }
+    function hexPath(level) {
+      var d = '';
+      for (var i = 0; i < n; i++) {
+        var p = pt(angles[i], R * level);
+        d += (i === 0 ? 'M' : 'L') + p.x.toFixed(2) + ',' + p.y.toFixed(2) + ' ';
+      }
+      return d + 'Z';
+    }
+    [0.25, 0.5, 0.75, 1].forEach(function (lv) {
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', hexPath(lv));
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#c5d4e3');
+      path.setAttribute('stroke-width', lv === 1 ? '1.5' : '1');
+      svg.appendChild(path);
+    });
+    for (var a = 0; a < n; a++) {
+      var pEdge = pt(angles[a], R);
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+      line.setAttribute('x2', pEdge.x); line.setAttribute('y2', pEdge.y);
+      line.setAttribute('stroke', '#dde5ee');
+      line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+    }
+
+    var ratios = weighted.map(function (w, i) { return Math.min(1, Math.max(0, w / MAX_W[i])); });
+    var t0 = animate ? 0 : 1;
+
+    function drawData(t) {
+      var existing = svg.querySelectorAll('.radar-data');
+      existing.forEach(function (el) { el.remove(); });
+      var pts = [];
+      for (var j = 0; j < n; j++) {
+        var rr = R * ratios[j] * t;
+        var p = pt(angles[j], rr);
+        pts.push(p.x.toFixed(2) + ',' + p.y.toFixed(2));
+      }
+      var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('class', 'radar-data');
+      poly.setAttribute('points', pts.join(' '));
+      poly.setAttribute('fill', 'rgba(46, 139, 192, 0.35)');
+      poly.setAttribute('stroke', '#0a2540');
+      poly.setAttribute('stroke-width', '2');
+      svg.appendChild(poly);
+      for (var j2 = 0; j2 < n; j2++) {
+        var rr2 = R * ratios[j2] * t;
+        var p2 = pt(angles[j2], rr2);
+        var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('class', 'radar-data');
+        c.setAttribute('cx', p2.x); c.setAttribute('cy', p2.y); c.setAttribute('r', '4');
+        c.setAttribute('fill', '#2e8bc0');
+        c.setAttribute('stroke', '#fff');
+        c.setAttribute('stroke-width', '1.5');
+        svg.appendChild(c);
+      }
+    }
+    drawData(t0);
+    if (animate) {
+      var start = null, dur = 600;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        var ease = 1 - Math.pow(1 - p, 3);
+        drawData(ease);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    for (var li = 0; li < n; li++) {
+      var pL = pt(angles[li], R + 22);
+      var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', pL.x);
+      text.setAttribute('y', pL.y);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '11');
+      text.setAttribute('fill', '#5c6b7a');
+      text.textContent = RADAR_LABELS[li] + ' ' + (Math.round(weighted[li] * 10) / 10) + '/' + MAX_W[li];
+      svg.appendChild(text);
+    }
+  }
+
+  function showReport() {
+    var res = computeScores();
+    submissionId = 'MD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+
+    document.getElementById('screen-quiz').classList.remove('visible');
+    document.getElementById('screen-report').classList.add('visible');
+    document.getElementById('main-wrap').classList.add('report-wide');
+
+    document.getElementById('app-title').textContent = CONFIG.reportTitle;
+    document.getElementById('rep-doc-title').textContent = '《' + CONFIG.reportTitle + '》';
+    var cname = (state.basic.name || '').trim() || '未填写企业名称';
+    document.getElementById('rep-company').textContent = '企业：' + cname;
+    document.getElementById('rep-date').textContent = '诊断日期：' + formatDate(new Date());
+    document.getElementById('rep-sid').textContent = '问卷编号：' + submissionId;
+    if (state.startedAt) {
+      var mins = Math.max(1, Math.round((Date.now() - state.startedAt) / 60000));
+      var eld = document.getElementById('rep-duration');
+      eld.style.display = 'inline-block';
+      eld.textContent = '答题约 ' + mins + ' 分钟';
+    }
+
+    document.getElementById('rep-total').textContent = res.total + ' / 100';
+    document.getElementById('rep-level').textContent = levelOf(res.total);
+
+    var svg = document.getElementById('radar-chart');
+    drawRadar(svg, res.weighted, true);
+
+    var leg = document.getElementById('radar-legend');
+    leg.innerHTML = '';
+    for (var i = 0; i < 6; i++) {
+      var li = document.createElement('li');
+      li.textContent = RADAR_LABELS[i] + '：' + (Math.round(res.weighted[i] * 10) / 10) + ' / ' + MAX_W[i] + ' 分';
+      leg.appendChild(li);
+    }
+
+    var tbl = document.getElementById('rep-dim-table');
+    tbl.innerHTML = '<thead><tr><th>维度</th><th>加权得分</th><th>满分</th></tr></thead><tbody></tbody>';
+    var tb = tbl.querySelector('tbody');
+    DIMS.forEach(function (d, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + esc(d.name) + '</td><td>' + (Math.round(res.weighted[i] * 10) / 10) + '</td><td>' + d.maxW + '</td>';
+      tb.appendChild(tr);
+    });
+
+    LAST_RES = res;
+    var bKey = INDUSTRY_KEY;
+    var bench = BENCHMARK[bKey] || BENCHMARK.medical_device;
+    var bp = calcPercentile(res.total, bKey);
+    var elBenchLabel = document.getElementById('rep-bench-ind-label');
+    if (elBenchLabel) elBenchLabel.textContent = bench.label;
+    var elPct = document.getElementById('rep-bench-percentile');
+    if (elPct) {
+      elPct.textContent = '您的综合得分（' + res.total + ' 分）在「' + bench.label + '」估算分布中，约超过 ' + bp + '% 的样本企业（avg=' + bench.avg + '，std=' + bench.std + '）。';
+    }
+    var elNums = document.getElementById('rep-bench-nums');
+    if (elNums) elNums.textContent = '您 ' + res.total + ' · 行业均 ' + bench.avg;
+    var barYou = document.getElementById('bench-bar-you');
+    var barAvg = document.getElementById('bench-bar-ind-avg');
+    if (barYou) barYou.style.width = Math.min(100, Math.max(0, res.total)) + '%';
+    if (barAvg) barAvg.style.width = Math.min(100, Math.max(0, bench.avg)) + '%';
+
+    var aiBox = document.getElementById('ai-advice-content');
+    var aiBtn = document.getElementById('btn-generate-advice');
+    if (aiBox) {
+      aiBox.style.display = 'none';
+      aiBox.innerHTML = '';
+    }
+    if (aiBtn) {
+      aiBtn.disabled = false;
+      aiBtn.textContent = '🤖 获取 AI 改进建议';
+    }
+
+    var idxs = [0,1,2,3,4,5].sort(function (a,b) { return res.weighted[a] - res.weighted[b]; });
+    var top3 = document.getElementById('rep-top3');
+    top3.innerHTML = '';
+    for (var j = 0; j < 3; j++) {
+      var ii = idxs[j];
+      var li2 = document.createElement('li');
+      li2.innerHTML = '<strong>' + esc(DIMS[ii].name) + '</strong>（加权 ' + (Math.round(res.weighted[ii]*10)/10) + '）— ' + esc(DIMS[ii].issues);
+      top3.appendChild(li2);
+    }
+
+    var book = document.getElementById('rep-book-link');
+    book.href = CONFIG.bookingUrl;
+    document.getElementById('rep-hotline').textContent = CONFIG.hotline;
+
+    document.getElementById('lead-name').value = state.text.q25.name || '';
+    document.getElementById('lead-phone').value = state.text.q25.phone || '';
+    document.getElementById('lead-co').value = state.text.q25.company || state.basic.name || '';
+  }
+
+  function formatDate(d) {
+    var y = d.getFullYear();
+    var m = ('0' + (d.getMonth() + 1)).slice(-2);
+    var day = ('0' + d.getDate()).slice(-2);
+    return y + '-' + m + '-' + day;
+  }
+
+  document.getElementById('btn-start').addEventListener('click', function () {
+    document.getElementById('screen-welcome').classList.add('hidden');
+    document.getElementById('screen-quiz').classList.add('visible');
+    state.startedAt = Date.now();
+    state.qIndex = 0;
+    render();
+  });
+
+  btnNext.addEventListener('click', function () {
+    if (!validateCurrent()) return;
+    if (state.qIndex < TOTAL_STEPS - 1) {
+      state.qIndex++;
+      render();
+    } else {
+      showReport();
+    }
+  });
+
+  btnPrev.addEventListener('click', function () {
+    if (state.qIndex > 0) {
+      state.qIndex--;
+      render();
+    }
+  });
+
+  document.getElementById('cta-reset').addEventListener('click', function () {
+    state = {
+      qIndex: 0,
+      startedAt: null,
+      basic: { name: '', industry: null, scale: null, years: null },
+      single: {},
+      multi: {},
+      text: { q25: {}, q26: '' }
+    };
+    document.getElementById('screen-report').classList.remove('visible');
+    document.getElementById('screen-quiz').classList.remove('visible');
+    document.getElementById('screen-welcome').classList.remove('hidden');
+    document.getElementById('main-wrap').classList.remove('report-wide');
+    document.getElementById('app-title').textContent = '医疗器械营销能力诊断';
+  });
+
+  document.getElementById('btn-generate-advice').addEventListener('click', function () {
+    var btn = document.getElementById('btn-generate-advice');
+    var out = document.getElementById('ai-advice-content');
+    if (!LAST_RES) { alert('请先完成问卷'); return; }
+    var res = LAST_RES;
+    btn.disabled = true;
+    btn.textContent = '正在生成个性化建议，请稍候…';
+    out.style.display = 'block';
+    out.innerHTML = '';
+
+    function finishDemo() {
+      out.innerHTML = renderSimpleMd(offlineDemoAdvice(res));
+      btn.disabled = false;
+      btn.textContent = '🔄 重新生成（演示）';
+    }
+
+    var key = (CONFIG.LLM_API_KEY || '').trim();
+    if (!key) {
+      finishDemo();
+      return;
+    }
+
+    var prompt = buildMedicalAdvicePrompt(res);
+    var url = CONFIG.LLM_API_URL || 'https://api.moonshot.cn/v1/chat/completions';
+    var body = {
+      model: CONFIG.LLM_MODEL || 'moonshot-v1-8k',
+      messages: [
+        { role: 'system', content: '你是资深医疗器械行业营销与准入顾问，回答简洁可落地，拒绝医疗诊断与投资建议。' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.5,
+      max_tokens: 800
+    };
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + key
+      },
+      body: JSON.stringify(body),
+      mode: 'cors'
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      var txt = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      if (!String(txt).trim()) throw new Error('empty');
+      out.innerHTML = renderSimpleMd(txt);
+      btn.disabled = false;
+      btn.textContent = '🔄 重新生成';
+    }).catch(function () {
+      finishDemo();
+    });
+  });
+
+  document.getElementById('lead-save').addEventListener('click', function () {
+    var n = document.getElementById('lead-name').value.trim();
+    var p = document.getElementById('lead-phone').value.trim();
+    var c = document.getElementById('lead-co').value.trim();
+    if (!n || !p || !c) { alert('请填写姓名、手机、公司'); return; }
+    alert('已记录（演示）：' + n + ' / ' + p + ' / ' + c + '\n细分赛道：' + basicIndustryLabel());
+  });
+})();
+  </script>
+</body>
+</html>

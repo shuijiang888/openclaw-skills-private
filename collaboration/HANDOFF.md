@@ -15,13 +15,13 @@ collab-009 完成了制造业营销诊断系统。本轮目标：打造医疗器
 
 ## 完成定义（DoD）
 
-- [ ] `marketing_diagnosis/medical_device/questionnaire_medical.md` — 医疗器械行业问卷（26题，行业定制选项）
-- [ ] `marketing_diagnosis/medical_device/h5_medical.html` — 医疗器械H5问卷（基于现有H5改造行业选项）
-- [ ] `marketing_diagnosis/medical_device/benchmark_data.md` — 行业Benchmark数据（制造业/医疗器械/能源三行业）
-- [ ] `marketing_diagnosis/medical_device/ai_diagnosis.md` — AI诊断建议设计文档（LLM API集成方案）
-- [ ] `marketing_diagnosis/medical_device/h5_with_ai_benchmark.html` — 含AI建议+Benchmark的增强版H5
-- [ ] `./scripts/check-collab.sh` 更新绑定 collab-010
-- [ ] `STATUS.md`：`task_id: collab-010`，`state: done`
+- [x] `marketing_diagnosis/medical_device/questionnaire_medical.md` — 医疗器械行业问卷（26题，行业定制选项）
+- [x] `marketing_diagnosis/medical_device/h5_medical.html` — 医疗器械H5问卷（基于现有H5改造行业选项）
+- [x] `marketing_diagnosis/medical_device/benchmark_data.md` — 行业Benchmark数据（制造业/医疗器械/能源三行业）
+- [x] `marketing_diagnosis/medical_device/ai_diagnosis.md` — AI诊断建议设计文档（LLM API集成方案）
+- [x] `marketing_diagnosis/medical_device/h5_with_ai_benchmark.html` — 含AI建议+Benchmark的增强版H5
+- [x] `./scripts/check-collab.sh` 更新绑定 collab-010
+- [x] `STATUS.md`：`task_id: collab-010`，`state: done`
 
 ---
 

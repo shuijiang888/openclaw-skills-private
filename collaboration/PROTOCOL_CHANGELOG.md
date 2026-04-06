@@ -60,6 +60,6 @@
 
 - 新增：医疗器械行业版营销诊断系统
 - 包含1：行业定制问卷（26题，医疗器械特征选项）
-- 包含2：行业Benchmark数据（制造业/医疗器械/能源三行业）
-- 包含3：AI诊断建议（LLM API集成，KIMI/Gemini）
+- 包含2：行业Benchmark数据（制造业/医疗器械/能源三行业）；H5 分位估算：`calcPercentile(score)` ≈ `clamp(round(50 + (score - avg) / std * 25), 1, 99)`
+- 包含3：AI诊断建议（LLM API集成，KIMI/Gemini；浏览器 CORS 受限时走后端代理）
 - 里程碑：从单一制造业→双行业覆盖+AI增强+Benchmark对比
