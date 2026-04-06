@@ -268,7 +268,7 @@ export default async function DashboardPage({
       </section>
 
       {/* 数据大屏入口 */}
-      <Link href="/data-screen"
+      <Link href="data-screen"
         className="card-hover flex items-center justify-between rounded-2xl border border-slate-200/90 bg-gradient-to-r from-slate-900 to-amber-900 px-5 py-4 shadow-sm transition hover:shadow-lg">
         <div>
           <p className="text-xs font-semibold text-amber-300/80">Real-time Dashboard</p>
