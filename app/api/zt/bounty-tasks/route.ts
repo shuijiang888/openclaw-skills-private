@@ -5,13 +5,54 @@ import { getRequestUserContext } from "@/lib/request-user";
 import { ztRoleFromRequest } from "@/lib/http";
 import { actorRoleCandidatesForZt } from "@/lib/zt-ranks";
 
-export async function GET() {
+type BountyTaskStatus =
+  | "OPEN"
+  | "CLAIMED"
+  | "REVIEWING"
+  | "APPROVED"
+  | "REJECTED";
+
+const ALL_TASK_STATUSES = new Set<BountyTaskStatus>([
+  "OPEN",
+  "CLAIMED",
+  "REVIEWING",
+  "APPROVED",
+  "REJECTED",
+]);
+
+function managerAllowedTransitions(current: BountyTaskStatus): BountyTaskStatus[] {
+  if (current === "OPEN") return ["CLAIMED", "REJECTED"];
+  if (current === "CLAIMED") return ["REVIEWING", "OPEN", "REJECTED"];
+  if (current === "REVIEWING") return ["APPROVED", "REJECTED", "CLAIMED"];
+  if (current === "APPROVED") return ["OPEN"];
+  return ["OPEN", "CLAIMED"];
+}
+
+function allowedTransitions(current: BountyTaskStatus, isZtManager: boolean): BountyTaskStatus[] {
+  if (!isZtManager) {
+    return current === "OPEN" ? ["CLAIMED"] : [];
+  }
+  return managerAllowedTransitions(current);
+}
+
+export async function GET(req: Request) {
   try {
     await ensureZtBootstrap();
+    const ctx = getRequestUserContext(req);
+    const role = ztRoleFromRequest(req);
     const rows = await prisma.ztBountyTask.findMany({
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ items: rows });
+    return NextResponse.json({
+      items: rows.map((row) => ({
+        ...row,
+        allowedTransitions: ALL_TASK_STATUSES.has(row.status as BountyTaskStatus)
+          ? allowedTransitions(row.status as BountyTaskStatus, ctx.isZtManager)
+          : [],
+      })),
+      actorScope: ctx.userId ? ctx.ztRole : role,
+      isManager: ctx.isZtManager,
+    });
   } catch (error) {
     return NextResponse.json(
       {
@@ -41,14 +82,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "taskId required" }, { status: 400 });
     }
 
-    const allowedStatus = new Set([
-      "OPEN",
-      "CLAIMED",
-      "REVIEWING",
-      "APPROVED",
-      "REJECTED",
-    ]);
-    if (!allowedStatus.has(status)) {
+    if (!ALL_TASK_STATUSES.has(status as BountyTaskStatus)) {
       return NextResponse.json(
         { error: "invalid status, expected OPEN/CLAIMED/REVIEWING/APPROVED/REJECTED" },
         { status: 400 },
@@ -67,15 +101,22 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "task not found or forbidden" }, { status: 404 });
     }
 
-    // 非管理员只能做 OPEN -> CLAIMED 的认领动作
-    if (!ctx.isZtManager && !(exists.status === "OPEN" && status === "CLAIMED")) {
+    if (!ALL_TASK_STATUSES.has(exists.status as BountyTaskStatus)) {
+      return NextResponse.json({ error: "task status invalid" }, { status: 400 });
+    }
+    const nextAllowed = allowedTransitions(
+      exists.status as BountyTaskStatus,
+      ctx.isZtManager,
+    );
+    if (!nextAllowed.includes(status as BountyTaskStatus)) {
       return NextResponse.json(
-        { error: "forbidden transition for non-admin user" },
-        { status: 403 },
+        {
+          error: `invalid transition: ${exists.status} -> ${status}, expected: ${nextAllowed.join("/") || "none"}`,
+        },
+        { status: ctx.isZtManager ? 400 : 403 },
       );
     }
 
-    // 管理员可做全状态流转
     const row = await prisma.ztBountyTask.update({
       where: { id: taskId },
       data: { status },
@@ -86,6 +127,9 @@ export async function PATCH(req: Request) {
       ok: true,
       item: row,
       actorScope: ctx.userId ? ctx.ztRole : myRoles,
+      allowedTransitions: ALL_TASK_STATUSES.has(row.status as BountyTaskStatus)
+        ? allowedTransitions(row.status as BountyTaskStatus, ctx.isZtManager)
+        : [],
     });
   } catch (error) {
     return NextResponse.json(

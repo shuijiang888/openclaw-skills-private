@@ -116,11 +116,11 @@ export function ZtWarRoomBoard() {
                 : "正在接入战情数据流..."}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
             <button
               type="button"
               onClick={() => setAutoRotate((prev) => !prev)}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+              className={`min-h-11 shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition ${
                 autoRotate
                   ? "border-emerald-300 bg-emerald-400/20 text-emerald-100"
                   : "border-slate-600 text-slate-300 hover:border-cyan-500/60"
@@ -131,7 +131,7 @@ export function ZtWarRoomBoard() {
             <button
               type="button"
               onClick={() => void load()}
-              className="rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-cyan-500/60 hover:text-cyan-100"
+              className="min-h-11 shrink-0 rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-cyan-500/60 hover:text-cyan-100"
             >
               刷新数据
             </button>
@@ -140,7 +140,7 @@ export function ZtWarRoomBoard() {
                 key={x}
                 type="button"
                 onClick={() => setBoard(x)}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                className={`min-h-11 shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition ${
                   board === x
                     ? "border-cyan-300 bg-cyan-400/20 text-cyan-100"
                     : "border-slate-600 text-slate-300 hover:border-cyan-500/60"

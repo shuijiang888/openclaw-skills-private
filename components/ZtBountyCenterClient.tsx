@@ -11,6 +11,9 @@ type BountyTask = {
   description: string;
   rewardPoints: number;
   status: string;
+  taskType?: string;
+  deadlineAt?: string | null;
+  allowedTransitions?: string[];
 };
 
 type IntelDef = {
@@ -93,6 +96,8 @@ export function ZtBountyCenterClient() {
   const [intelDefs, setIntelDefs] = useState<IntelDef[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [reviewBusyId, setReviewBusyId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [lastFeedback, setLastFeedback] = useState<{
     pointsDelta: number;
     currentPoints: number;
@@ -115,6 +120,13 @@ export function ZtBountyCenterClient() {
   const dynamicRequiredFields = (selectedIntelDef?.requiredFields ?? []).filter(
     (field) => !BUILTIN_SUBMISSION_FIELDS.has(field),
   );
+  const visibleTasks = tasks.filter((task) =>
+    statusFilter === "ALL" ? true : task.status === statusFilter,
+  );
+  const taskStatusCount = tasks.reduce<Record<string, number>>((acc, task) => {
+    acc[task.status] = (acc[task.status] ?? 0) + 1;
+    return acc;
+  }, {});
 
   async function load() {
     const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
@@ -166,6 +178,43 @@ export function ZtBountyCenterClient() {
   useEffect(() => {
     void load().catch((e) => setError(e instanceof Error ? e.message : "加载失败"));
   }, []);
+
+  async function updateTaskStatus(taskId: string, status: string) {
+    setReviewBusyId(taskId);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          ...demoHeaders(),
+        },
+        body: JSON.stringify({ taskId, status }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) {
+        throw new Error(payload.message ?? payload.error ?? "任务状态更新失败");
+      }
+      setMessage(`任务状态已更新为 ${status}`);
+      await load();
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : "任务状态更新失败";
+      setError(
+        /forbidden/i.test(raw)
+          ? "当前角色无权执行该状态流转。"
+          : /invalid transition/i.test(raw)
+            ? "当前任务状态不允许此流转，请按流程推进。"
+            : raw,
+      );
+    } finally {
+      setReviewBusyId(null);
+    }
+  }
 
   async function submitSignal(e: FormEvent) {
     e.preventDefault();
@@ -236,8 +285,32 @@ export function ZtBountyCenterClient() {
         <p className="mt-1 text-xs text-slate-400">
           选择悬赏任务并提交情报，提交成功后自动进入积分闭环。
         </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {[
+            { value: "ALL", label: "全部" },
+            { value: "OPEN", label: "待认领" },
+            { value: "CLAIMED", label: "进行中" },
+            { value: "REVIEWING", label: "待审核" },
+            { value: "APPROVED", label: "已通过" },
+            { value: "REJECTED", label: "已驳回" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setStatusFilter(opt.value)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
+                statusFilter === opt.value
+                  ? "border-cyan-400/80 bg-cyan-500/20 text-cyan-100"
+                  : "border-slate-600 text-slate-300 hover:border-cyan-500/60"
+              }`}
+            >
+              {opt.label}
+              {opt.value !== "ALL" ? ` ${taskStatusCount[opt.value] ?? 0}` : ` ${tasks.length}`}
+            </button>
+          ))}
+        </div>
         <div className="mt-3 space-y-2">
-          {tasks.map((t) => (
+          {visibleTasks.map((t) => (
             <div
               key={t.id}
               className="rounded-lg border border-slate-700 bg-slate-950/60 p-3"
@@ -249,8 +322,62 @@ export function ZtBountyCenterClient() {
                 </span>
               </div>
               <p className="mt-1 text-xs text-slate-400">{t.description}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-300">
+                <span className="rounded-full border border-slate-600 px-2 py-0.5">
+                  状态：{t.status}
+                </span>
+                {t.deadlineAt ? (
+                  <span className="rounded-full border border-slate-600 px-2 py-0.5">
+                    截止：{new Date(t.deadlineAt).toLocaleDateString()}
+                  </span>
+                ) : null}
+                {t.taskType ? (
+                  <span className="rounded-full border border-slate-600 px-2 py-0.5">
+                    类型：{t.taskType}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <button
+                  type="button"
+                  disabled={reviewBusyId === t.id || !t.allowedTransitions?.includes("CLAIMED")}
+                  onClick={() => void updateTaskStatus(t.id, "CLAIMED")}
+                  className="min-h-11 rounded-md border border-cyan-500/35 bg-cyan-500/15 px-2.5 text-xs font-medium text-cyan-200 disabled:opacity-45"
+                >
+                  认领
+                </button>
+                <button
+                  type="button"
+                  disabled={reviewBusyId === t.id || !t.allowedTransitions?.includes("REVIEWING")}
+                  onClick={() => void updateTaskStatus(t.id, "REVIEWING")}
+                  className="min-h-11 rounded-md border border-amber-500/35 bg-amber-500/15 px-2.5 text-xs font-medium text-amber-200 disabled:opacity-45"
+                >
+                  送审
+                </button>
+                <button
+                  type="button"
+                  disabled={reviewBusyId === t.id || !t.allowedTransitions?.includes("APPROVED")}
+                  onClick={() => void updateTaskStatus(t.id, "APPROVED")}
+                  className="min-h-11 rounded-md border border-emerald-500/35 bg-emerald-500/15 px-2.5 text-xs font-medium text-emerald-200 disabled:opacity-45"
+                >
+                  通过
+                </button>
+                <button
+                  type="button"
+                  disabled={reviewBusyId === t.id || !t.allowedTransitions?.includes("REJECTED")}
+                  onClick={() => void updateTaskStatus(t.id, "REJECTED")}
+                  className="min-h-11 rounded-md border border-rose-500/35 bg-rose-500/15 px-2.5 text-xs font-medium text-rose-200 disabled:opacity-45"
+                >
+                  驳回
+                </button>
+              </div>
             </div>
           ))}
+          {visibleTasks.length === 0 ? (
+            <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">
+              当前筛选条件下暂无任务。
+            </div>
+          ) : null}
         </div>
       </div>
 
