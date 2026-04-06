@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/client-base-path";
 import { useDemoRole } from "@/components/RoleSwitcher";
 import { parseDemoRole } from "@/lib/approval";
 
@@ -10,7 +11,7 @@ export function QuickActionPanel() {
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    void fetch("/api/projects")
+    void fetch(apiUrl("/api/projects"))
       .then(r => r.json())
       .then((projects: { status: string }[]) => {
         setPendingCount(projects.filter(p => p.status === "PENDING_APPROVAL").length);

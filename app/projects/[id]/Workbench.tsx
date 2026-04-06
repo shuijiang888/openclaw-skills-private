@@ -72,6 +72,7 @@ type ProjectDTO = {
   leadDays: number;
   isStandard: boolean;
   isSmallOrder: boolean;
+  customerId: string;
   customer: { name: string; tier: string };
   quote: EnrichedQuote | null;
 };
@@ -379,7 +380,7 @@ export function Workbench({ projectId }: { projectId: string }) {
       <div className="xl:grid xl:grid-cols-[1fr_minmax(300px,380px)] xl:items-start xl:gap-8">
         <div className="min-w-0 space-y-6">
           {/* 客户画像 */}
-          <CustomerProfileCard customerId={data.customer.name} />
+          <CustomerProfileCard customerId={data.customerId} customerName={data.customer.name} />
 
           {/* ==================== 图2：成本基准 + 系数引擎 + 参考对比 + 胜率 ==================== */}
 
