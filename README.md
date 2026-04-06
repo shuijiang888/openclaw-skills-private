@@ -198,6 +198,41 @@ P2 第二批补充：
 - 监控趋势查询：`GET /api/zt/monitoring/history?limit=24`（管理员）
 - 告警 webhook（可选）：配置 `ZT_MONITORING_ALERT_WEBHOOK_URL` 后，`/api/zt/monitoring` 在出现告警时会尝试推送，并做 5 分钟同类节流
 
+### 分系统 Smoke + 发布/回滚（P1-4）
+
+```bash
+# 分系统 smoke（BASE_URL 可选，默认本地）
+npm run smoke:profit
+npm run smoke:zt
+
+# Nginx 白名单门禁（检查远端 profit-web.conf 包含关键路径）
+npm run gate:nginx
+
+# SHA 门禁（默认校验 HEAD，口径：origin + bare.git main + worktree）
+npm run gate:sha
+
+# 按系统发布（默认线上 BASE_URL=http://119.45.205.137, PAGE_PREFIX=/profit）
+npm run release:profit
+npm run release:zt
+
+# 按系统回滚（默认回滚到 d9a757b_hotfix_backup）
+npm run rollback:profit
+npm run rollback:zt
+```
+
+脚本说明：
+- `smoke:profit`：覆盖门户、健康、工作台、数据大屏、项目 API、罗盘 API、后台首页。
+- `smoke:zt`：覆盖智探入口、总览、行动卡、悬赏、作战快照、监控、联动、console/system、console/users。
+- `release:profit`：`release:preflight` → `smoke:profit` → `gate:nginx` → 部署 → `gate:sha` → `smoke:profit`。
+- `release:zt`：`gate:nginx` → `release:preflight` → `smoke:zt` → `prisma db push`（可关）→ 部署 → `gate:sha`。
+- `rollback:*`：执行远端 `git reset --hard <target>` + 更新 bare `main` 引用，再做 SHA 与对应系统 smoke 校验。
+
+关键环境变量：
+- `BASE_URL`（默认 `http://119.45.205.137`）
+- `PAGE_PREFIX`（默认 `/profit`）
+- `DEPLOY_SSH`（默认 `root@119.45.205.137`）
+- `SKIP_SHA_GATE=1`（仅紧急排障时临时跳过，不建议）
+
 ### Docker 部署（生产发布）
 
 仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。
