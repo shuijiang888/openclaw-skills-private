@@ -1,5 +1,17 @@
-# 协作状态
+# 当前任务（OpenClaw 维护）
 
-## 人类可读备注
+## 任务 ID
 
-collab-008 验收通过（企业级H5 95/100）。collab-009 目标：设计完整的"企业营销诊断系统"实现方案，包含纷享CRM OpenAPI对接、数据库Schema、后端API、腾讯云部署指南。Agent1/2可照此文档直接开发部署。
+`collab-009`
+
+## 背景
+
+collab-008 H5 已就绪。本轮输出 **企业营销诊断系统** 完整实现级设计：OpenAPI、数据库、后端 API、腾讯云部署、CRM 跟进流程，供 Agent1/2 直接开发。
+
+## 完成定义（DoD）
+
+见 `collaboration/HANDOFF.md`：`marketing_diagnosis/system/` 下五份文档 + `check-collab.sh` 绑定 collab-009。
+
+## 非目标
+
+不实际部署、不写入真实 AppId/Secret、不写业务代码（仅设计）。

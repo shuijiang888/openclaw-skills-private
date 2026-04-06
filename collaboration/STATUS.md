@@ -4,14 +4,14 @@
   OpenClaw / Cursor 共用；Cursor 执行任务时更新 YAML 块。
 -->
 ```yaml
-task_id: collab-008
+task_id: collab-009
 state: done
 updated: "2026-04-06"
 owner: cursor
-last_step: "H5 专业版：QB1-4 + 纯SVG雷达 + html2pdf + CONFIG + 报告版式"
+last_step: "营销诊断系统完整设计：system/ 五文档（OpenAPI+DB+API+部署+CRM流程）"
 blocker: ""
 ```
 
 ## 人类可读备注
 
-collab-008 已交付；等待小江验收。PDF 需能访问 cdnjs 加载 html2pdf.js。
+collab-009 已交付；Agent1/2 可据 `marketing_diagnosis/system/` 开发与部署。

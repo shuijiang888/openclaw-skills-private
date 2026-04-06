@@ -13,6 +13,7 @@ REPORT="$ROOT/collaboration/opportunity_insight_report.md"
 TALKTRACK="$ROOT/collaboration/huichuan_sales_talktrack.md"
 MD_DIR="$ROOT/collaboration/marketing_diagnosis"
 H5_MVP="$ROOT/collaboration/marketing_diagnosis/mvp/h5_questionnaire.html"
+SYS_DIR="$ROOT/collaboration/marketing_diagnosis/system"
 
 err() { echo "check-collab: $*" >&2; exit 1; }
 
@@ -23,7 +24,7 @@ for heading in "目标对齐" "指令下发" "Cursor 执行" "过程管理" "质
 done
 
 [[ -f "$STATUS" ]] || err "missing collaboration/STATUS.md"
-grep -q "^task_id: collab-008" "$STATUS" || err "STATUS task_id must be collab-008"
+grep -q "^task_id: collab-009" "$STATUS" || err "STATUS task_id must be collab-009"
 grep -q "^state: done" "$STATUS" || err "STATUS state must be done (YAML block)"
 
 [[ -f "$RETRO" ]] || err "missing collaboration/retrospectives/collab-001-20260406.md"
@@ -47,6 +48,7 @@ grep -q "v1.4" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.4"
 grep -q "v1.5" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.5"
 grep -q "v1.6" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.6"
 grep -q "v1.7" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.7"
+grep -q "v1.8" "$CHANGELOG" || err "PROTOCOL_CHANGELOG missing v1.8"
 
 [[ -f "$REPORT" ]] || err "missing collaboration/opportunity_insight_report.md"
 [[ -s "$REPORT" ]] || err "opportunity_insight_report.md is empty"
@@ -84,5 +86,19 @@ grep -q "var CONFIG" "$H5_MVP" || err "h5 must expose CONFIG"
 grep -q "basic-name-inp" "$H5_MVP" || err "h5 must have QB1 company field"
 grep -q "TOTAL_STEPS = 30" "$H5_MVP" || err "h5 must use 30 steps"
 grep -q "report-page" "$H5_MVP" || err "h5 report-page for PDF"
+
+[[ -d "$SYS_DIR" ]] || err "missing marketing_diagnosis/system/"
+for f in openapi_integration database_schema backend_api_design deployment_guide crm_workflow; do
+  [[ -f "$SYS_DIR/${f}.md" ]] || err "missing system/${f}.md"
+  [[ -s "$SYS_DIR/${f}.md" ]] || err "empty system/${f}.md"
+done
+grep -q "待老江" "$SYS_DIR/openapi_integration.md" || err "openapi needs 待确认 section"
+grep -q "CREATE TABLE campaigns" "$SYS_DIR/database_schema.md" || err "schema needs campaigns"
+grep -q "crm_sync_log" "$SYS_DIR/database_schema.md" || err "schema needs crm_sync_log"
+grep -q "POST /api/v1/submissions" "$SYS_DIR/backend_api_design.md" || err "api needs submissions"
+grep -q "GenerateReportJob" "$SYS_DIR/backend_api_design.md" || err "api needs async jobs"
+grep -q "119.45.205.137" "$SYS_DIR/deployment_guide.md" || err "deploy needs server IP"
+grep -q "location /diag/" "$SYS_DIR/deployment_guide.md" || err "deploy needs nginx diag"
+grep -q "utm_sales" "$SYS_DIR/crm_workflow.md" || err "crm workflow needs utm"
 
 echo "check-collab: OK"
