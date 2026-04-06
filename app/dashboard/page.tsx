@@ -217,6 +217,40 @@ export default async function DashboardPage({
               打开健康检查 →
             </p>
           </Link>
+          <Link
+            href="/diag-manufacturing.html"
+            className="rounded-xl border border-amber-200/90 bg-white/95 p-4 shadow-sm transition hover:border-amber-300 hover:shadow dark:border-amber-800/60 dark:bg-slate-950/50 dark:hover:border-amber-700"
+          >
+            <p className="text-xs font-semibold tracking-wide text-amber-700 dark:text-amber-300">
+              MARKETING DIAG H5
+            </p>
+            <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+              制造业企业营销诊断
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+              面向制造业企业的一页式营销诊断问卷，支持快速评估增长瓶颈与优先改进方向。
+            </p>
+            <p className="mt-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
+              打开制造业诊断 →
+            </p>
+          </Link>
+          <Link
+            href="/diag-medical.html"
+            className="rounded-xl border border-violet-200/90 bg-white/95 p-4 shadow-sm transition hover:border-violet-300 hover:shadow dark:border-violet-800/60 dark:bg-slate-950/50 dark:hover:border-violet-700"
+          >
+            <p className="text-xs font-semibold tracking-wide text-violet-700 dark:text-violet-300">
+              MARKETING DIAG H5
+            </p>
+            <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+              医疗器械企业营销诊断
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+              面向医疗器械企业的一页式营销诊断问卷，聚焦渠道合规、学术推广与成交效率。
+            </p>
+            <p className="mt-3 text-xs font-semibold text-violet-700 dark:text-violet-300">
+              打开医疗器械诊断 →
+            </p>
+          </Link>
         </div>
       </section>
 
