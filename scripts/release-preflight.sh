@@ -63,6 +63,7 @@ declare -a CHECK_PATHS=(
   "/api/zt/strategist/snapshot"
   "/api/zt/monitoring"
   "/api/zt/monitoring/history?limit=5"
+  "/api/zt/linkage"
 )
 
 for p in "${CHECK_PATHS[@]}"; do

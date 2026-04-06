@@ -76,8 +76,15 @@ echo "[10/11] Monitoring history endpoint reachable for manager..."
 curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/zt/monitoring/history?limit=10" \
   | jq -e '.ok==true and (.summary.total|type=="number") and (.items|type=="array")' >/dev/null
 
-echo "[11/11] Console redemptions manager endpoint reachable..."
+echo "[11/13] Console redemptions manager endpoint reachable..."
 curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/console/zt/redemptions" \
   | jq -e '.items|type=="array"' >/dev/null
+
+echo "[12/13] Linkage API reachable for manager..."
+curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/zt/linkage" \
+  | jq -e '.ok==true and (.coverage|type=="object") and (.byCity|type=="array") and (.topLinkedProjects|type=="array")' >/dev/null
+
+echo "[13/13] Linkage page reachable..."
+curl -fsS -b "$tmp_cookie" "$BASE_URL/zt007/linkage" >/dev/null
 
 echo "ZT acceptance passed."
