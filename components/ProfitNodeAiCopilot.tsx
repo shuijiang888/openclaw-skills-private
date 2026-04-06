@@ -32,6 +32,12 @@ type ParseApiError = {
   requestId?: string;
 };
 
+type QuoteParseBootstrap = {
+  csrfToken?: string;
+  csrfRequired?: boolean;
+  llmProvider?: "none" | "ollama" | "minimax";
+};
+
 type NodeId = "customer" | "bom" | "engine" | "quote" | "approval";
 
 type NodeResult = ParseApiResponse & { requestId: string | null };
@@ -173,19 +179,28 @@ export function ProfitNodeAiCopilot({
   );
   const [assistantCsrf, setAssistantCsrf] = useState<string | null>(null);
   const [assistantCsrfRequired, setAssistantCsrfRequired] = useState(false);
+  const [llmProvider, setLlmProvider] = useState<"none" | "ollama" | "minimax" | null>(
+    null,
+  );
 
   const playbook = useMemo(() => getRolePlaybook(demoRole), [demoRole]);
 
   useEffect(() => {
     void fetch(withClientBasePath("/api/assistant/quote-parse"))
       .then((r) => r.json())
-      .then((j: { csrfToken?: string; csrfRequired?: boolean }) => {
+      .then((j: QuoteParseBootstrap) => {
         setAssistantCsrfRequired(Boolean(j.csrfRequired));
         setAssistantCsrf(j.csrfToken ?? null);
+        setLlmProvider(
+          j.llmProvider === "none" || j.llmProvider === "ollama" || j.llmProvider === "minimax"
+            ? j.llmProvider
+            : null,
+        );
       })
       .catch(() => {
         setAssistantCsrf(null);
         setAssistantCsrfRequired(false);
+        setLlmProvider(null);
       });
   }, []);
 
@@ -291,6 +306,12 @@ export function ProfitNodeAiCopilot({
           当前角色：{playbook.label}
         </span>
       </div>
+
+      {llmProvider === "none" ? (
+        <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-2 text-[11px] text-amber-900 dark:border-amber-700/70 dark:bg-amber-950/30 dark:text-amber-200">
+          当前未配置大模型，正在使用规则引擎。
+        </div>
+      ) : null}
 
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         {NODE_CONFIGS.map((node) => (
