@@ -367,6 +367,7 @@ export function Zt007System() {
     { name: "任务悬赏众包", status: "已发布", href: "/zt007/bounty" },
     { name: "积分兑换", status: "已发布", href: "/zt007/honor" },
     { name: "个人工作台", status: "已发布", href: "/personal" },
+    { name: "情报联动看板（P2 Batch3）", status: "已发布", href: "/zt007/linkage" },
     { name: "智探007系统维护", status: "已发布", href: "/console/system" },
     { name: "智探007用户组织", status: "已发布", href: "/console/users" },
     { name: "健康检查页", status: "已发布", href: "/health-check" },
