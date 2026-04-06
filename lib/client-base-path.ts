@@ -1,16 +1,23 @@
-/**
- * 获取 Next.js basePath，用于客户端 fetch 调用。
- * 生产部署在 /profit/ 下时，fetch("/api/...") 会 404，
- * 需要改为 fetch("/profit/api/...")。
- */
-export function getClientBasePath(): string {
+const PROFIT_SUBPATH = "/profit";
+
+function detectClientBasePath(): string {
   if (typeof window === "undefined") return "";
-  const nd = (window as unknown as { __NEXT_DATA__?: { basePath?: string } }).__NEXT_DATA__;
-  return nd?.basePath ?? "";
+  const pathname = window.location.pathname;
+  if (pathname === PROFIT_SUBPATH || pathname.startsWith(`${PROFIT_SUBPATH}/`)) {
+    return PROFIT_SUBPATH;
+  }
+  return "";
 }
 
+/**
+ * 为客户端 fetch 添加 basePath 前缀。
+ * 线上部署在 /profit/ 下时自动加前缀，本地开发时不加。
+ * 逻辑与 Agent1 线上 lib/client-url.ts 的 withClientBasePath 一致。
+ */
 export function apiUrl(path: string): string {
-  const bp = getClientBasePath();
-  if (path.startsWith("/")) return `${bp}${path}`;
-  return `${bp}/${path}`;
+  if (!path.startsWith("/")) return path;
+  const basePath = detectClientBasePath();
+  if (!basePath) return path;
+  if (path === basePath || path.startsWith(`${basePath}/`)) return path;
+  return `${basePath}${path}`;
 }

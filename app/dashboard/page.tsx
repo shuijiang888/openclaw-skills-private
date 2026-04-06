@@ -211,6 +211,17 @@ export default async function DashboardPage({
       {/* 数据分析看板 */}
       <DashboardAnalytics />
 
+      {/* 数据大屏入口 */}
+      <Link href="/data-screen"
+        className="card-hover flex items-center justify-between rounded-2xl border border-slate-200/90 bg-gradient-to-r from-slate-900 to-amber-900 px-5 py-4 shadow-sm transition hover:shadow-lg">
+        <div>
+          <p className="text-xs font-semibold text-amber-300/80">Real-time Dashboard</p>
+          <p className="mt-0.5 text-base font-bold text-white">经营数据大屏</p>
+          <p className="mt-0.5 text-xs text-slate-300">适合会议室投影 · 全屏展示</p>
+        </div>
+        <span className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-bold text-white backdrop-blur">进入大屏 →</span>
+      </Link>
+
       <p className="text-xs text-slate-500">
         设计文档 <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">docs/DESIGN.md</code>
         ；战略打包{" "}
