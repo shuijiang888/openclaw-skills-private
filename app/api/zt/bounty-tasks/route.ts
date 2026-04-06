@@ -71,13 +71,16 @@ export async function PATCH(req: Request) {
     const ctx = getRequestUserContext(req);
     const role = ztRoleFromRequest(req);
     const body = (await req.json().catch(() => null)) as
-      | { taskId?: string; status?: string }
+      | { taskId?: string; status?: string; reviewNote?: string }
       | null;
 
     const taskId = String(body?.taskId ?? "").trim();
     const status = String(body?.status ?? "")
       .trim()
       .toUpperCase();
+    const reviewNote = String(body?.reviewNote ?? "")
+      .trim()
+      .slice(0, 240);
     if (!taskId) {
       return NextResponse.json({ error: "taskId required" }, { status: 400 });
     }
@@ -89,12 +92,7 @@ export async function PATCH(req: Request) {
       );
     }
 
-    const where = ctx.isZtManager
-      ? { id: taskId }
-      : {
-          id: taskId,
-          OR: [{ status: "OPEN" }, { status: "CLAIMED" }],
-        };
+    const where = { id: taskId };
 
     const exists = await prisma.ztBountyTask.findFirst({ where });
     if (!exists) {
@@ -119,7 +117,17 @@ export async function PATCH(req: Request) {
 
     const row = await prisma.ztBountyTask.update({
       where: { id: taskId },
-      data: { status },
+      data: {
+        status,
+        reviewNote:
+          status === "REJECTED" || status === "APPROVED"
+            ? reviewNote
+            : undefined,
+        reviewedByRole:
+          status === "REJECTED" || status === "APPROVED" ? ctx.ztRole : null,
+        reviewedAt:
+          status === "REJECTED" || status === "APPROVED" ? new Date() : null,
+      },
     });
 
     const myRoles = actorRoleCandidatesForZt(role);
@@ -212,6 +220,112 @@ export async function POST(req: Request) {
         error: "bounty_task_create_failed",
         message:
           error instanceof Error ? error.message : "bounty task create failed",
+      },
+      { status: 503 },
+    );
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    await ensureZtBootstrap();
+    const ctx = getRequestUserContext(req);
+    if (!ctx.isZtManager) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    const body = (await req.json().catch(() => null)) as
+      | {
+          taskId?: string;
+          intelDefId?: string;
+          title?: string;
+          description?: string;
+          rewardPoints?: number;
+          status?: string;
+          deadlineAt?: string | null;
+        }
+      | null;
+    const taskId = String(body?.taskId ?? "").trim();
+    if (!taskId) {
+      return NextResponse.json({ error: "taskId required" }, { status: 400 });
+    }
+
+    const patch: Record<string, unknown> = {};
+    if (typeof body?.title === "string") {
+      const title = body.title.trim();
+      if (!title) return NextResponse.json({ error: "title invalid" }, { status: 400 });
+      patch.title = title;
+    }
+    if (typeof body?.description === "string") {
+      const description = body.description.trim();
+      if (!description) {
+        return NextResponse.json({ error: "description invalid" }, { status: 400 });
+      }
+      patch.description = description;
+    }
+    if (typeof body?.rewardPoints !== "undefined") {
+      const rewardPoints = Number(body.rewardPoints);
+      if (!Number.isFinite(rewardPoints)) {
+        return NextResponse.json({ error: "rewardPoints invalid" }, { status: 400 });
+      }
+      patch.rewardPoints = Math.max(1, Math.min(500, Math.floor(rewardPoints)));
+    }
+    if (typeof body?.status === "string") {
+      const status = body.status.trim().toUpperCase();
+      if (!ALL_TASK_STATUSES.has(status as BountyTaskStatus)) {
+        return NextResponse.json({ error: "status invalid" }, { status: 400 });
+      }
+      patch.status = status;
+    }
+    if (typeof body?.intelDefId === "string") {
+      const intelDefId = body.intelDefId.trim();
+      if (!intelDefId) {
+        patch.intelDefId = null;
+      } else {
+        const def = await prisma.ztIntelDefinition.findFirst({
+          where: { id: intelDefId, isActive: true },
+        });
+        if (!def) {
+          return NextResponse.json(
+            { error: "invalid intelDefId (definition not found or inactive)" },
+            { status: 400 },
+          );
+        }
+        patch.intelDefId = def.id;
+        patch.taskType = def.category.toLowerCase();
+      }
+    }
+    if (body?.deadlineAt === null) {
+      patch.deadlineAt = null;
+    } else if (typeof body?.deadlineAt === "string") {
+      const raw = body.deadlineAt.trim();
+      if (!raw) {
+        patch.deadlineAt = null;
+      } else {
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) {
+          return NextResponse.json(
+            { error: "deadlineAt invalid datetime string" },
+            { status: 400 },
+          );
+        }
+        patch.deadlineAt = d;
+      }
+    }
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json({ error: "empty patch" }, { status: 400 });
+    }
+
+    const updated = await prisma.ztBountyTask.update({
+      where: { id: taskId },
+      data: patch,
+    });
+    return NextResponse.json({ ok: true, item: updated });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "bounty_task_update_failed",
+        message:
+          error instanceof Error ? error.message : "bounty task update failed",
       },
       { status: 503 },
     );

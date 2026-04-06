@@ -13,6 +13,7 @@ type BountyTask = {
   status: string;
   taskType?: string;
   deadlineAt?: string | null;
+  reviewNote?: string;
   allowedTransitions?: string[];
 };
 
@@ -26,6 +27,33 @@ type IntelDef = {
   allowedFormats: string[];
   defaultRewardPoints: number;
 };
+
+type TaskEditForm = {
+  taskId: string;
+  intelDefId: string;
+  title: string;
+  description: string;
+  rewardPoints: number;
+  status: string;
+  deadlineAt: string;
+};
+
+type TaskCreateForm = {
+  intelDefId: string;
+  title: string;
+  description: string;
+  rewardPoints: number;
+  deadlineAt: string;
+};
+
+function toDatetimeLocalInput(raw?: string | null): string {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "";
+  const offsetMs = d.getTimezoneOffset() * 60 * 1000;
+  const local = new Date(d.getTime() - offsetMs);
+  return local.toISOString().slice(0, 16);
+}
 
 const BUILTIN_SUBMISSION_FIELDS = new Set([
   "title",
@@ -97,6 +125,20 @@ export function ZtBountyCenterClient() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [reviewBusyId, setReviewBusyId] = useState<string | null>(null);
+  const [isManager, setIsManager] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState<string>("REVIEWING");
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [editingTask, setEditingTask] = useState<TaskEditForm | null>(null);
+  const [savingTask, setSavingTask] = useState(false);
+  const [creatingTask, setCreatingTask] = useState<TaskCreateForm>({
+    intelDefId: "",
+    title: "",
+    description: "",
+    rewardPoints: 30,
+    deadlineAt: "",
+  });
+  const [creatingTaskBusy, setCreatingTaskBusy] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [lastFeedback, setLastFeedback] = useState<{
     pointsDelta: number;
@@ -127,7 +169,6 @@ export function ZtBountyCenterClient() {
     acc[task.status] = (acc[task.status] ?? 0) + 1;
     return acc;
   }, {});
-
   async function load() {
     const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
       cache: "no-store",
@@ -137,9 +178,11 @@ export function ZtBountyCenterClient() {
     const payload = (await res.json().catch(() => ({}))) as {
       items?: BountyTask[];
       message?: string;
+      isManager?: boolean;
     };
     if (!res.ok) throw new Error(payload.message ?? "加载悬赏任务失败");
     setTasks(payload.items ?? []);
+    setIsManager(payload.isManager === true);
 
     const defsRes = await fetch(withClientBasePath("/api/zt/intel-definitions"), {
       cache: "no-store",
@@ -156,6 +199,10 @@ export function ZtBountyCenterClient() {
     }
     const defs = defsPayload.items ?? [];
     setIntelDefs(defs);
+    setCreatingTask((prev) => ({
+      ...prev,
+      intelDefId: prev.intelDefId || defs[0]?.id || "",
+    }));
     setForm((prev) => {
       const currentValid = defs.some((x) => x.id === prev.intelDefId);
       const nextIntelDefId = currentValid ? prev.intelDefId : (defs[0]?.id ?? "");
@@ -179,11 +226,28 @@ export function ZtBountyCenterClient() {
     void load().catch((e) => setError(e instanceof Error ? e.message : "加载失败"));
   }, []);
 
-  async function updateTaskStatus(taskId: string, status: string) {
+  useEffect(() => {
+    setSelectedTaskIds((prev) => prev.filter((id) => tasks.some((t) => t.id === id)));
+    setEditingTask((prev) => {
+      if (!prev) return null;
+      return tasks.some((t) => t.id === prev.taskId) ? prev : null;
+    });
+  }, [tasks]);
+
+  async function updateTaskStatus(
+    taskId: string,
+    status: string,
+    options?: { askReviewNote?: boolean },
+  ) {
     setReviewBusyId(taskId);
     setError("");
     setMessage("");
     try {
+      const needReviewNote =
+        options?.askReviewNote && (status === "APPROVED" || status === "REJECTED");
+      const reviewNote = needReviewNote
+        ? window.prompt("可选：审核备注（可留空）", "") ?? ""
+        : "";
       const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
         method: "PATCH",
         credentials: "include",
@@ -191,7 +255,7 @@ export function ZtBountyCenterClient() {
           "content-type": "application/json",
           ...demoHeaders(),
         },
-        body: JSON.stringify({ taskId, status }),
+        body: JSON.stringify({ taskId, status, reviewNote }),
       });
       const payload = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -213,6 +277,153 @@ export function ZtBountyCenterClient() {
       );
     } finally {
       setReviewBusyId(null);
+    }
+  }
+
+  async function batchUpdateStatus() {
+    if (selectedTaskIds.length === 0) {
+      setError("请先勾选至少一个任务。");
+      return;
+    }
+    setBulkBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      let okCount = 0;
+      let failCount = 0;
+      const needReviewNote = bulkStatus === "APPROVED" || bulkStatus === "REJECTED";
+      const reviewNote = needReviewNote
+        ? window.prompt("可选：本次批量操作审核备注（可留空）", "") ?? ""
+        : "";
+      for (const taskId of selectedTaskIds) {
+        // eslint-disable-next-line no-await-in-loop
+        const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "content-type": "application/json",
+            ...demoHeaders(),
+          },
+          body: JSON.stringify({ taskId, status: bulkStatus, reviewNote }),
+        });
+        if (res.ok) {
+          okCount += 1;
+        } else {
+          failCount += 1;
+        }
+      }
+      setMessage(
+        `批量处理完成：成功 ${okCount} 条，失败 ${failCount} 条（可能因状态不匹配或权限限制）。`,
+      );
+      setSelectedTaskIds([]);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "批量处理失败");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  function openTaskEditor(task: BountyTask) {
+    setEditingTask({
+      taskId: task.id,
+      intelDefId: task.intelDefId ?? "",
+      title: task.title,
+      description: task.description,
+      rewardPoints: task.rewardPoints,
+      status: task.status,
+      deadlineAt: toDatetimeLocalInput(task.deadlineAt),
+    });
+  }
+
+  async function createTask() {
+    if (!creatingTask.intelDefId) {
+      setError("请先选择商情定义后再创建任务。");
+      return;
+    }
+    if (!creatingTask.title.trim() || !creatingTask.description.trim()) {
+      setError("任务标题和任务说明不能为空。");
+      return;
+    }
+    setCreatingTaskBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          ...demoHeaders(),
+        },
+        body: JSON.stringify({
+          intelDefId: creatingTask.intelDefId,
+          title: creatingTask.title.trim(),
+          description: creatingTask.description.trim(),
+          rewardPoints: creatingTask.rewardPoints,
+          deadlineAt: creatingTask.deadlineAt
+            ? new Date(creatingTask.deadlineAt).toISOString()
+            : undefined,
+        }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) throw new Error(payload.message ?? payload.error ?? "任务创建失败");
+      setMessage("任务已创建。");
+      setCreatingTask((prev) => ({
+        ...prev,
+        title: "",
+        description: "",
+        rewardPoints: 30,
+        deadlineAt: "",
+      }));
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "任务创建失败");
+    } finally {
+      setCreatingTaskBusy(false);
+    }
+  }
+
+  async function saveTaskEdit() {
+    if (!editingTask) return;
+    setSavingTask(true);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch(withClientBasePath("/api/zt/bounty-tasks"), {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          ...demoHeaders(),
+        },
+        body: JSON.stringify({
+          taskId: editingTask.taskId,
+          intelDefId: editingTask.intelDefId,
+          title: editingTask.title,
+          description: editingTask.description,
+          rewardPoints: editingTask.rewardPoints,
+          status: editingTask.status,
+          deadlineAt: editingTask.deadlineAt
+            ? new Date(editingTask.deadlineAt).toISOString()
+            : null,
+        }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) throw new Error(payload.message ?? payload.error ?? "任务保存失败");
+      setMessage("任务已更新。");
+      setEditingTask(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "任务保存失败");
+    } finally {
+      setSavingTask(false);
     }
   }
 
@@ -309,6 +520,31 @@ export function ZtBountyCenterClient() {
             </button>
           ))}
         </div>
+        {isManager ? (
+          <div className="mt-3 rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold text-cyan-200">批量审核操作</p>
+              <select
+                className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-2.5 text-xs text-slate-100"
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+              >
+                <option value="REVIEWING">批量送审</option>
+                <option value="APPROVED">批量通过</option>
+                <option value="REJECTED">批量驳回</option>
+                <option value="OPEN">批量重开</option>
+              </select>
+              <button
+                type="button"
+                disabled={bulkBusy || selectedTaskIds.length === 0}
+                onClick={() => void batchUpdateStatus()}
+                className="min-h-11 rounded-md border border-cyan-500/35 bg-cyan-500/15 px-3 text-xs font-semibold text-cyan-200 disabled:opacity-55"
+              >
+                {bulkBusy ? "处理中..." : `执行批量操作（${selectedTaskIds.length}）`}
+              </button>
+            </div>
+          </div>
+        ) : null}
         <div className="mt-3 space-y-2">
           {visibleTasks.map((t) => (
             <div
@@ -316,6 +552,22 @@ export function ZtBountyCenterClient() {
               className="rounded-lg border border-slate-700 bg-slate-950/60 p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
+                {isManager ? (
+                  <label className="inline-flex items-center gap-2 text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={selectedTaskIds.includes(t.id)}
+                      onChange={(e) =>
+                        setSelectedTaskIds((prev) =>
+                          e.target.checked
+                            ? Array.from(new Set([...prev, t.id]))
+                            : prev.filter((id) => id !== t.id),
+                        )
+                      }
+                    />
+                    选中
+                  </label>
+                ) : null}
                 <p className="font-medium text-slate-100">{t.title}</p>
                 <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-200">
                   +{t.rewardPoints}
@@ -357,7 +609,9 @@ export function ZtBountyCenterClient() {
                 <button
                   type="button"
                   disabled={reviewBusyId === t.id || !t.allowedTransitions?.includes("APPROVED")}
-                  onClick={() => void updateTaskStatus(t.id, "APPROVED")}
+                  onClick={() =>
+                    void updateTaskStatus(t.id, "APPROVED", { askReviewNote: true })
+                  }
                   className="min-h-11 rounded-md border border-emerald-500/35 bg-emerald-500/15 px-2.5 text-xs font-medium text-emerald-200 disabled:opacity-45"
                 >
                   通过
@@ -365,12 +619,28 @@ export function ZtBountyCenterClient() {
                 <button
                   type="button"
                   disabled={reviewBusyId === t.id || !t.allowedTransitions?.includes("REJECTED")}
-                  onClick={() => void updateTaskStatus(t.id, "REJECTED")}
+                  onClick={() =>
+                    void updateTaskStatus(t.id, "REJECTED", { askReviewNote: true })
+                  }
                   className="min-h-11 rounded-md border border-rose-500/35 bg-rose-500/15 px-2.5 text-xs font-medium text-rose-200 disabled:opacity-45"
                 >
                   驳回
                 </button>
+                {isManager ? (
+                  <button
+                    type="button"
+                    onClick={() => openTaskEditor(t)}
+                    className="min-h-11 rounded-md border border-slate-500/40 bg-slate-700/20 px-2.5 text-xs font-medium text-slate-200"
+                  >
+                    编辑任务
+                  </button>
+                ) : null}
               </div>
+              {t.reviewNote ? (
+                <p className="mt-2 rounded-md border border-slate-700 bg-slate-900/40 px-2.5 py-1.5 text-xs text-slate-300">
+                  审核备注：{t.reviewNote}
+                </p>
+              ) : null}
             </div>
           ))}
           {visibleTasks.length === 0 ? (
@@ -382,6 +652,201 @@ export function ZtBountyCenterClient() {
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 lg:col-span-2">
+        {isManager ? (
+          <div className="mb-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3">
+            <h3 className="text-sm font-semibold text-cyan-200">任务管理（管理员）</h3>
+            <div className="mt-2 grid gap-2">
+              <select
+                className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                value={creatingTask.intelDefId}
+                onChange={(e) =>
+                  setCreatingTask((prev) => ({ ...prev, intelDefId: e.target.value }))
+                }
+              >
+                <option value="">选择商情定义</option>
+                {intelDefs.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    [{d.category}] {d.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="任务标题"
+                value={creatingTask.title}
+                onChange={(e) =>
+                  setCreatingTask((prev) => ({ ...prev, title: e.target.value }))
+                }
+              />
+              <textarea
+                className="min-h-20 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="任务说明"
+                value={creatingTask.description}
+                onChange={(e) =>
+                  setCreatingTask((prev) => ({ ...prev, description: e.target.value }))
+                }
+              />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={creatingTask.rewardPoints}
+                  onChange={(e) =>
+                    setCreatingTask((prev) => ({
+                      ...prev,
+                      rewardPoints: Math.max(1, Number(e.target.value || 1)),
+                    }))
+                  }
+                />
+                <input
+                  type="datetime-local"
+                  className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={creatingTask.deadlineAt}
+                  onChange={(e) =>
+                    setCreatingTask((prev) => ({ ...prev, deadlineAt: e.target.value }))
+                  }
+                />
+              </div>
+              <button
+                type="button"
+                disabled={creatingTaskBusy}
+                onClick={() => void createTask()}
+                className="min-h-11 rounded-md border border-cyan-500/35 bg-cyan-500/15 px-3 text-xs font-semibold text-cyan-200 disabled:opacity-55"
+              >
+                {creatingTaskBusy ? "创建中..." : "创建任务"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {isManager && editingTask ? (
+          <div className="mb-3 rounded-lg border border-slate-700 bg-slate-950/50 p-3">
+            <h3 className="text-sm font-semibold text-cyan-200">任务编辑</h3>
+            <div className="mt-2 grid gap-2">
+              <select
+                className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                value={editingTask.intelDefId}
+                onChange={(e) =>
+                  setEditingTask((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          intelDefId: e.target.value,
+                        }
+                      : prev,
+                  )
+                }
+              >
+                <option value="">不绑定定义</option>
+                {intelDefs.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    [{d.category}] {d.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                value={editingTask.title}
+                onChange={(e) =>
+                  setEditingTask((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          title: e.target.value,
+                        }
+                      : prev,
+                  )
+                }
+              />
+              <textarea
+                className="min-h-20 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                value={editingTask.description}
+                onChange={(e) =>
+                  setEditingTask((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          description: e.target.value,
+                        }
+                      : prev,
+                  )
+                }
+              />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={editingTask.rewardPoints}
+                  onChange={(e) =>
+                    setEditingTask((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            rewardPoints: Number(e.target.value),
+                          }
+                        : prev,
+                    )
+                  }
+                />
+                <select
+                  className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={editingTask.status}
+                  onChange={(e) =>
+                    setEditingTask((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            status: e.target.value,
+                          }
+                        : prev,
+                    )
+                  }
+                >
+                  <option value="OPEN">OPEN</option>
+                  <option value="CLAIMED">CLAIMED</option>
+                  <option value="REVIEWING">REVIEWING</option>
+                  <option value="APPROVED">APPROVED</option>
+                  <option value="REJECTED">REJECTED</option>
+                </select>
+                <input
+                  type="datetime-local"
+                  className="min-h-11 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  value={editingTask.deadlineAt}
+                  onChange={(e) =>
+                    setEditingTask((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            deadlineAt: e.target.value,
+                          }
+                        : prev,
+                    )
+                  }
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={savingTask}
+                  onClick={() => void saveTaskEdit()}
+                  className="min-h-11 rounded-md border border-cyan-500/35 bg-cyan-500/15 px-3 text-xs font-semibold text-cyan-200 disabled:opacity-55"
+                >
+                  {savingTask ? "保存中..." : "保存任务"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingTask(null)}
+                  className="min-h-11 rounded-md border border-slate-600 px-3 text-xs text-slate-300"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <h2 className="text-lg font-semibold text-cyan-200">提交情报</h2>
         <form className="mt-3 space-y-2" onSubmit={submitSignal}>
           <select

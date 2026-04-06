@@ -194,9 +194,11 @@ model ZtBountyTask {
   taskType     String   @default("tactical")
   rewardPoints Int      @default(30)
   status       String   @default("OPEN")
+  reviewNote   String   @default("")
+  reviewedByRole String?
+  reviewedAt   DateTime?
   deadlineAt   DateTime?
   createdAt    DateTime @default(now())
-
   submissions  ZtSubmission[]
 
   @@index([status, createdAt])
