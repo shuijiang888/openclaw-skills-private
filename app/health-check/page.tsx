@@ -17,6 +17,7 @@ export default function HealthCheckPage() {
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>npm run release:preflight</li>
           <li>npm run zt:acceptance（门禁→行动→悬赏→积分→个人工作台）</li>
+          <li>/api/zt/monitoring 状态非 critical（可在本页监控面板查看）</li>
         </ul>
       </div>
       <HealthCheckDashboard />

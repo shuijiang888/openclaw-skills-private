@@ -20,6 +20,38 @@ type CheckResult = {
   url: string;
 };
 
+type MonitoringPayload = {
+  ok: boolean;
+  status: "ok" | "warning" | "critical";
+  sampledAt: string;
+  scope: string;
+  thresholds: {
+    availabilityPct: number;
+    p95LatencyMs: number;
+    errorRatePct: number;
+    sampledAt?: string;
+    scope?: string;
+  };
+  probe: {
+    total: number;
+    success: number;
+    availabilityPct: number;
+    errorRatePct: number;
+    p95LatencyMs: number;
+  };
+  consistency: {
+    windowMinutes: number;
+    submissionVsLedger: { submissions: number; ledgers: number; gap: number };
+    redemptionVsLedger: { redemptions: number; ledgers: number; gap: number };
+    negativeWallets: number;
+  };
+  alerts: Array<{
+    id: string;
+    severity: "warning" | "critical";
+    message: string;
+  }>;
+};
+
 const CHECKS: CheckItem[] = [
   { key: "page-portal", label: "首页门户", path: "/", expected: [200] },
   { key: "page-dashboard", label: "盈利工作台页面", path: "/dashboard", expected: [200] },
@@ -109,10 +141,29 @@ export function HealthCheckDashboard() {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<CheckResult[]>([]);
   const [ranAt, setRanAt] = useState<string | null>(null);
+  const [monitoring, setMonitoring] = useState<MonitoringPayload | null>(null);
+  const [monitoringError, setMonitoringError] = useState<string | null>(null);
 
   const runChecks = useCallback(async () => {
     setRunning(true);
     const rows = await Promise.all(CHECKS.map((c) => runOne(c)));
+    try {
+      const monitorRes = await fetch(withClientBasePath("/api/zt/monitoring"), {
+        method: "GET",
+        cache: "no-store",
+        headers: { ...demoHeaders() },
+        credentials: "include",
+      });
+      if (!monitorRes.ok) {
+        throw new Error(`monitoring http ${monitorRes.status}`);
+      }
+      const monitorJson = (await monitorRes.json()) as MonitoringPayload;
+      setMonitoring(monitorJson);
+      setMonitoringError(null);
+    } catch (error) {
+      setMonitoring(null);
+      setMonitoringError(error instanceof Error ? error.message : "monitoring fetch failed");
+    }
     setResults(rows);
     setRanAt(new Date().toISOString());
     setRunning(false);
@@ -152,6 +203,87 @@ export function HealthCheckDashboard() {
         <Card label="通过" value={String(summary.ok)} accent="ok" />
         <Card label="异常" value={String(summary.fail)} accent={summary.fail > 0 ? "fail" : "ok"} />
       </div>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">智探007监控告警面板（P2）</h3>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              阈值：可用率&gt;={monitoring?.thresholds.availabilityPct ?? 99}% · P95&lt;={monitoring?.thresholds.p95LatencyMs ?? 1500}ms · 错误率&lt;={monitoring?.thresholds.errorRatePct ?? 1}%
+            </p>
+          </div>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+              monitoring?.status === "critical"
+                ? "bg-rose-100 text-rose-800 dark:bg-rose-900/35 dark:text-rose-300"
+                : monitoring?.status === "warning"
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/35 dark:text-amber-300"
+                  : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/35 dark:text-emerald-300"
+            }`}
+          >
+            {monitoring?.status === "critical"
+              ? "严重告警"
+              : monitoring?.status === "warning"
+                ? "预警"
+                : "正常"}
+          </span>
+        </div>
+        {monitoringError ? (
+          <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+            监控数据拉取失败：{monitoringError}
+          </p>
+        ) : null}
+        {monitoring ? (
+          <>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Card label="可用率" value={`${monitoring.probe.availabilityPct}%`} accent={monitoring.probe.availabilityPct >= monitoring.thresholds.availabilityPct ? "ok" : "fail"} />
+              <Card label="P95 延迟" value={`${monitoring.probe.p95LatencyMs}ms`} accent={monitoring.probe.p95LatencyMs <= monitoring.thresholds.p95LatencyMs ? "ok" : "fail"} />
+              <Card label="错误率" value={`${monitoring.probe.errorRatePct}%`} accent={monitoring.probe.errorRatePct <= monitoring.thresholds.errorRatePct ? "ok" : "fail"} />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Card
+                label="提交-记账差值(1h)"
+                value={String(monitoring.consistency.submissionVsLedger.gap)}
+                accent={monitoring.consistency.submissionVsLedger.gap === 0 ? "ok" : "fail"}
+              />
+              <Card
+                label="兑换-记账差值(1h)"
+                value={String(monitoring.consistency.redemptionVsLedger.gap)}
+                accent={monitoring.consistency.redemptionVsLedger.gap === 0 ? "ok" : "fail"}
+              />
+              <Card
+                label="负积分钱包"
+                value={String(monitoring.consistency.negativeWallets)}
+                accent={monitoring.consistency.negativeWallets === 0 ? "ok" : "fail"}
+              />
+            </div>
+            <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-950/40">
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">当前告警</p>
+              {monitoring.alerts.length === 0 ? (
+                <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">无告警</p>
+              ) : (
+                <ul className="mt-2 space-y-1.5 text-xs">
+                  {monitoring.alerts.map((a) => (
+                    <li
+                      key={a.id}
+                      className={`rounded-md px-2 py-1 ${
+                        a.severity === "critical"
+                          ? "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                      }`}
+                    >
+                      [{a.severity === "critical" ? "严重" : "预警"}] {a.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              采样时间：{new Date(monitoring.sampledAt).toLocaleString("zh-CN")} · 监控视角：{monitoring.scope}
+            </p>
+          </>
+        ) : null}
+      </section>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-left text-xs">
