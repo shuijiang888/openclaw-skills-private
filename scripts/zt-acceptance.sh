@@ -68,11 +68,15 @@ echo "[8/10] War-room snapshot available..."
 curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/zt/strategist/snapshot" \
   | jq -e '.ok==true and (.snapshot.kpis|type=="object")' >/dev/null
 
-echo "[9/10] Monitoring endpoint available and non-critical..."
+echo "[9/11] Monitoring endpoint available and non-critical..."
 curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/zt/monitoring" \
-  | jq -e '(.status=="ok" or .status=="warning") and (.alerts|type=="array")' >/dev/null
+  | jq -e '(.status=="ok" or .status=="warning") and (.alerts|type=="array") and (.persistence.saved|type=="boolean") and (.notification.enabled|type=="boolean")' >/dev/null
 
-echo "[10/10] Console redemptions manager endpoint reachable..."
+echo "[10/11] Monitoring history endpoint reachable for manager..."
+curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/zt/monitoring/history?limit=10" \
+  | jq -e '.ok==true and (.summary.total|type=="number") and (.items|type=="array")' >/dev/null
+
+echo "[11/11] Console redemptions manager endpoint reachable..."
 curl -fsS -b "$tmp_cookie" -H "x-demo-role: ADMIN" "$BASE_URL/api/console/zt/redemptions" \
   | jq -e '.items|type=="array"' >/dev/null
 

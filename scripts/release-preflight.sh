@@ -62,6 +62,7 @@ declare -a CHECK_PATHS=(
   "/api/zt/bounty-tasks"
   "/api/zt/strategist/snapshot"
   "/api/zt/monitoring"
+  "/api/zt/monitoring/history?limit=5"
 )
 
 for p in "${CHECK_PATHS[@]}"; do

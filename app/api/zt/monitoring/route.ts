@@ -20,6 +20,10 @@ const ALERT_THRESHOLDS = {
   errorRatePct: 1,
 } as const;
 
+const MONITORING_ROUTE = "/api/zt/monitoring";
+const SNAPSHOT_ACTION = "zt_monitoring_snapshot";
+const ALERT_DISPATCH_ACTION = "zt_monitoring_alert_dispatch";
+
 type ProbeRow = {
   path: string;
   status: number;
@@ -33,6 +37,26 @@ type AlertRow = {
   message: string;
 };
 
+type MonitoringSnapshotMeta = {
+  sampledAt: string;
+  scope: string;
+  status: "ok" | "warning" | "critical";
+  probe: {
+    total: number;
+    success: number;
+    availabilityPct: number;
+    errorRatePct: number;
+    p95LatencyMs: number;
+  };
+  consistency: {
+    windowMinutes: number;
+    submissionVsLedger: { submissions: number; ledgers: number; gap: number };
+    redemptionVsLedger: { redemptions: number; ledgers: number; gap: number };
+    negativeWallets: number;
+  };
+  alerts: AlertRow[];
+};
+
 function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
@@ -42,6 +66,19 @@ function p95(input: number[]): number {
   const sorted = [...input].sort((a, b) => a - b);
   const idx = Math.max(0, Math.ceil(sorted.length * 0.95) - 1);
   return sorted[idx] ?? 0;
+}
+
+function makeRequestId(seed?: string | null): string {
+  if (seed?.trim()) return seed.trim();
+  return `monitor-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function resolveProbeBasePath(req: Request): string {
+  const pathname = new URL(req.url).pathname;
+  const idx = pathname.lastIndexOf(MONITORING_ROUTE);
+  if (idx < 0) return "";
+  const prefix = pathname.slice(0, idx);
+  return prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
 }
 
 function pickForwardHeaders(req: Request): Headers {
@@ -149,12 +186,14 @@ export async function GET(req: Request) {
     ]);
 
     const origin = new URL(req.url).origin;
+    const probeBasePath = resolveProbeBasePath(req);
     const headers = pickForwardHeaders(req);
     const probeRows: ProbeRow[] = [];
     for (const path of PROBE_ENDPOINTS) {
       const started = Date.now();
       try {
-        const res = await fetch(`${origin}${path}`, {
+        const endpointUrl = `${origin}${probeBasePath}${path}`;
+        const res = await fetch(endpointUrl, {
           method: "GET",
           headers,
           cache: "no-store",
@@ -235,10 +274,159 @@ export async function GET(req: Request) {
         ? "warning"
         : "ok";
 
+    const sampledAt = new Date().toISOString();
+    const requestId = makeRequestId(req.headers.get("x-request-id"));
+
+    const snapshotMeta: MonitoringSnapshotMeta = {
+      sampledAt,
+      scope: scopeTag,
+      status,
+      probe: {
+        total,
+        success,
+        availabilityPct,
+        errorRatePct,
+        p95LatencyMs,
+      },
+      consistency: {
+        windowMinutes: 60,
+        submissionVsLedger: {
+          submissions: recentSubmissionCount,
+          ledgers: recentSubmissionLedgerCount,
+          gap: submissionLedgerGap,
+        },
+        redemptionVsLedger: {
+          redemptions: recentRedemptionCount,
+          ledgers: recentRedeemLedgerCount,
+          gap: redemptionLedgerGap,
+        },
+        negativeWallets: negativeWalletCount,
+      },
+      alerts,
+    };
+
+    let persistence: { saved: boolean; error?: string } = { saved: false };
+    try {
+      await prisma.agentAuditLog.create({
+        data: {
+          requestId,
+          route: MONITORING_ROUTE,
+          action: SNAPSHOT_ACTION,
+          actorRole: ctx.ztRole,
+          metaJson: JSON.stringify(snapshotMeta),
+        },
+      });
+      persistence = { saved: true };
+    } catch (error) {
+      persistence = {
+        saved: false,
+        error:
+          error instanceof Error
+            ? error.message.slice(0, 180)
+            : "snapshot_persist_failed",
+      };
+    }
+
+    const webhookUrl = process.env.ZT_MONITORING_ALERT_WEBHOOK_URL?.trim() ?? "";
+    const shouldNotify = webhookUrl.length > 0 && alerts.length > 0;
+    let notification: {
+      enabled: boolean;
+      sent: boolean;
+      throttled?: boolean;
+      skippedReason?: string;
+      webhookStatus?: number;
+      error?: string;
+    } = {
+      enabled: webhookUrl.length > 0,
+      sent: false,
+      skippedReason: webhookUrl ? "no_alerts" : "webhook_not_configured",
+    };
+
+    if (shouldNotify) {
+      const fingerprint = `${scopeTag}|${status}|${alerts
+        .map((x) => x.id)
+        .sort()
+        .join(",")}`;
+      const throttleSince = new Date(Date.now() - 5 * 60 * 1000);
+      const duplicated = await prisma.agentAuditLog.findFirst({
+        where: {
+          action: ALERT_DISPATCH_ACTION,
+          createdAt: { gte: throttleSince },
+          metaJson: { contains: fingerprint },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      if (duplicated) {
+        notification = {
+          enabled: true,
+          sent: false,
+          throttled: true,
+          skippedReason: "throttled_same_fingerprint_5m",
+        };
+      } else {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        try {
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              source: "zt-monitoring",
+              requestId,
+              sampledAt,
+              scope: scopeTag,
+              status,
+              alerts,
+              probe: snapshotMeta.probe,
+              consistency: snapshotMeta.consistency,
+            }),
+            signal: controller.signal,
+          });
+          notification = {
+            enabled: true,
+            sent: res.ok,
+            webhookStatus: res.status,
+            ...(res.ok ? {} : { error: `webhook_http_${res.status}` }),
+          };
+        } catch (error) {
+          notification = {
+            enabled: true,
+            sent: false,
+            error:
+              error instanceof Error
+                ? error.message.slice(0, 180)
+                : "webhook_send_failed",
+          };
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      try {
+        await prisma.agentAuditLog.create({
+          data: {
+            requestId: `${requestId}-dispatch`,
+            route: MONITORING_ROUTE,
+            action: ALERT_DISPATCH_ACTION,
+            actorRole: ctx.ztRole,
+            metaJson: JSON.stringify({
+              fingerprint,
+              sampledAt,
+              scope: scopeTag,
+              status,
+              notification,
+            }),
+          },
+        });
+      } catch {
+        // Ignore dispatch log write failure; monitor response should still return.
+      }
+    }
+
     return NextResponse.json({
       ok: status === "ok",
       status,
-      sampledAt: new Date().toISOString(),
+      sampledAt,
       scope: scopeTag,
       thresholds: ALERT_THRESHOLDS,
       probe: {
@@ -264,6 +452,8 @@ export async function GET(req: Request) {
         negativeWallets: negativeWalletCount,
       },
       alerts,
+      persistence,
+      notification,
     });
   } catch (error) {
     return NextResponse.json(

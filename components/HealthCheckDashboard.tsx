@@ -50,6 +50,47 @@ type MonitoringPayload = {
     severity: "warning" | "critical";
     message: string;
   }>;
+  persistence?: {
+    saved: boolean;
+    error?: string;
+  };
+  notification?: {
+    enabled: boolean;
+    sent: boolean;
+    throttled?: boolean;
+    skippedReason?: string;
+    webhookStatus?: number;
+    error?: string;
+  };
+};
+
+type MonitoringHistoryPayload = {
+  ok: boolean;
+  summary: {
+    total: number;
+    statusCounts: { ok: number; warning: number; critical: number };
+    avgAvailabilityPct: number;
+    avgP95LatencyMs: number;
+    avgErrorRatePct: number;
+    maxP95LatencyMs: number;
+    latestStatus: "ok" | "warning" | "critical";
+    latestSampledAt: string | null;
+  };
+  items: Array<{
+    id: string;
+    sampledAt: string;
+    status: "ok" | "warning" | "critical";
+    scope: string;
+    availabilityPct: number;
+    errorRatePct: number;
+    p95LatencyMs: number;
+    submissionLedgerGap: number;
+    redemptionLedgerGap: number;
+    negativeWallets: number;
+    alertsCount: number;
+    criticalAlerts: number;
+    warningAlerts: number;
+  }>;
 };
 
 const CHECKS: CheckItem[] = [
@@ -143,6 +184,8 @@ export function HealthCheckDashboard() {
   const [ranAt, setRanAt] = useState<string | null>(null);
   const [monitoring, setMonitoring] = useState<MonitoringPayload | null>(null);
   const [monitoringError, setMonitoringError] = useState<string | null>(null);
+  const [monitoringHistory, setMonitoringHistory] = useState<MonitoringHistoryPayload | null>(null);
+  const [monitoringHistoryError, setMonitoringHistoryError] = useState<string | null>(null);
 
   const runChecks = useCallback(async () => {
     setRunning(true);
@@ -163,6 +206,28 @@ export function HealthCheckDashboard() {
     } catch (error) {
       setMonitoring(null);
       setMonitoringError(error instanceof Error ? error.message : "monitoring fetch failed");
+    }
+    try {
+      const historyRes = await fetch(
+        withClientBasePath("/api/zt/monitoring/history?limit=24"),
+        {
+          method: "GET",
+          cache: "no-store",
+          headers: { ...demoHeaders() },
+          credentials: "include",
+        },
+      );
+      if (!historyRes.ok) {
+        throw new Error(`monitoring history http ${historyRes.status}`);
+      }
+      const historyJson = (await historyRes.json()) as MonitoringHistoryPayload;
+      setMonitoringHistory(historyJson);
+      setMonitoringHistoryError(null);
+    } catch (error) {
+      setMonitoringHistory(null);
+      setMonitoringHistoryError(
+        error instanceof Error ? error.message : "monitoring history fetch failed",
+      );
     }
     setResults(rows);
     setRanAt(new Date().toISOString());
@@ -281,6 +346,113 @@ export function HealthCheckDashboard() {
             <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
               采样时间：{new Date(monitoring.sampledAt).toLocaleString("zh-CN")} · 监控视角：{monitoring.scope}
             </p>
+            <div className="mt-2 rounded-lg border border-slate-200/80 bg-slate-50/70 px-3 py-2 text-[11px] dark:border-slate-700 dark:bg-slate-950/40">
+              <p className="font-medium text-slate-700 dark:text-slate-200">监控持久化与通知</p>
+              <p className="mt-1 text-slate-600 dark:text-slate-400">
+                快照落盘：{monitoring.persistence?.saved ? "成功" : "失败"}
+                {monitoring.persistence?.error ? `（${monitoring.persistence.error}）` : ""}
+              </p>
+              <p className="mt-1 text-slate-600 dark:text-slate-400">
+                通知通道：
+                {!monitoring.notification?.enabled
+                  ? "未配置 webhook"
+                  : monitoring.notification.sent
+                    ? "已发送"
+                    : monitoring.notification.throttled
+                      ? "5分钟内同类告警已节流"
+                      : monitoring.notification.skippedReason === "no_alerts"
+                        ? "当前无告警，无需发送"
+                        : monitoring.notification.error
+                          ? `发送失败（${monitoring.notification.error}）`
+                          : "待发送/已跳过"}
+              </p>
+            </div>
+          </>
+        ) : null}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">监控趋势（最近24次采样）</h3>
+        {monitoringHistoryError ? (
+          <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+            趋势数据拉取失败：{monitoringHistoryError}
+          </p>
+        ) : null}
+        {monitoringHistory ? (
+          <>
+            <div className="mt-3 grid gap-3 sm:grid-cols-4">
+              <Card label="采样数" value={String(monitoringHistory.summary.total)} />
+              <Card
+                label="平均可用率"
+                value={`${monitoringHistory.summary.avgAvailabilityPct}%`}
+                accent={monitoringHistory.summary.avgAvailabilityPct >= 99 ? "ok" : "fail"}
+              />
+              <Card
+                label="平均P95"
+                value={`${monitoringHistory.summary.avgP95LatencyMs}ms`}
+                accent={monitoringHistory.summary.avgP95LatencyMs <= 1500 ? "ok" : "fail"}
+              />
+              <Card
+                label="平均错误率"
+                value={`${monitoringHistory.summary.avgErrorRatePct}%`}
+                accent={monitoringHistory.summary.avgErrorRatePct <= 1 ? "ok" : "fail"}
+              />
+            </div>
+            <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-xs dark:border-slate-700 dark:bg-slate-950/40">
+              <p className="font-medium text-slate-700 dark:text-slate-200">
+                状态分布：正常 {monitoringHistory.summary.statusCounts.ok} · 预警{" "}
+                {monitoringHistory.summary.statusCounts.warning} · 严重{" "}
+                {monitoringHistory.summary.statusCounts.critical}
+              </p>
+              <p className="mt-1 text-slate-600 dark:text-slate-400">
+                最近状态：{monitoringHistory.summary.latestStatus} · 最近采样：
+                {monitoringHistory.summary.latestSampledAt
+                  ? new Date(monitoringHistory.summary.latestSampledAt).toLocaleString(
+                      "zh-CN",
+                    )
+                  : "无"}
+              </p>
+            </div>
+            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-slate-50 text-slate-500 dark:bg-slate-950/50 dark:text-slate-400">
+                  <tr>
+                    <th className="px-2 py-1.5">采样时间</th>
+                    <th className="px-2 py-1.5">状态</th>
+                    <th className="px-2 py-1.5 text-right">可用率</th>
+                    <th className="px-2 py-1.5 text-right">P95</th>
+                    <th className="px-2 py-1.5 text-right">错误率</th>
+                    <th className="px-2 py-1.5 text-right">告警数</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {monitoringHistory.items.slice(0, 8).map((x) => (
+                    <tr key={x.id}>
+                      <td className="px-2 py-1.5 text-slate-600 dark:text-slate-400">
+                        {new Date(x.sampledAt).toLocaleTimeString("zh-CN")}
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <span
+                          className={`rounded-full px-1.5 py-0.5 ${
+                            x.status === "critical"
+                              ? "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300"
+                              : x.status === "warning"
+                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          }`}
+                        >
+                          {x.status}
+                        </span>
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">{x.availabilityPct}%</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">{x.p95LatencyMs}ms</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">{x.errorRatePct}%</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">{x.alertsCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         ) : null}
       </section>

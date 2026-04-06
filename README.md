@@ -194,6 +194,10 @@ npm run zt:acceptance -- http://127.0.0.1:3000
 - `release:preflight`：检查分支祖先关系、工作区洁净、构建、门禁认证、关键 API 200、监控非 critical。
 - `zt:acceptance`：覆盖门禁、总览、行动卡、悬赏、提交反馈、个人工作台、作战大屏、监控、维护后台接口。
 
+P2 第二批补充：
+- 监控趋势查询：`GET /api/zt/monitoring/history?limit=24`（管理员）
+- 告警 webhook（可选）：配置 `ZT_MONITORING_ALERT_WEBHOOK_URL` 后，`/api/zt/monitoring` 在出现告警时会尝试推送，并做 5 分钟同类节流
+
 ### Docker 部署（生产发布）
 
 仓库提供 `Dockerfile`（Next.js `output: "standalone"`）。

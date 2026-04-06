@@ -2,6 +2,7 @@
 
 ## 关键接口（每5分钟）
 - `GET /api/zt/monitoring`（聚合探针 + 一致性 + 告警结论）
+- `GET /api/zt/monitoring/history?limit=24`（趋势历史 + 状态分布）
 - `GET /api/zt/overview`
 - `GET /api/zt/action-cards`
 - `GET /api/zt/bounty-tasks`
@@ -26,4 +27,11 @@
 ## 自动化命令
 - `npm run release:preflight`
 - `npm run zt:acceptance`
+
+## P2 第二批（可观测性增强）
+- 监控快照会落盘到 `agentAuditLog(action=zt_monitoring_snapshot)`，用于趋势回放。
+- 告警通知支持 webhook 占位开关：
+  - 环境变量：`ZT_MONITORING_ALERT_WEBHOOK_URL`
+  - 未配置时仅本地告警展示，不外发。
+- 同类告警 5 分钟内自动节流（按 scope + status + alerts fingerprint）。
 
