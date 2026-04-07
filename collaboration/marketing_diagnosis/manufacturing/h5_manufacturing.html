@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no" />
-  <title>医疗器械营销能力诊断</title>
+  <title>智能制造企业营销能力诊断</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     :root {
@@ -169,17 +169,17 @@
 <body>
   <div class="wrap" id="main-wrap">
     <header class="hero">
-      <h1 id="app-title">医疗器械营销能力诊断</h1>
-      <p id="app-sub">约 6–10 分钟 · 适用于高值耗材、医疗设备、IVD、家用器械等细分 · 提交后生成专业摘要（得分需真实样本校准）</p>
+      <h1 id="app-title">智能制造企业营销能力诊断</h1>
+      <p id="app-sub">约 5–8 分钟 · 离散/流程/装配/军工等细分 · 轻诊断 10 题后解锁完整版（≤25 步）</p>
     </header>
 
     <div id="screen-welcome">
       <div class="card">
-        <p style="margin:0 0 12px;font-weight:600;color:var(--primary);">欢迎使用医疗器械行业营销能力快速诊断</p>
+        <p style="margin:0 0 12px;font-weight:600;color:var(--primary);">欢迎使用智能制造行业营销能力快速诊断</p>
         <ul class="welcome-list">
-          <li>可先完成 <strong>10 题轻诊断</strong>（Q_B1–B4 + 六维各 1 题），查看<strong>初估画像</strong>后再<strong>解锁完整版</strong>报告与 PDF</li>
-          <li>完整版含 <strong>QB 区 + 模块一～四</strong>（行业认知 / 核心痛点 / 数字化与运营 / 能力与转型），共 <strong>30</strong> 步；Q_B2 多选；Q2 战略重点<strong>最多 2 项</strong></li>
-          <li>支持<strong>断点续答</strong>（本机保存，清除缓存或提交报告后失效）</li>
+          <li><strong>QB 区</strong>：公司、智造细分赛道（多选）、规模、年限</li>
+          <li><strong>模块一～四</strong>：行业认知 → 核心痛点 → 数字化现状 → 合作意向；完整版 <strong>22</strong> 步</li>
+          <li><strong>10 题轻诊断</strong>、<strong>localStorage</strong> 续答、报告含 Q_B2 标签、专家二次确认</li>
         </ul>
         <div class="welcome-actions">
           <button type="button" class="btn btn-primary" style="width:100%" id="btn-start">全新开始</button>
@@ -192,7 +192,7 @@
       <div class="wrap report-wide" style="padding-top:8px">
         <header class="hero" style="padding-top:8px">
           <h1 style="font-size:1.2rem">轻诊断 · 初估画像</h1>
-          <p id="app-sub-light" style="margin-top:8px">完成 10 题后的初估分档（完整 30 题后出具正式加权报告）</p>
+          <p id="app-sub-light" style="margin-top:8px">完成 10 题后的初估分档（完整版共 22 步，含联系与开放题）</p>
         </header>
         <div class="light-preview-card">
           <p style="margin:0 0 8px;text-align:center;font-size:14px;color:var(--muted)">初估分档（满分 100 换算示意）</p>
@@ -201,7 +201,7 @@
           <p style="margin:16px 0 8px;font-weight:700;color:var(--primary);text-align:center" id="light-tier-label">—</p>
           <div class="light-skeleton" id="light-skel-1"></div>
           <div class="light-skeleton" id="light-skel-2"></div>
-          <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-light-continue">继续完成完整版（剩余约 20 题）</button>
+          <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-light-continue">继续完成完整版（剩余约 12 题）</button>
           <button type="button" class="btn btn-ghost" style="width:100%;margin-top:10px;background:#fff;border:2px solid #d0dbe6" id="btn-light-back-welcome">返回首页</button>
         </div>
       </div>
@@ -210,7 +210,7 @@
     <div id="screen-quiz">
       <div class="progress-meta">
         <span id="dim-label">企业基本信息</span>
-        <span id="step-label">1 / 30</span>
+        <span id="step-label">1 / 22</span>
       </div>
       <div class="progress-outer"><div class="progress-inner" id="progress-bar"></div></div>
       <div class="card" id="question-card"></div>
@@ -225,7 +225,7 @@
       <div class="wrap report-wide" style="padding-top:0">
         <div id="report-page">
           <header class="report-header">
-            <h1 id="rep-doc-title">《医疗器械营销能力诊断报告》</h1>
+            <h1 id="rep-doc-title">《智能制造企业营销能力诊断报告》</h1>
             <div class="report-meta">
               <span id="rep-company">—</span>
               <span id="rep-segments">—</span>
@@ -242,7 +242,7 @@
           </div>
 
           <div class="radar-section">
-            <h2>六维度能力雷达</h2>
+            <h2>四模块能力雷达</h2>
             <div class="radar-box">
               <svg id="radar-chart" width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-label="雷达图"></svg>
               <ul class="radar-legend" id="radar-legend"></ul>
@@ -315,32 +315,32 @@ var CONFIG = {
   companyName: '纷享销客·中西南',
   bookingUrl: 'https://www.fxiaoke.com/',
   hotline: '400-000-0000',
-  reportTitle: '医疗器械营销能力诊断报告',
-  industryEdition: 'medical_device',
-  industryEditionLabel: '医疗器械行业版（问卷结构对齐通用计分模型 v1.9）'
+  reportTitle: '智能制造企业营销能力诊断报告',
+  industryEdition: 'smart_manufacturing',
+  industryEditionLabel: '智能制造行业版（QB+四模块，≤25步）'
 };
 
 (function () {
   'use strict';
 
-  var RADAR_LABELS = ['市场定位', '获客渠道', '销售管道', '客户成功', '团队激励', '数字化'];
-  var MAX_W = [20, 20, 20, 15, 15, 10];
+  var RADAR_LABELS = ['行业认知', '核心痛点', '数字化现状', '合作意向'];
+  var MAX_W = [25, 25, 25, 25];
 
   var DIMS = [
-    { id: 'D1', name: '市场定位与目标客户', maxW: 20, issues: '医院层级/集采语境下的目标叙事与准入故事线可能不一致，市场 KPI 难闭环。' },
-    { id: 'D2', name: '获客渠道与线索质量', maxW: 20, issues: '学术、招采、经销商、数字化等路径治理薄弱，入院线索与销售对齐不足。' },
-    { id: 'D3', name: '销售管道与赢单率', maxW: 20, issues: '招投标/多科室/渠道协同下的管道语言与复盘不足，复杂项目铁三角弱。' },
-    { id: 'D4', name: '客户成功与续费/复购', maxW: 15, issues: '设备使用、耗材复购、维保与回款健康度跟踪不足。' },
-    { id: 'D5', name: '团队架构与激励机制', maxW: 15, issues: '代表/经销商培养、合规过程考核与跨部门（医学/注册）协同待加强。' },
-    { id: 'D6', name: '数字化工具与数据应用', maxW: 10, issues: 'CRM、招采信息、入院过程数据分散，看板与 SOP 在线化不足。' }
+    { id: 'M1', name: '模块一 · 行业认知探测', maxW: 25, issues: '对智造细分、生产模式与渠道分工的认知若滞后，方案故事线难与买家采购语境对齐。' },
+    { id: 'M2', name: '模块二 · 核心痛点', maxW: 25, issues: '渠道冲突、经销商赋能、服务化与项目型业务、交付周期等问题叠加，影响复购与口碑。' },
+    { id: 'M3', name: '模块三 · 数字化现状', maxW: 25, issues: 'ERP/MES 与 CRM 割裂、数据驱动弱，难支撑预测性服务与精细化渠道运营。' },
+    { id: 'M4', name: '模块四 · 合作模式意向', maxW: 25, issues: '服务形态、预算与标杆共建若不清，共创 POC 与规模化落地路径易反复。' }
   ];
 
   var BASIC_INDUSTRY = [
-    { v: 1, t: '高值耗材（骨科/心血管/神经外科等）' },
-    { v: 2, t: '医疗设备（影像/手术/监护等）' },
-    { v: 3, t: 'IVD / 体外诊断' },
-    { v: 4, t: '家用医疗器械' },
-    { v: 5, t: '其他医疗器械' }
+    { v: 1, t: '离散制造（机加/钣金/电子组装等）' },
+    { v: 2, t: '流程制造（化工/材料/食品医药产线等）' },
+    { v: 3, t: '装配集成（产线/工作站/专机）' },
+    { v: 4, t: '军工 / 航空航天配套' },
+    { v: 5, t: '汽车零部件 / 新能源装备' },
+    { v: 6, t: '工业机器人 / 自动化核心部件' },
+    { v: 7, t: '其他智能制造相关' }
   ];
   var BASIC_SCALE = [
     { v: 1, t: '50人以下' }, { v: 2, t: '50-200人' }, { v: 3, t: '200-1000人' }, { v: 4, t: '1000人以上' }
@@ -349,7 +349,7 @@ var CONFIG = {
     { v: 1, t: '3年以下' }, { v: 2, t: '3-10年' }, { v: 3, t: '10年以上' }
   ];
 
-  var TOTAL_STEPS = 30;
+  var TOTAL_STEPS = 22;
   var submissionId = '';
 
   function freshState() {
@@ -376,37 +376,6 @@ var CONFIG = {
     } else state.multi[qid] = [key];
   }
 
-  function scoreQ2(keys) {
-    var sum = 0;
-    keys.forEach(function () { sum += 2; });
-    return Math.min(5, sum);
-  }
-  function scoreQ5(keys) {
-    var MAIN = ['ch1','ch2','ch3','ch4','ch5','ch6'];
-    var n = keys.filter(function (k) { return MAIN.indexOf(k) >= 0; }).length;
-    var onlyNone = keys.length === 1 && keys[0] === 'none';
-    if (onlyNone) return 1;
-    if (n === 0 && keys.indexOf('none') < 0) return 0;
-    return Math.min(5, n + 1);
-  }
-  function scoreQ8(keys) { return Math.max(0, 5 - keys.length); }
-  function scoreQ11(keys) {
-    var s = 5;
-    if (keys.indexOf('mismatch') >= 0) s -= 1;
-    if (keys.indexOf('relation') >= 0) s -= 1;
-    if (keys.indexOf('slow') >= 0) s -= 1;
-    if (keys.indexOf('nosum') >= 0) s -= 1;
-    return Math.max(0, s);
-  }
-  function scoreQ15(keys) { return Math.max(0, 5 - keys.length); }
-  function scoreQ19(keys) { return Math.max(0, 5 - keys.length); }
-  function scoreQ23(keys) {
-    var n = keys.length;
-    if (n <= 0) return 0;
-    if (n === 1) return 3;
-    return 5;
-  }
-
   function scoreMcSumCap5(keys, qid) {
     var q = null;
     for (var i = 0; i < QUESTIONS.length; i++) {
@@ -423,14 +392,14 @@ var CONFIG = {
     return Math.min(5, sum);
   }
 
+  function cap20(x) { return Math.min(20, x); }
+
   function computeScores() {
-    var r = [0,0,0,0,0,0];
-    r[0] = scoreMcSumCap5(state.multi.q1||[], 'q1') + scoreQ2(state.multi.q2||[]) + (state.single.q3||0) + (state.single.q4||0);
-    r[1] = scoreQ5(state.multi.q5||[]) + (state.single.q6||0) + (state.single.q7||0) + scoreQ8(state.multi.q8||[]);
-    r[2] = (state.single.q9||0) + (state.single.q10||0) + scoreQ11(state.multi.q11||[]) + (state.single.q12||0);
-    r[3] = (state.single.q13||0) + (state.single.q14||0) + scoreQ15(state.multi.q15||[]) + (state.single.q16||0);
-    r[4] = (state.single.q17||0) + (state.single.q18||0) + scoreQ19(state.multi.q19||[]) + (state.single.q20||0);
-    r[5] = (state.single.q21||0) + (state.single.q22||0) + scoreQ23(state.multi.q23||[]) + (state.single.q24||0);
+    var r = [0, 0, 0, 0];
+    r[0] = cap20(scoreMcSumCap5(state.multi.q1||[], 'q1') + scoreMcSumCap5(state.multi.q2||[], 'q2') + scoreMcSumCap5(state.multi.q3||[], 'q3') + scoreMcSumCap5(state.multi.q4||[], 'q4'));
+    r[1] = cap20(scoreMcSumCap5(state.multi.q5||[], 'q5') + scoreMcSumCap5(state.multi.q6||[], 'q6') + scoreMcSumCap5(state.multi.q7||[], 'q7') + scoreMcSumCap5(state.multi.q8||[], 'q8'));
+    r[2] = cap20(scoreMcSumCap5(state.multi.q9||[], 'q9') + scoreMcSumCap5(state.multi.q10||[], 'q10') + scoreMcSumCap5(state.multi.q11||[], 'q11') + scoreMcSumCap5(state.multi.q12||[], 'q12'));
+    r[3] = cap20(scoreMcSumCap5(state.multi.q13||[], 'q13') + (state.single.q14||0) + scoreMcSumCap5(state.multi.q15||[], 'q15') + (state.single.q16||0));
     var w = r.map(function (raw, i) {
       return (raw / 20) * DIMS[i].maxW;
     });
@@ -447,102 +416,76 @@ var CONFIG = {
   }
 
   var QUESTIONS = [
-    { id: 'q1', dim: 0, type: 'mc', title: '贵司的主要目标客户类型是？（医疗器械，可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
-        { k: 'a', t: '三级医院（大型三甲）', s: 5 },
-        { k: 'b', t: '二级医院（县域中心）', s: 3 },
-        { k: 'c', t: '基层医疗机构（社区/乡镇）', s: 2 },
-        { k: 'd', t: '经销商/代理商为主', s: 1 },
-        { k: 'e', t: '政府集中采购 / 卫健体系项目为主', s: 1 }
+    { id: 'q1', dim: 0, type: 'mc', title: '对智造细分赛道与典型客户场景的认知？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '熟悉细分龙头与采购决策链', s: 5 }, { k: 'b', t: '掌握工艺痛点与 ROI 话术', s: 4 },
+        { k: 'c', t: '有样板线但行业复制弱', s: 3 }, { k: 'd', t: '以单品参数竞争为主', s: 2 }, { k: 'e', t: '市场洞察依赖渠道反馈', s: 1 }
     ]},
-    { id: 'q2', dim: 0, type: 'mc2', maxPick: 2, title: '未来 12 个月战略重点？（最多选 2 项）', hint: '每项 2 分，合计封顶 5 分（与行业问卷 v1 一致）', opts: [
-        { k: 'm1', t: '集采中标与院内放量' }, { k: 'm2', t: '基层医疗市场覆盖' },
-        { k: 'm3', t: '器械国产替代与政策窗口' }, { k: 'm4', t: '学术推广与循证/临床数据' }, { k: 'm5', t: '设备更新改造与以旧换新机会' }
+    { id: 'q2', dim: 0, type: 'mc', title: '生产模式（多品种小批量 / 大批量等）对销售打法的影响？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '方案与交付节奏匹配柔性生产', s: 5 }, { k: 'b', t: '标准品+定制模块清晰', s: 4 },
+        { k: 'c', t: '交期与产能承诺常被动', s: 2 }, { k: 'd', t: '销售与排产信息不同步', s: 1 }
     ]},
-    { id: 'q3', dim: 0, type: 'sc', title: '与主要竞品相比，准入/挂网/物价相关对外叙事是否一致？', opts: [
-        { k: 'a', t: '挂网价、适应症表述、推广材料跨团队一致', s: 5 },
-        { k: 'b', t: '大体一致，区域或产品线有差异', s: 3 },
-        { k: 'c', t: '各区域/代理各说各话', s: 1 }
+    { id: 'q3', dim: 0, type: 'mc', title: '渠道与分销模式（直销/代理/OEM）治理？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '分区划品与报备机制清晰', s: 5 }, { k: 'b', t: '有渠道赋能与认证', s: 4 },
+        { k: 'c', t: '价格体系波动大', s: 2 }, { k: 'd', t: '跨区冲货难约束', s: 2 }
     ]},
-    { id: 'q4', dim: 0, type: 'sc', title: '品牌与医学市场投入是否有可衡量目标（会议、线索、入院）？', opts: [
-        { k: 'a', t: '有明确 KPI（如覆盖医院数、会议场次、有效线索）并复盘', s: 5 },
-        { k: 'b', t: '有预算但效果难量化', s: 3 },
-        { k: 'c', t: '以曝光为主，与销售入院脱节', s: 1 }
+    { id: 'q4', dim: 0, type: 'mc', title: '对工业互联网、灯塔工厂等标杆叙事的运用？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '案例与数据可验证', s: 5 }, { k: 'b', t: '有白皮书/行业方案包', s: 4 },
+        { k: 'c', t: '概念多、落地少', s: 2 }, { k: 'd', t: '较少对外讲故事', s: 1 }
     ]},
-    { id: 'q5', dim: 1, type: 'mc', title: '当前可复制的获客/入院路径？（可多选）', hint: '前 6 项：得分=min(5,N+1)；仅选「暂无可复制渠道」为 1 分', opts: [
-        { k: 'ch1', t: '学术会议、卫星会、赞助项目' }, { k: 'ch2', t: '医院采购办 / 招采平台线索' }, { k: 'ch3', t: '经销商开发与协同打单' },
-        { k: 'ch4', t: '政府/医院招投标平台' }, { k: 'ch5', t: '医生推荐与 KOL 背书' }, { k: 'ch6', t: '数字化推广（线上会、医学内容、私域）' },
-        { k: 'none', t: '暂无可复制渠道' }
+    { id: 'q5', dim: 1, type: 'mc', title: '渠道冲突与价格管控？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '线上线下一盘价', s: 2 }, { k: 'b', t: '项目授权与备案可追溯', s: 2 },
+        { k: 'c', t: '代理与直销抢单', s: 2 }, { k: 'd', t: '特价审批随意', s: 2 }
     ]},
-    { id: 'q6', dim: 1, type: 'sc', title: '线索到商机（入院/中标/进院）转化率与历史对比？', opts: [
-        { k: 'a', t: '优于历史与竞品区域', s: 5 }, { k: 'b', t: '持平', s: 3 },
-        { k: 'c', t: '低于预期，原因未复盘', s: 2 }, { k: 'd', t: '无统计', s: 1 }
+    { id: 'q6', dim: 1, type: 'mc', title: '经销商/集成商赋能难点？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '培训与认证流于形式', s: 2 }, { k: 'b', t: '售前与交付支持不足', s: 2 },
+        { k: 'c', t: '备件与售后扯皮', s: 2 }, { k: 'd', t: '数字化工具未下沉渠道', s: 2 }
     ]},
-    { id: 'q7', dim: 1, type: 'sc', title: '市场部与销售对「合格线索 / 有效入院机会」定义是否一致？', opts: [
-        { k: 'a', t: '书面一致并在 CRM 落地', s: 5 }, { k: 'b', t: '会议对齐，执行偏差大', s: 3 }, { k: 'c', t: '无统一标准', s: 1 }
+    { id: 'q7', dim: 1, type: 'mc', title: '服务化转型（运维/订阅/按效付费）压力？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '合同与计费模型不成熟', s: 2 }, { k: 'b', t: '客户更愿一次性采购', s: 2 },
+        { k: 'c', t: '毛利与服务成本难平衡', s: 2 }, { k: 'd', t: '组织仍以卖设备为主', s: 2 }
     ]},
-    { id: 'q8', dim: 1, type: 'mc', title: '线索质量问题表现？（多选，每项扣 1 分，基础 5 分）', opts: [
-        { k: 'a', t: '挂网/集采信息跟踪滞后、撞单多' }, { k: 'b', t: '假终端、渠道压货虚报' },
-        { k: 'c', t: '跟进优先级靠关系而非规则' }, { k: 'd', t: '线上留资质量差或刷量' }
+    { id: 'q8', dim: 1, type: 'mc', title: '项目型业务（产线改造、交钥匙）管理痛点？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '范围蔓延与变更失控', s: 2 }, { k: 'b', t: '跨部门里程碑不清', s: 2 },
+        { k: 'c', t: '验收与回款周期长', s: 2 }, { k: 'd', t: '风险准备金不足', s: 2 }
     ]},
-    { id: 'q9', dim: 2, type: 'sc', title: '入院/中标/代理签约等阶段与赢率是否标准化？', opts: [
-        { k: 'a', t: '阶段、必填字段、退出标准清晰', s: 5 }, { k: 'b', t: '有阶段但执行松散', s: 3 }, { k: 'c', t: '无统一管道语言', s: 1 }
+    { id: 'q9', dim: 2, type: 'mc', title: 'ERP / MES 与营销侧数据衔接？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '交期、产能可支撑销售承诺', s: 5 }, { k: 'b', t: '部分拉通、仍需人工', s: 3 },
+        { k: 'c', t: '系统割裂严重', s: 2 }, { k: 'd', t: '未打通', s: 1 }
     ]},
-    { id: 'q10', dim: 2, type: 'sc', title: '年度/季度目标到代表/代理商动作的分解与复盘？', opts: [
-        { k: 'a', t: '工具 + 复盘闭环', s: 5 }, { k: 'b', t: '有分解，落地走样', s: 3 }, { k: 'c', t: '老板拍板或走过场', s: 1 }
+    { id: 'q10', dim: 2, type: 'mc', title: 'CRM 使用深度（商机、渠道、服务工单）？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '全过程在线、报表可信', s: 5 }, { k: 'b', t: '部分团队使用', s: 3 },
+        { k: 'c', t: '以表格为主', s: 2 }, { k: 'd', t: '无统一 CRM', s: 1 }
     ]},
-    { id: 'q11', dim: 2, type: 'mc', title: '丢单/丢标主要原因？（多选，见计分规则）', hint: '产品/关系/协同各 -1；未总结再 -1；价格/竞品不扣分', opts: [
-        { k: 'price', t: '价格/商务政策' }, { k: 'mismatch', t: '产品/适应证/循证不足' }, { k: 'relation', t: '关系/决策链失守' },
-        { k: 'slow', t: '内部协同慢（医学、注册、交付）' }, { k: 'comp', t: '竞品强力抢标' }, { k: 'nosum', t: '未总结原因' }
+    { id: 'q11', dim: 2, type: 'mc', title: '数据驱动决策（OEE、良率、能耗与营销联动）？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '已用于方案设计与案例包装', s: 5 }, { k: 'b', t: '内部可见、对外弱', s: 3 },
+        { k: 'c', t: '数据质量差', s: 2 }, { k: 'd', t: '未建立指标', s: 1 }
     ]},
-    { id: 'q12', dim: 2, type: 'sc', title: '复杂项目（招采、多科室、渠道）协作机制？', opts: [
-        { k: 'a', t: '招投标+医学+渠道常态化协同', s: 5 }, { k: 'b', t: '大项目临时组队', s: 3 }, { k: 'c', t: '主要依赖单兵或单经销商', s: 1 }
+    { id: 'q12', dim: 2, type: 'mc', title: 'AI / 视觉 / 预测性维护在方案中的呈现？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '已商业化落地案例', s: 5 }, { k: 'b', t: 'POC 阶段', s: 3 },
+        { k: 'c', t: '概念包装', s: 2 }, { k: 'd', t: '未涉及', s: 1 }
     ]},
-    { id: 'q13', dim: 3, type: 'sc', title: '设备/耗材入院后使用、不良事件、回款是否可度量？', opts: [
-        { k: 'a', t: '有健康度或红黄绿', s: 5 }, { k: 'b', t: '数据分散在 HIS/经销商报表', s: 3 }, { k: 'c', t: '几乎不跟踪', s: 1 }
+    { id: 'q13', dim: 3, type: 'mc', title: '服务模式偏好（交钥匙 / 咨询+实施 / SaaS 等）？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '全生命周期托管', s: 2 }, { k: 'b', t: '分期里程碑付款', s: 2 },
+        { k: 'c', t: '纯硬件供货', s: 2 }, { k: 'd', t: '效果对赌分成', s: 2 }
     ]},
-    { id: 'q14', dim: 3, type: 'sc', title: '维保合同、耗材复购、学术合作是否流程化、可预测？', opts: [
-        { k: 'a', t: '有续约清单与节奏（维保/耗材）', s: 5 }, { k: 'b', t: '主要靠客情维护', s: 3 }, { k: 'c', t: '被动响应', s: 1 }
+    { id: 'q14', dim: 3, type: 'sc', title: '年度营销与数字化预算体感？', opts: [
+        { k: 'a', t: '可支撑市场活动与系统迭代', s: 5 }, { k: 'b', t: '偏紧、需拆东补西', s: 3 }, { k: 'c', t: '严重不足', s: 1 }
     ]},
-    { id: 'q15', dim: 3, type: 'mc', title: '回款与合规风险？（多选，每项扣 1 分，基础 5 分）', opts: [
-        { k: 'a', t: '医院/经销商应收账款周期长' }, { k: 'b', t: '合同与发货/验收单据不全' },
-        { k: 'c', t: '授信随意' }, { k: 'd', t: '验收或开票拖延导致挂账' }
+    { id: 'q15', dim: 3, type: 'mc', title: '标杆客户共建与行业曝光意愿？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '愿联合办会/白皮书', s: 5 }, { k: 'b', t: '可匿名案例', s: 3 },
+        { k: 'c', t: '客户限制宣传', s: 2 }, { k: 'd', t: '缺少可量化成果', s: 1 }
     ]},
-    { id: 'q16', dim: 3, type: 'sc', title: '售后成本与客户满意是否与销售/渠道考核挂钩？', opts: [
-        { k: 'a', t: '有机制', s: 5 }, { k: 'b', t: '部分挂钩', s: 3 }, { k: 'c', t: '不挂钩，售后成短板', s: 1 }
+    { id: 'q16', dim: 3, type: 'mc', title: '与集成商、高校/联盟、金融机构等生态协作？（可多选）', hint: '封顶 5 分', opts: [
+        { k: 'a', t: '稳定推荐与分成机制', s: 5 }, { k: 'b', t: '项目级合作', s: 3 },
+        { k: 'c', t: '偶发联合', s: 2 }, { k: 'd', t: '以直销为主', s: 1 }
     ]},
-    { id: 'q17', dim: 4, type: 'sc', title: '考核是否含过程质量（入院、会议、合规）不仅是销售额？', opts: [
-        { k: 'a', t: '多维度且可解释', s: 5 }, { k: 'b', t: '以业绩为主，少量过程项', s: 3 }, { k: 'c', t: '几乎只看回款/出货', s: 1 }
-    ]},
-    { id: 'q18', dim: 4, type: 'sc', title: '经销商、一线代表的培养与认证体系？', opts: [
-        { k: 'a', t: '标准化培训（产品+临床+合规）+ 认证', s: 5 }, { k: 'b', t: '有培训效果一般', s: 3 }, { k: 'c', t: '人员流动大、复制难', s: 1 }
-    ]},
-    { id: 'q19', dim: 4, type: 'mc', title: '团队管理痛点？（多选，每项扣 1 分，基础 5 分）', opts: [
-        { k: 'a', t: '老代表/老代理躺平在少数大医院' }, { k: 'b', t: '管理者弱，只会自己跑医院' },
-        { k: 'c', t: '激励不公平、渠道冲突多' }, { k: 'd', t: '会议表格多无闭环' }
-    ]},
-    { id: 'q20', dim: 4, type: 'sc', title: '跨部门协作（医学、注册、供应链、财务）效率？', opts: [
-        { k: 'a', t: '流程清晰 SLA 明确', s: 5 }, { k: 'b', t: '常需老板拍板', s: 3 }, { k: 'c', t: '内耗严重', s: 1 }
-    ]},
-    { id: 'q21', dim: 5, type: 'sc', title: 'CRM / 渠道系统 / 招采信息使用情况？', opts: [
-        { k: 'a', t: '主数据统一，入院与商机过程必填、报表可信', s: 5 }, { k: 'b', t: '在用但数据质量一般', s: 3 }, { k: 'c', t: '表格/微信为主', s: 1 }
-    ]},
-    { id: 'q22', dim: 5, type: 'sc', title: '是否有管道、入院转化、人效的可运营看板？', opts: [
-        { k: 'a', t: '实时或 T+1', s: 5 }, { k: 'b', t: '月度手工统计', s: 3 }, { k: 'c', t: '无', s: 1 }
-    ]},
-    { id: 'q23', dim: 5, type: 'mc', title: '入院/跟台/招投标 SOP、合同审批、培训资料是否在线化？（多选）', hint: 'N=0→0 分；N=1→3 分；N≥2→5 分', opts: [
-        { k: 'a', t: '入院/跟台/招投标 SOP' }, { k: 'b', t: '合同与特价/返利审批在线' },
-        { k: 'c', t: '培训与话术/DA 在线库' }, { k: 'd', t: '与企微/钉钉协同' }
-    ]},
-    { id: 'q24', dim: 5, type: 'sc', title: '对 AI（纪要、文献摘要、线索优先级等）态度与试点？', opts: [
-        { k: 'a', t: '已试点或规划清晰', s: 5 }, { k: 'b', t: '观望', s: 3 }, { k: 'c', t: '无计划', s: 1 }
-    ]},
-    { id: 'q25', dim: -1, type: 'contact', title: '方便回访的联系方式', hint: '不计入得分；公司默认可与 QB1 一致' },
-    { id: 'q26', dim: -1, type: 'open', title: '当前最想解决的一个营销/入院问题（可选）', hint: '一句话即可' }
+    { id: 'q25', dim: -1, type: 'contact', title: '方便回访的联系方式', hint: '不计入得分；公司默认可与 Q_B1 一致' },
+    { id: 'q26', dim: -1, type: 'open', title: '当前最想解决的智造营销或渠道问题（可选）', hint: '一句话即可' }
   ];
 
-  var DIAG_STORAGE_KEY = 'diag_medical_v2';
-  /** 轻诊断 6 道能力题对应的全局 qIndex：q1,q5,q9,q13,q17,q21 */
-  var LIGHT_TAIL_QI = [4, 8, 12, 16, 20, 24];
+  var DIAG_STORAGE_KEY = 'diag_smart_mfg_v1';
+  /** 轻诊断：Q_B1–B4 + q1,q5,q9,q13,q14,q16 */
+  var LIGHT_TAIL_QI = [4, 8, 12, 16, 17, 19];
 
   var card = document.getElementById('question-card');
   var errEl = document.getElementById('err-msg');
@@ -579,11 +522,11 @@ var CONFIG = {
 
   function computeLightPreviewSum() {
     return scoreMcSumCap5(state.multi.q1 || [], 'q1')
-      + scoreQ5(state.multi.q5 || [])
-      + (state.single.q9 || 0)
-      + (state.single.q13 || 0)
-      + (state.single.q17 || 0)
-      + (state.single.q21 || 0);
+      + scoreMcSumCap5(state.multi.q5 || [], 'q5')
+      + scoreMcSumCap5(state.multi.q9 || [], 'q9')
+      + scoreMcSumCap5(state.multi.q13 || [], 'q13')
+      + (state.single.q14 || 0)
+      + scoreMcSumCap5(state.multi.q16 || [], 'q16');
   }
 
   function saveDiagProgress() {
@@ -676,7 +619,7 @@ var CONFIG = {
     }
     if (qi === 1) {
       var segs = state.basic.industry || [];
-      if (segs.length < 1) { showErr('请至少选择一项主要产品细分赛道'); return false; }
+      if (segs.length < 1) { showErr('请至少选择一项细分赛道（Q_B2）'); return false; }
       return true;
     }
     if (qi === 2) {
@@ -694,10 +637,7 @@ var CONFIG = {
     }
     if (q.type === 'mc' || q.type === 'mc2') {
       var arr = state.multi[q.id] || [];
-      if (q.id === 'q2' && arr.length < 1) { showErr('请至少选择 1 项战略重点（最多 2 项）'); return false; }
-      if (q.id === 'q5' && arr.length < 1) { showErr('请至少选择一项'); return false; }
-      var allowEmptyMc = (q.id === 'q8' || q.id === 'q11' || q.id === 'q15' || q.id === 'q19' || q.id === 'q23');
-      if (!allowEmptyMc && arr.length < 1) { showErr('请至少选择一项'); return false; }
+      if (arr.length < 1) { showErr('请至少选择一项'); return false; }
       return true;
     }
     if (q.type === 'contact') {
@@ -714,14 +654,13 @@ var CONFIG = {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   }
 
-  /** 老江框架：QB 后四大模块（与题干顺序对齐，便于答题端展示） */
-  function moduleBannerForMedical(qid) {
+  function moduleBannerMfg(qid) {
     var n = parseInt(String(qid).replace(/^q/, ''), 10);
     if (isNaN(n) || n < 1) return '';
     if (n <= 4) return '模块一 · 行业认知探测';
-    if (n <= 12) return '模块二 · 核心痛点（获客 / 管道 / 客户成功）';
-    if (n <= 18) return '模块三 · 数字化与团队协同';
-    if (n <= 24) return '模块四 · 工具应用与转型意向';
+    if (n <= 8) return '模块二 · 核心痛点';
+    if (n <= 12) return '模块三 · 数字化现状';
+    if (n <= 16) return '模块四 · 合作模式意向';
     return '';
   }
 
@@ -747,7 +686,7 @@ var CONFIG = {
         html += '<div class="section-label">📋 Q_B1</div><div class="q-title">贵司名称是？</div>';
         html += '<input type="text" class="inp" id="basic-name-inp" placeholder="请输入公司全称" value="' + esc(state.basic.name) + '" />';
       } else if (qi === 1) {
-        html += '<div class="section-label">📋 Q_B2</div><div class="q-title">主要产品细分赛道？（可多选）</div>';
+        html += '<div class="section-label">📋 Q_B2</div><div class="q-title">智造细分赛道？（可多选）</div>';
         html += '<p class="hint">至少选 1 项；跨赛道经营可多项勾选</p>';
         var segArr = state.basic.industry || [];
         BASIC_INDUSTRY.forEach(function (o) {
@@ -795,7 +734,7 @@ var CONFIG = {
       else dimLabel.textContent = '联系信息';
 
       var html2 = '';
-      var mb = moduleBannerForMedical(q.id);
+      var mb = moduleBannerMfg(q.id);
       if (mb) html2 += '<div class="section-label">' + esc(mb) + '</div>';
       var dispNum = qi - 3;
       html2 += '<div class="dim-tag">Q' + dispNum + '</div>';
@@ -976,7 +915,7 @@ var CONFIG = {
 
   function showReport() {
     var res = computeScores();
-    submissionId = 'MD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+    submissionId = 'MFG-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
 
     document.getElementById('screen-quiz').classList.remove('visible');
     document.getElementById('screen-report').classList.add('visible');
@@ -986,7 +925,7 @@ var CONFIG = {
     document.getElementById('rep-doc-title').textContent = '《' + CONFIG.reportTitle + '》';
     var cname = (state.basic.name || '').trim() || '未填写企业名称';
     document.getElementById('rep-company').textContent = '企业：' + cname;
-    document.getElementById('rep-segments').textContent = '主要产品细分赛道（Q_B2）：' + basicIndustryLabel();
+    document.getElementById('rep-segments').textContent = '细分赛道（Q_B2 多选）：' + basicIndustryLabel();
     document.getElementById('rep-date').textContent = '诊断日期：' + formatDate(new Date());
     document.getElementById('rep-sid').textContent = '问卷编号：' + submissionId;
     if (state.startedAt) {
@@ -1264,7 +1203,7 @@ var CONFIG = {
     document.getElementById('screen-light-preview').classList.remove('visible');
     document.getElementById('screen-welcome').classList.remove('hidden');
     document.getElementById('main-wrap').classList.remove('report-wide');
-    document.getElementById('app-title').textContent = '医疗器械营销能力诊断';
+    document.getElementById('app-title').textContent = '智能制造企业营销能力诊断';
     updateResumeButton();
   });
 
@@ -1290,7 +1229,7 @@ var CONFIG = {
   document.getElementById('btn-export-pdf').addEventListener('click', function () {
     var btn = document.getElementById('btn-export-pdf');
     var safeName = (state.basic.name || '企业').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 40);
-    exportReportToPdf(btn, '医疗器械营销诊断报告_' + safeName + '.pdf');
+    exportReportToPdf(btn, '智能制造营销诊断报告_' + safeName + '.pdf');
   });
 
   document.getElementById('lead-save').addEventListener('click', function () {
