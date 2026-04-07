@@ -233,9 +233,17 @@
       var STORAGE_VERSION = 2;
       var qb = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.qb) || [];
       var questions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.questions) || [];
-      var roleOptions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.roleOptions) || [];
+      var roleOptions =
+        (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && (
+          window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.roleOptions ||
+          window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.roles
+        )) || [];
       var salesModes = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.salesModes) || [];
-      var industryOptions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.industryOptions) || [];
+      var industryOptions =
+        (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && (
+          window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.industryOptions ||
+          window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.industries
+        )) || [];
       var segsByIndustry = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.segsByIndustry) || {};
 
       var rubrics = (window.UNIVERSAL_RUBRICS_BUNDLE && window.UNIVERSAL_RUBRICS_BUNDLE) || {};
@@ -510,6 +518,12 @@
             } else {
               state.answers[qid] = key;
             }
+            console.info("[diag-universal] option_selected", {
+              qIndex: state.qIndex,
+              qid: qid,
+              qType: q.type,
+              answer: state.answers[qid]
+            });
             save();
             renderQuestion();
           });
@@ -517,6 +531,19 @@
       }
 
       function validCurrent() {
+        var q = currentQuestion();
+        if (q) {
+          var ans = state.answers[q.id];
+          var ok = q.type === "mc" ? (ans || []).length > 0 : !!ans;
+          console.info("[diag-universal] validate_question", {
+            qIndex: state.qIndex,
+            qid: q.id,
+            qType: q.type,
+            answer: ans,
+            valid: ok
+          });
+          return ok;
+        }
         if (state.qIndex === 0) return !!state.basic.roleType;
         if (state.qIndex === 1 && state.basic.roleType === "sales") return !!state.basic.salesMode;
         if ((state.qIndex === 1 && state.basic.roleType !== "sales") || (state.qIndex === 2 && state.basic.roleType === "sales")) return !!state.basic.industryEdition;
@@ -524,11 +551,7 @@
         if ((state.qIndex === 3 && state.basic.roleType !== "sales") || (state.qIndex === 4 && state.basic.roleType === "sales")) return (state.basic.q_b2 || []).length > 0;
         if ((state.qIndex === 4 && state.basic.roleType !== "sales") || (state.qIndex === 5 && state.basic.roleType === "sales")) return !!state.basic.scale;
         if ((state.qIndex === 5 && state.basic.roleType !== "sales") || (state.qIndex === 6 && state.basic.roleType === "sales")) return !!state.basic.years;
-        var q = currentQuestion();
-        if (!q) return true;
-        var ans = state.answers[q.id];
-        if (q.type === "mc") return (ans || []).length > 0;
-        return !!ans;
+        return true;
       }
 
       function scoreQuestion(q) {
@@ -605,8 +628,8 @@
         document.getElementById("reportTitle").textContent = CONFIG.reportTitle;
         document.getElementById("finalScore").textContent = String(score.total);
         document.getElementById("levelText").textContent = "等级：" + score.level;
-        var ind = industries.find(function (x) { return x.id === state.basic.industryEdition; });
-        document.getElementById("repIndustry").textContent = ind ? ind.label : state.basic.industryEdition;
+        var ind = industryOptions.find(function (x) { return x.id === state.basic.industryEdition; });
+        document.getElementById("repIndustry").textContent = ind ? (ind.label || ind.text || ind.id) : state.basic.industryEdition;
         document.getElementById("repCompany").textContent = state.basic.companyName || "未填写";
         document.getElementById("repSegments").innerHTML = segTextChips();
       }
@@ -737,7 +760,17 @@
 
       document.getElementById("btnNext").addEventListener("click", function () {
         safeSetError(errQuiz, "");
-        if (!validCurrent()) {
+        var canNext = validCurrent();
+        console.info("[diag-universal] next_click_validation", {
+          qIndex: state.qIndex,
+          canNext: canNext,
+          basic: {
+            roleType: state.basic.roleType,
+            salesMode: state.basic.salesMode,
+            industryEdition: state.basic.industryEdition
+          }
+        });
+        if (!canNext) {
           safeSetError(errQuiz, "请先完成当前题目。");
           return;
         }
