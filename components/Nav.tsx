@@ -24,20 +24,12 @@ export function Nav() {
   const pathname = resolveClientPathname(usePathname() ?? "/");
   const [mobileOpen, setMobileOpen] = useState(false);
   const isPortalContext = pathname === "/";
-  const isWorkbenchContext = isPortalContext || pathname.startsWith("/dashboard");
   const isZtContext = isZtPath(pathname);
 
   const portalLinks = PORTAL_NAV_SHELL.links;
-  const workbenchLinks = PORTAL_NAV_SHELL.links;
   const ztLinks = getZtShellLinks(role);
   const profitLinks = PROFIT_NAV_SHELL;
-  const links = isPortalContext
-    ? portalLinks
-    : isWorkbenchContext
-      ? workbenchLinks
-      : isZtContext
-        ? ztLinks
-        : profitLinks;
+  const links = isPortalContext ? portalLinks : isZtContext ? ztLinks : profitLinks;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
@@ -98,7 +90,7 @@ export function Nav() {
           </nav>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
-          {!isWorkbenchContext ? (
+          {!isPortalContext ? (
             <Link
               href={isZtContext ? "/profit/zt007" : "/profit/dashboard"}
               className="hidden rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:inline-flex dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
@@ -106,7 +98,7 @@ export function Nav() {
               {isPortalContext ? "进入工作台" : isZtContext ? "进入智探007" : "进入系统"}
             </Link>
           ) : null}
-          {!isWorkbenchContext ? <RoleSwitcher /> : null}
+          {!isPortalContext ? <RoleSwitcher /> : null}
           <button
             type="button"
             aria-expanded={mobileOpen}
