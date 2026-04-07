@@ -39,6 +39,7 @@
     <aside class="sidebar">
       <div class="brand">SRNE · Channel OS</div>
       <nav>
+        <button type="button" data-nav="valueMap">全场景价值图谱</button>
         <button type="button" data-nav="dashboard">运营总览</button>
         <button type="button" data-nav="playbook">业务作战台</button>
         <button type="button" data-nav="channels">渠道商</button>
@@ -53,12 +54,27 @@
       <div class="topbar">
         <h1 id="viewTitle">运营总览</h1>
         <div class="user-pill">
+          <span id="copyBriefToast" class="copy-toast hidden" role="status">已复制到剪贴板</span>
+          <button type="button" class="btn secondary" id="btnCopyExecBrief" title="汇总作战台与绩效要点，便于发群">复制高管简报</button>
           <span id="userLabel"></span>
           <button type="button" class="btn secondary" id="btnLogout" style="margin-left:12px;padding:6px 12px;font-size:12px">退出</button>
         </div>
       </div>
 
       <section data-view="dashboard">
+        <div class="panel exec-opening-banner">
+          <h2>演示开场（约 30 秒）</h2>
+          <p class="vm-open-script">
+            「这是硕日<strong>海外渠道运营 OS</strong>的演示环境：一屏看<strong>区域出货与结构</strong>，一屏看<strong>风险与优先动作</strong>（作战台），再下钻到<strong>渠道 + 情报 + 报价</strong>。
+            数据可<strong>校验导入、批次审计</strong>；绩效按 <strong>BSC</strong> 对齐老板汇报。左侧 <strong>全场景价值图谱</strong>讲清各角色收益与分期售卖。」
+          </p>
+          <div class="row flex-wrap" style="margin-top:12px;gap:8px">
+            <button type="button" class="btn" id="btnCopyBriefDash">复制高管简报</button>
+            <button type="button" class="btn secondary" data-nav-jump="valueMap">
+              打开价值图谱
+            </button>
+          </div>
+        </div>
         <div class="grid-kpi">
           <div class="kpi"><div class="label">渠道商数量</div><div class="value" id="kpiChannels">—</div></div>
           <div class="kpi"><div class="label">活跃渠道年出货(演示汇总)</div><div class="value" id="kpiRevenue">—</div></div>
@@ -84,11 +100,17 @@
             <div class="chart-wrap"><canvas id="chartTopBar" height="260"></canvas></div>
           </div>
         </div>
-        <div class="panel">
-          <h2>演示说明</h2>
+        <div class="panel demo-debug-only exec-tech-note">
+          <h2>演示说明（技术）</h2>
           <p class="muted">
             图表数据与列表、详情同源 API；支持快捷录入渠道、补录月度出货与 JSON 导入。新种子需空库首次启动或批量导入后生效。
           </p>
+        </div>
+      </section>
+
+      <section data-view="valueMap" class="hidden">
+        <div id="valueMapMount" class="value-map-mount">
+          <p class="muted">正在加载价值图谱…</p>
         </div>
       </section>
 
@@ -97,6 +119,9 @@
           <h2>关键业务场景 · 作战台</h2>
           <p class="muted" id="playbookIntro">聚合预警时效、回款与联络风险、目标脉搏与覆盖缺口；权限范围内数据（销售仅看本人负责渠道）。</p>
           <ul id="playbookScenarioBullets" class="muted narrative-list" style="margin-top:12px"></ul>
+          <div class="row flex-wrap" style="margin-top:14px;gap:8px">
+            <button type="button" class="btn secondary" id="btnCopyBriefPlaybook">复制高管简报</button>
+          </div>
         </div>
         <div class="playbook-grid">
           <div class="panel playbook-card">
@@ -371,8 +396,11 @@
         <div class="panel perf-narrative">
           <h2>如何用于实战会议</h2>
           <ul id="perfNarrativeList" class="muted narrative-list"></ul>
+          <div class="row flex-wrap" style="margin-top:12px;gap:8px">
+            <button type="button" class="btn secondary" id="btnCopyBriefPerf">复制高管简报</button>
+          </div>
         </div>
-        <details class="panel">
+        <details class="panel demo-debug-only">
           <summary style="cursor:pointer;font-weight:600">调试：计分卡原始 JSON</summary>
           <pre id="perfOut" class="muted" style="margin-top:12px;white-space:pre-wrap;font-size:12px;max-height:240px;overflow:auto"></pre>
         </details>

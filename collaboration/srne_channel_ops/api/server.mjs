@@ -21,6 +21,7 @@ const PORT = Number(process.env.PORT || 8790);
 const DB_PATH = process.env.SRNE_DB_PATH || join(__dirname, "srne_channel.db");
 const JWT_SECRET = process.env.JWT_SECRET || "srne-demo-change-me-in-production";
 const TOKEN_TTL_SEC = Number(process.env.TOKEN_TTL_SEC || 604800);
+const SRNE_DEMO_MODE = process.env.SRNE_DEMO_MODE === "1" || process.env.SRNE_DEMO_MODE === "true";
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
@@ -286,6 +287,19 @@ app.get("/v1/health", async () => ({
   service: "srne-channel-ops",
   time: new Date().toISOString(),
 }));
+
+/** 前端演示模式、标题等；无需登录 */
+app.get("/v1/config", async () => ({
+  demo_mode: SRNE_DEMO_MODE,
+  product_title: "硕日海外渠道拓展运营管理系统",
+}));
+
+/** 价值图谱长页 HTML 片段（避免子路径下静态路径不一致） */
+app.get("/v1/demo/value-map-html", async (req, reply) => {
+  const p = join(WEB_DIR, "value-map-snippet.html");
+  if (!existsSync(p)) return reply.code(404).send({ error: "value_map_missing" });
+  reply.type("text/html; charset=utf-8").send(readFileSync(p, "utf8"));
+});
 
 app.post("/v1/auth/login", async (req, reply) => {
   const body = req.body || {};
