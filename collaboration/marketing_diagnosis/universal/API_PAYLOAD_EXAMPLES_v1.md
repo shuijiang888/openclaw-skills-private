@@ -1,6 +1,10 @@
 # 通用行业营销诊断 API 示例（v1）
 
 > 目的：给小江 / Agent1 快速对齐前后端请求响应字段，不绑定具体后端框架。
+>
+> 契约说明：
+> - 保留现有 H5 的 `type + payload` 嵌套结构。
+> - 后端可将原始请求整体落到 `payloadJson`（数据库字段建议 `payload_json`），降低前端改动成本。
 
 ## 1) POST `/v1/submissions`
 
@@ -13,6 +17,18 @@
   "scoringModelVersion": "score_v1_9",
   "sourcePage": "/diag/h5_energy.html",
   "clientSubmissionId": "web_20260407_abc123",
+  "type": "questionnaire_submission",
+  "payload": {
+    "stepMeta": {
+      "totalSteps": 22,
+      "liteLimit": 10,
+      "resumeFromQIndex": 5
+    },
+    "device": {
+      "platform": "h5",
+      "userAgent": "Mozilla/5.0 ..."
+    }
+  },
   "qbPayload": {
     "q_b1_companyName": "华南某新能源公司",
     "q_b2_segments": ["storage", "pv_wind", "epc"],
@@ -54,6 +70,7 @@
       "total": 65.0,
       "level": "一般"
     },
+    "payloadJsonStored": true,
     "reportPayload": {
       "top3": [
         "数字化能力",
@@ -112,6 +129,7 @@
 ```json
 {
   "submissionId": "01HRY4SFH2FKM7EP9M7DG8H44A",
+  "leadKind": "expert_opportunity",
   "name": "张三",
   "phone": "13800000000",
   "company": "某智能制造企业",
@@ -130,6 +148,7 @@
   "data": {
     "leadId": "01HRY52CJQ6H00V5XZGMH3R1TN",
     "submissionId": "01HRY4SFH2FKM7EP9M7DG8H44A",
+    "leadKind": "expert_opportunity",
     "syncStatus": "pending",
     "createdAt": "2026-04-07T11:45:00.000Z"
   }
@@ -171,7 +190,15 @@
 
 ---
 
-## 5) 错误响应建议（统一）
+## 5) `leadKind` 约定（建议）
+
+- `diagnosis_summary`：用于报告归档/线索沉淀（不一定触发商机）
+- `expert_opportunity`：用户点击预约专家后的商机型线索
+
+同一 `submissionId` 可产生多条 lead（不同 `leadKind`）。
+
+---
+## 6) 错误响应建议（统一）
 
 ```json
 {

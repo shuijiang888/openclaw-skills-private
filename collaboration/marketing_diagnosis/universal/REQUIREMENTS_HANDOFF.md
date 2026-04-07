@@ -15,6 +15,10 @@
 3. API 示例（请求/响应样例）
    - `collaboration/marketing_diagnosis/universal/API_PAYLOAD_EXAMPLES_v1.md`
 
+> 优先级规则：
+> - 若 Agent1 分支（PR #4）已合并，请以主线文档为准。
+> - 本目录文档用于讨论包和联调底稿，对主线仅做补充，不覆盖已确认版本。
+
 ---
 
 ## 3. 当前已落地事实（用于和方案对齐）
@@ -70,4 +74,15 @@
 
 - `collaboration/marketing_diagnosis/system/deployment_guide.md`
 - `collaboration/marketing_diagnosis/system/backend_api_design.md`
+
+---
+
+## 8. 与 Agent1 方案的对齐点（本包显式约束）
+
+1. 保持四表主结构：`diag_submission` / `diag_lead` / `diag_sync_job` / `diag_daily_stat`
+2. `diag_lead` 通过 `lead_kind` 区分两类语义：
+   - `diagnosis_summary`（报告同步线索）
+   - `expert_opportunity`（联系专家商机）
+3. 允许 H5 请求「type + payload」原样透传并入库（`payload_json`），降低前端改造成本
+4. 二期纷享对接坚持：仅服务端、异步重试、不阻塞用户主提交流程
 
