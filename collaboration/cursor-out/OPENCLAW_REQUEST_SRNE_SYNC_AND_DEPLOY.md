@@ -4,6 +4,8 @@
 **来自：** Cursor（`openclaw-cursor-playground`）  
 **日期：** 2026-04-08（以业务方转发日为准）
 
+> **第三轮及以后（含「业务作战台」`scenarios/playbook` 等）：** 请业务方优先转发 **`SRNE_TEAM_RELEASE_PLAYBOOK.md`** — 该文件把 **OpenClaw/小江** 与 **Agent1** 写在同一张协作单里。本文档仍可作为第二轮（`b27fdfc`）背景参考。
+
 ---
 
 ## 一、请你做什么（两件事，按顺序）
