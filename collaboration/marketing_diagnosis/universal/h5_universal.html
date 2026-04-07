@@ -206,7 +206,7 @@
         <label class="label">手机 *</label>
         <input class="inp" id="pf-phone" type="tel" inputmode="tel" autocomplete="tel" />
         <label class="label">邮箱</label>
-        <input class="inp" id="pf-email" type="email" autocomplete="email" />
+        <input class="inp" id="pf-email" type="text" inputmode="email" autocomplete="email" placeholder="如：name@example.com（选填）" />
         <label class="label">职位</label>
         <input class="inp" id="pf-title" autocomplete="organization-title" />
         <label class="label">行业 / 主营（选填）</label>
@@ -408,12 +408,25 @@
   }
 
   function getDimensions() {
-    if (state.role === "sales_rep") {
-      var m = Q.roles.sales_rep.modes[state.saleMode];
-      return m ? m.dimensions : [];
+    try {
+      var roles = (Q && Q.roles) || {};
+      if (state.role === "sales_rep") {
+        var salesRep = roles.sales_rep || {};
+        var modes = salesRep.modes || {};
+        var m = modes[state.saleMode];
+        return m && Array.isArray(m.dimensions) ? m.dimensions : [];
+      }
+      if (state.role === "sales_manager") {
+        var manager = roles.sales_manager || {};
+        return Array.isArray(manager.dimensions) ? manager.dimensions : [];
+      }
+      if (state.role === "marketing_system") {
+        var marketing = roles.marketing_system || {};
+        return Array.isArray(marketing.dimensions) ? marketing.dimensions : [];
+      }
+    } catch (err) {
+      console.error("[diag] getDimensions", err);
     }
-    if (state.role === "sales_manager") return Q.roles.sales_manager.dimensions;
-    if (state.role === "marketing_system") return Q.roles.marketing_system.dimensions;
     return [];
   }
 
@@ -421,7 +434,9 @@
     var dims = getDimensions();
     var list = [];
     dims.forEach(function (d, di) {
+      if (!d || !Array.isArray(d.questions)) return;
       d.questions.forEach(function (q, qi) {
+        if (!q) return;
         list.push({ dimIndex: di, qIndex: qi, dim: d, question: q, key: di + "_" + qi });
       });
     });
@@ -481,15 +496,18 @@
   function computeResult() {
     var dims = getDimensions();
     var dimScores = dims.map(function (d, di) {
+      var questions = Array.isArray(d && d.questions) ? d.questions : [];
       var s = 0;
-      d.questions.forEach(function (q, qi) {
+      questions.forEach(function (q, qi) {
         var k = di + "_" + qi;
         var ans = state.answers[k];
         if (!ans) return;
-        var opt = q.options.find(function (o) { return o.key === ans; });
+        var options = Array.isArray(q && q.options) ? q.options : [];
+        var opt = options.find(function (o) { return o.key === ans; });
         if (opt) s += opt.score;
       });
-      return { name: d.name, score: Math.round(s * 100) / 100, maxPoints: d.maxPoints || 0, band: dimBand(s, d.maxPoints) };
+      var maxPoints = d && typeof d.maxPoints === "number" ? d.maxPoints : 0;
+      return { name: (d && d.name) || "未命名维度", score: Math.round(s * 100) / 100, maxPoints: maxPoints, band: dimBand(s, maxPoints) };
     });
     var total = Math.round(dimScores.reduce(function (a, x) { return a + x.score; }, 0) * 100) / 100;
     var ob = overallBand(total);
@@ -500,12 +518,14 @@
     var questionDetails = [];
     var globalNo = 1;
     dims.forEach(function (d, di) {
+      var questions = Array.isArray(d && d.questions) ? d.questions : [];
       d.questions.forEach(function (q, qi) {
         var k = di + "_" + qi;
         var ansKey = state.answers[k];
-        var opt = ansKey ? q.options.find(function (o) { return o.key === ansKey; }) : null;
+        var options = Array.isArray(q && q.options) ? q.options : [];
+        var opt = ansKey ? options.find(function (o) { return o.key === ansKey; }) : null;
         var maxScore = 0;
-        q.options.forEach(function (o) {
+        options.forEach(function (o) {
           if (o.score > maxScore) maxScore = o.score;
         });
         questionDetails.push({
@@ -514,7 +534,7 @@
           dimName: d.name,
           qLocalIndex: qi + 1,
           qId: q.id || "",
-          qText: q.text,
+          qText: (q && q.text) || "（题干缺失）",
           answerKey: ansKey || "",
           optionLabel: opt ? opt.label : "—",
           score: opt != null ? opt.score : null,
@@ -834,13 +854,18 @@
 
   document.getElementById("btn-profile-next").addEventListener("click", function () {
     if (!validateProfile()) return;
-    buildFlat();
-    if (!state.flat.length) {
-      showToast("问卷数据为空，请检查数据包");
-      return;
+    try {
+      buildFlat();
+      if (!state.flat.length) {
+        showToast("问卷数据为空，请检查数据包");
+        return;
+      }
+      showScreen("quiz");
+      renderQuestion();
+    } catch (err) {
+      console.error("[diag] enter quiz", err);
+      showToast("进入问卷失败，请检查题本数据并重试");
     }
-    showScreen("quiz");
-    renderQuestion();
   });
 
   document.getElementById("btn-next").addEventListener("click", function () {
