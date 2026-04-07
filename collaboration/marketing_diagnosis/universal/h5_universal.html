@@ -310,8 +310,11 @@
     BRIDGE_TOKEN: ""
   };
 
-  var Q = window.UNIVERSAL_QUESTIONNAIRE;
-  var R = window.UNIVERSAL_RUBRICS;
+  // 兼容两种 bundle 导出名：无后缀（主线）与 *_BUNDLE（历史/协作产物）
+  var Q = window.UNIVERSAL_QUESTIONNAIRE || window.UNIVERSAL_QUESTIONNAIRE_BUNDLE;
+  var R = window.UNIVERSAL_RUBRICS || window.UNIVERSAL_RUBRICS_BUNDLE;
+  if (!window.UNIVERSAL_QUESTIONNAIRE && Q) window.UNIVERSAL_QUESTIONNAIRE = Q;
+  if (!window.UNIVERSAL_RUBRICS && R) window.UNIVERSAL_RUBRICS = R;
   if (!Q || !R) {
     var basePath = window.__UNIVERSAL_STATIC_BASE__ || "/diag/universal";
     var origin = window.location.origin || "";
