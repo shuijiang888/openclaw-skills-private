@@ -159,20 +159,21 @@
   </style>
 </head>
 <body>
+  <!-- universal-chenwei-h5 fingerprint -->
   <div class="wrap">
     <div id="screenWelcome" class="card">
-      <h1>通用营销诊断系统</h1>
+      <h1>通用营销诊断</h1>
       <p class="sub">
-        统一支持医疗器械、能源电力、智能制造三行业。先完成 10 步轻诊断查看初估，
-        再解锁完整版生成正式报告，并可提交线索到生产接口。
+        面向医疗器械、能源电力、智能制造等行业，采用「三角色 × 四销售模式」统一框架。
+        先选择你的角色与销售模式，再进入基础信息与逐题评估，生成可执行诊断建议。
       </p>
       <ul class="welcome-list">
-        <li>QB：行业、企业名称、细分赛道（Q_B2 多选）、规模、年限</li>
-        <li>10 步轻诊断 -> 初估页 -> 续答完整版（断点续答）</li>
-        <li>报告页可提交诊断线索与预约专家线索</li>
+        <li>三角色：销售负责人 / 市场负责人 / 企业管理者</li>
+        <li>四销售模式：渠道型 / 直销型 / 项目型 / 复合型</li>
+        <li>流程：开始测评 → 角色选择 →（销售岗选模式）→ 基本信息 → 逐题 → 报告</li>
       </ul>
       <div class="actions">
-        <button id="btnStart" class="btn primary">全新开始</button>
+        <button id="btnStart" class="btn primary">开始测评</button>
         <button id="btnResume" class="btn ghost hide">继续上次</button>
       </div>
       <div class="footer-note">入口建议：/diag/universal/h5_universal.html（依赖 ./data/ 相对路径）</div>
@@ -180,8 +181,8 @@
 
     <div id="screenQuiz" class="card hide">
       <div class="progress">
-        <span id="stepTag">轻诊断阶段</span>
-        <span id="stepText">1 / 10</span>
+        <span id="stepTag">测评阶段</span>
+        <span id="stepText">1 / 16</span>
       </div>
       <div class="bar-wrap"><div id="bar" class="bar"></div></div>
       <div id="qCard"></div>
@@ -190,15 +191,6 @@
         <button id="btnNext" class="btn primary">下一步</button>
       </div>
       <div id="errQuiz" class="err"></div>
-    </div>
-
-    <div id="screenPreview" class="card hide">
-      <h2>初估画像</h2>
-      <p class="sub">已完成轻诊断，以下为当前估算结果。</p>
-      <div class="score"><span>初估总分</span><strong id="previewScore">--</strong><span>/ 100</span></div>
-      <div class="actions">
-        <button id="btnContinueFull" class="btn primary">继续完成完整版</button>
-      </div>
     </div>
 
     <div id="screenReport" class="card hide">
@@ -238,15 +230,13 @@
     };
 
     (function () {
-      var STORAGE_VERSION = 1;
-      var LITE_LIMIT = 10;
-      var FULL_RESUME_QI = 5;
-      var LIGHT_TAIL_QI = 9;
-
+      var STORAGE_VERSION = 2;
       var qb = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.qb) || [];
       var questions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.questions) || [];
+      var roleOptions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.roleOptions) || [];
+      var salesModes = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.salesModes) || [];
+      var industryOptions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.industryOptions) || [];
       var segsByIndustry = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.segsByIndustry) || {};
-      var industries = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.industries) || [];
 
       var rubrics = (window.UNIVERSAL_RUBRICS_BUNDLE && window.UNIVERSAL_RUBRICS_BUNDLE) || {};
       var dims = rubrics.dims || [];
@@ -255,7 +245,6 @@
 
       var screenWelcome = document.getElementById("screenWelcome");
       var screenQuiz = document.getElementById("screenQuiz");
-      var screenPreview = document.getElementById("screenPreview");
       var screenReport = document.getElementById("screenReport");
       var qCard = document.getElementById("qCard");
       var stepTag = document.getElementById("stepTag");
@@ -269,8 +258,9 @@
         v: STORAGE_VERSION,
         phase: "welcome",
         qIndex: 0,
-        unlockedFull: false,
         basic: {
+          roleType: "",
+          salesMode: "",
           industryEdition: "",
           companyName: "",
           q_b2: [],
@@ -319,11 +309,9 @@
       function setVisible(which) {
         screenWelcome.classList.add("hide");
         screenQuiz.classList.add("hide");
-        screenPreview.classList.add("hide");
         screenReport.classList.add("hide");
         if (which === "welcome") screenWelcome.classList.remove("hide");
         if (which === "quiz") screenQuiz.classList.remove("hide");
-        if (which === "preview") screenPreview.classList.remove("hide");
         if (which === "report") screenReport.classList.remove("hide");
       }
 
@@ -332,51 +320,89 @@
       }
 
       function renderProgress() {
-        var isLite = !state.unlockedFull && state.qIndex <= LIGHT_TAIL_QI;
-        if (isLite) {
-          stepTag.textContent = "轻诊断阶段";
-          stepText.textContent = (state.qIndex + 1) + " / " + LITE_LIMIT;
-          bar.style.width = Math.round(((state.qIndex + 1) / LITE_LIMIT) * 100) + "%";
-        } else {
-          stepTag.textContent = "完整版阶段";
-          stepText.textContent = (state.qIndex + 1) + " / " + TOTAL_STEPS;
-          bar.style.width = Math.round(((state.qIndex + 1) / TOTAL_STEPS) * 100) + "%";
-        }
+        stepTag.textContent = "测评阶段";
+        stepText.textContent = (state.qIndex + 1) + " / " + TOTAL_STEPS;
+        bar.style.width = Math.round(((state.qIndex + 1) / TOTAL_STEPS) * 100) + "%";
       }
 
       function renderBasic(step) {
         if (step === 1) {
-          var html = '<div class="q-title">选择行业</div>';
-          for (var i = 0; i < industries.length; i++) {
-            var it = industries[i];
-            var sel = state.basic.industryEdition === it.id ? " sel" : "";
-            html += '<button type="button" class="opt' + sel + '" data-industry="' + it.id + '">' + it.label + '</button>';
+          var html = '<div class="q-title">你的角色是？</div><p class="hint">请选择一个最贴近当前职责的角色。</p>';
+          for (var i = 0; i < roleOptions.length; i++) {
+            var it = roleOptions[i];
+            var sel = state.basic.roleType === it.id ? " sel" : "";
+            html += '<button type="button" class="opt' + sel + '" data-role="' + it.id + '">' + it.text + '</button>';
           }
           return html;
         }
         if (step === 2) {
-          return '<div class="q-title">企业名称</div><input id="inp-company" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || "") + '" />';
+          if (state.basic.roleType === "sales") {
+            var htmlMode = '<div class="q-title">你的主要销售模式是？</div><p class="hint">销售角色需先确定模式，以匹配后续题目语境。</p>';
+            for (var m = 0; m < salesModes.length; m++) {
+              var mode = salesModes[m];
+              var selm = state.basic.salesMode === mode.id ? " sel" : "";
+              htmlMode += '<button type="button" class="opt' + selm + '" data-mode="' + mode.id + '">' + mode.text + '</button>';
+            }
+            return htmlMode;
+          }
+          return '<div class="q-title">请选择行业</div>' + renderIndustryOptions();
         }
         if (step === 3) {
-          var items = segsByIndustry[state.basic.industryEdition] || [];
-          var out = '<div class="q-title">Q_B2 细分赛道（可多选）</div><p class="hint">报告中会展示多选标签。</p>';
-          for (var j = 0; j < items.length; j++) {
-            var seg = items[j];
-            var selected = (state.basic.q_b2 || []).indexOf(seg.id) >= 0 ? " sel" : "";
-            out += '<button type="button" class="opt' + selected + '" data-seg="' + seg.id + '">' + seg.text + '</button>';
+          if (state.basic.roleType === "sales") {
+            return '<div class="q-title">请选择行业</div>' + renderIndustryOptions();
           }
-          return out;
+          return '<div class="q-title">企业名称</div><input id="inp-company" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || "") + '" />';
         }
         if (step === 4) {
-          var scales = ["100人以下", "100-500人", "500-2000人", "2000人以上"];
-          var html2 = '<div class="q-title">企业规模</div>';
-          for (var s = 0; s < scales.length; s++) {
-            var sc = scales[s];
-            var sel2 = state.basic.scale === sc ? " sel" : "";
-            html2 += '<button type="button" class="opt' + sel2 + '" data-scale="' + sc + '">' + sc + '</button>';
+          if (state.basic.roleType === "sales") {
+            return '<div class="q-title">企业名称</div><input id="inp-company" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || "") + '" />';
           }
-          return html2;
+          return renderSegmentsQuestion();
         }
+        if (step === 5) {
+          if (state.basic.roleType === "sales") return renderSegmentsQuestion();
+          return renderScaleQuestion();
+        }
+        if (step === 6) {
+          if (state.basic.roleType === "sales") return renderScaleQuestion();
+          return renderYearsQuestion();
+        }
+        return renderYearsQuestion();
+      }
+
+      function renderIndustryOptions() {
+        var out = '<p class="hint">行业将用于题库与报告口径匹配。</p>';
+        for (var i = 0; i < industryOptions.length; i++) {
+          var it = industryOptions[i];
+          var sel = state.basic.industryEdition === it.id ? " sel" : "";
+          out += '<button type="button" class="opt' + sel + '" data-industry="' + it.id + '">' + it.text + '</button>';
+        }
+        return out;
+      }
+
+      function renderSegmentsQuestion() {
+        var items = segsByIndustry[state.basic.industryEdition] || [];
+        var out = '<div class="q-title">细分赛道（可多选）</div><p class="hint">Q_B2 将在报告中展示。</p>';
+        for (var j = 0; j < items.length; j++) {
+          var seg = items[j];
+          var selected = (state.basic.q_b2 || []).indexOf(seg.id) >= 0 ? " sel" : "";
+          out += '<button type="button" class="opt' + selected + '" data-seg="' + seg.id + '">' + seg.text + '</button>';
+        }
+        return out;
+      }
+
+      function renderScaleQuestion() {
+        var scales = ["100人以下", "100-500人", "500-2000人", "2000人以上"];
+        var html2 = '<div class="q-title">企业规模</div>';
+        for (var s = 0; s < scales.length; s++) {
+          var sc = scales[s];
+          var sel2 = state.basic.scale === sc ? " sel" : "";
+          html2 += '<button type="button" class="opt' + sel2 + '" data-scale="' + sc + '">' + sc + '</button>';
+        }
+        return html2;
+      }
+
+      function renderYearsQuestion() {
         var years = ["3年以下", "3-10年", "10-20年", "20年以上"];
         var html3 = '<div class="q-title">成立年限</div>';
         for (var y = 0; y < years.length; y++) {
@@ -413,6 +439,23 @@
           inpCompany.addEventListener("input", function () {
             state.basic.companyName = inpCompany.value;
             save();
+          });
+        }
+        var roleBtns = qCard.querySelectorAll("[data-role]");
+        for (var r = 0; r < roleBtns.length; r++) {
+          roleBtns[r].addEventListener("click", function () {
+            state.basic.roleType = this.getAttribute("data-role");
+            if (state.basic.roleType !== "sales") state.basic.salesMode = "";
+            save();
+            renderQuestion();
+          });
+        }
+        var modeBtns = qCard.querySelectorAll("[data-mode]");
+        for (var m = 0; m < modeBtns.length; m++) {
+          modeBtns[m].addEventListener("click", function () {
+            state.basic.salesMode = this.getAttribute("data-mode");
+            save();
+            renderQuestion();
           });
         }
         var industryBtns = qCard.querySelectorAll("[data-industry]");
@@ -474,11 +517,13 @@
       }
 
       function validCurrent() {
-        if (state.qIndex === 0) return !!state.basic.industryEdition;
-        if (state.qIndex === 1) return !!(state.basic.companyName || "").trim();
-        if (state.qIndex === 2) return (state.basic.q_b2 || []).length > 0;
-        if (state.qIndex === 3) return !!state.basic.scale;
-        if (state.qIndex === 4) return !!state.basic.years;
+        if (state.qIndex === 0) return !!state.basic.roleType;
+        if (state.qIndex === 1 && state.basic.roleType === "sales") return !!state.basic.salesMode;
+        if ((state.qIndex === 1 && state.basic.roleType !== "sales") || (state.qIndex === 2 && state.basic.roleType === "sales")) return !!state.basic.industryEdition;
+        if ((state.qIndex === 2 && state.basic.roleType !== "sales") || (state.qIndex === 3 && state.basic.roleType === "sales")) return !!(state.basic.companyName || "").trim();
+        if ((state.qIndex === 3 && state.basic.roleType !== "sales") || (state.qIndex === 4 && state.basic.roleType === "sales")) return (state.basic.q_b2 || []).length > 0;
+        if ((state.qIndex === 4 && state.basic.roleType !== "sales") || (state.qIndex === 5 && state.basic.roleType === "sales")) return !!state.basic.scale;
+        if ((state.qIndex === 5 && state.basic.roleType !== "sales") || (state.qIndex === 6 && state.basic.roleType === "sales")) return !!state.basic.years;
         var q = currentQuestion();
         if (!q) return true;
         var ans = state.answers[q.id];
@@ -556,14 +601,6 @@
         return html;
       }
 
-      function gotoPreview() {
-        var score = computeScore();
-        document.getElementById("previewScore").textContent = String(score.total);
-        state.phase = "preview";
-        save();
-        setVisible("preview");
-      }
-
       function renderReport(score) {
         document.getElementById("reportTitle").textContent = CONFIG.reportTitle;
         document.getElementById("finalScore").textContent = String(score.total);
@@ -592,10 +629,12 @@
           type: "questionnaire_submission",
           payload: {
             totalSteps: TOTAL_STEPS,
-            liteLimit: LITE_LIMIT,
-            resumeFromQIndex: FULL_RESUME_QI
+            roleType: state.basic.roleType,
+            salesMode: state.basic.salesMode
           },
           qbPayload: {
+            q_b0_roleType: state.basic.roleType || "",
+            q_b0_salesMode: state.basic.salesMode || "",
             q_b1_companyName: state.basic.companyName || "",
             q_b2_segments: state.basic.q_b2 || [],
             q_b3_scale: state.basic.scale || "",
@@ -668,8 +707,7 @@
           v: STORAGE_VERSION,
           phase: "quiz",
           qIndex: 0,
-          unlockedFull: false,
-          basic: { industryEdition: "", companyName: "", q_b2: [], scale: "", years: "" },
+          basic: { roleType: "", salesMode: "", industryEdition: "", companyName: "", q_b2: [], scale: "", years: "" },
           answers: {},
           contact: { name: "", phone: "", role: "" },
           submissionId: "",
@@ -684,8 +722,7 @@
 
       document.getElementById("btnResume").addEventListener("click", function () {
         safeSetError(errQuiz, "");
-        if (state.phase === "preview") setVisible("preview");
-        else if (state.phase === "report") setVisible("report");
+        if (state.phase === "report") setVisible("report");
         else { state.phase = "quiz"; setVisible("quiz"); renderQuestion(); }
       });
 
@@ -704,10 +741,6 @@
           safeSetError(errQuiz, "请先完成当前题目。");
           return;
         }
-        if (!state.unlockedFull && state.qIndex === LIGHT_TAIL_QI) {
-          gotoPreview();
-          return;
-        }
         if (state.qIndex < TOTAL_STEPS - 1) {
           state.qIndex += 1;
           state.phase = "quiz";
@@ -716,15 +749,6 @@
           return;
         }
         createSubmission();
-      });
-
-      document.getElementById("btnContinueFull").addEventListener("click", function () {
-        state.unlockedFull = true;
-        state.phase = "quiz";
-        state.qIndex = FULL_RESUME_QI;
-        save();
-        setVisible("quiz");
-        renderQuestion();
       });
 
       document.getElementById("btnSubmitSummary").addEventListener("click", function () {
@@ -741,8 +765,7 @@
           v: STORAGE_VERSION,
           phase: "welcome",
           qIndex: 0,
-          unlockedFull: false,
-          basic: { industryEdition: "", companyName: "", q_b2: [], scale: "", years: "" },
+          basic: { roleType: "", salesMode: "", industryEdition: "", companyName: "", q_b2: [], scale: "", years: "" },
           answers: {},
           contact: { name: "", phone: "", role: "" },
           submissionId: "",
