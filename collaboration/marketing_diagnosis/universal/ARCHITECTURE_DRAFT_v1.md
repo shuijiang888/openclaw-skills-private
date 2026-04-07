@@ -1,4 +1,4 @@
-# 通用行业营销诊断系统：可执行架构草案 v1
+# 通用行业营销诊断系统：可执行架构草案 v1.1
 
 ## 1. 文档目的
 
@@ -56,6 +56,15 @@
 2. API 服务：CVM 容器化 Node.js（Fastify/NestJS/Express 均可）
 3. 数据库：MySQL 8（或 PostgreSQL，二选一）
 4. 可选组件：Redis（幂等与异步任务）
+
+### 4.1.1 数据快照与语义约束（Agent1 终版对齐）
+
+1. `diag_submission.payload_json` 作为不可变快照，建议原样保存前端请求体（含 `type + payload` 嵌套）。
+2. `diag_lead.payload_json` 作为线索请求快照，建议同样原样保存，便于审计、重放和 CRM 映射排查。
+3. `diag_lead.lead_kind` 采用双语义：
+   - `diagnosis_summary`
+   - `expert_opportunity`
+4. 建议保留数据库 `CHECK` 约束，保证 `lead_kind` 只落上述合法值；二期 CRM 映射按 `lead_kind` 分流，不阻塞用户主提交流程。
 
 ### 4.2 网络与域名建议
 
