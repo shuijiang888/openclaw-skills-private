@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { PORTAL_NAV_SHELL } from "@/components/nav-shells/portal-shell";
 import { PROFIT_NAV_SHELL } from "@/components/nav-shells/profit-shell";
 import { getZtShellLinks } from "@/components/nav-shells/zt-shell";
-import { isZtPath, resolveClientPathname } from "@/lib/nav-path";
+import { isZtPath, normalizeNavPath, resolveClientPathname } from "@/lib/nav-path";
 
 function isLinkActive(pathname: string, href: string): boolean {
   const activePath = resolveClientPathname(pathname);
@@ -21,9 +21,20 @@ function isLinkActive(pathname: string, href: string): boolean {
 
 export function Nav() {
   const role = parseDemoRole(useDemoRole());
-  const pathname = resolveClientPathname(usePathname() ?? "/");
+  const rawPathname = usePathname() ?? "/";
+  const pathname = resolveClientPathname(rawPathname);
+  const normalizedHookPath = normalizeNavPath(rawPathname);
+  const normalizedBrowserPath =
+    typeof window === "undefined"
+      ? normalizedHookPath
+      : normalizeNavPath(window.location.pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isPortalContext = pathname === "/";
+  // 门户上下文只在“所有路径信号都明确是根路径”时成立。
+  // 避免路由切换瞬态造成 /dashboard 被误判为门户导航壳。
+  const isPortalContext =
+    pathname === "/" &&
+    normalizedHookPath === "/" &&
+    normalizedBrowserPath === "/";
   const isZtContext = isZtPath(pathname);
 
   const portalLinks = PORTAL_NAV_SHELL.links;
