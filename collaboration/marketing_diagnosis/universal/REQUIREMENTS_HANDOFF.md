@@ -14,6 +14,8 @@
    - `collaboration/marketing_diagnosis/universal/MVP_SCHEMA_DRAFT.sql`
 3. API 示例（请求/响应样例）
    - `collaboration/marketing_diagnosis/universal/API_PAYLOAD_EXAMPLES_v1.md`
+4. 上线作战清单（发布 owner 执行）
+   - `collaboration/marketing_diagnosis/universal/LAUNCH_RUNBOOK_CHECKLIST_v1.md`
 
 > 优先级规则：
 > - 若 Agent1 分支（PR #4）已合并，请以主线文档为准。
