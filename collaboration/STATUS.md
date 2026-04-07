@@ -15,3 +15,5 @@ blocker: ""
 ## 人类可读备注
 
 collab-010 已交付：`marketing_diagnosis/medical_device/`（问卷文案、Benchmark、AI 方案、H5 基础版与 Benchmark+AI 增强版）。制造业 MVP 与 `system/` 不变。
+
+**硕日渠道运营原型 → Agent1：** 已本地提交 `c74e182`（源码树 `collaboration/srne_channel_ops/`），并追加 `6f17598`（`collaboration/cursor-out/srne_channel_ops_c74e182.tar.gz` + `AGENT1_SRNE_INGEST_AND_DEPLOY.md`）。本工作区无 `git remote`，由 OpenClaw/同步落库后 Agent1 按 ingest 文档部署闭环。
