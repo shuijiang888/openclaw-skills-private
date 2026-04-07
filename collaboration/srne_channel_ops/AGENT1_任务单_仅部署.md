@@ -13,9 +13,10 @@
 grep -q 'performance/scorecard' collaboration/srne_channel_ops/api/server.mjs && echo OK_scorecard || echo FAIL
 grep -q 'import/batches' collaboration/srne_channel_ops/api/server.mjs && echo OK_batches || echo FAIL
 grep -q 'import/channels/preview' collaboration/srne_channel_ops/api/server.mjs && echo OK_preview || echo FAIL
+grep -q 'scenarios/playbook' collaboration/srne_channel_ops/api/server.mjs && echo OK_playbook || echo FAIL
 ```
 
-三行都打印 `OK_*` 才继续做第 2 步。若出现 `FAIL`，说明拉到的仍是旧 `server.mjs`，**重建多少次都不会出现新接口**。
+四行都打印 `OK_*` 才继续做第 2 步。若出现 `FAIL`，说明拉到的仍是旧 `server.mjs`，**重建多少次都不会出现新接口**。
 
 ### 2. 构建与启动
 
