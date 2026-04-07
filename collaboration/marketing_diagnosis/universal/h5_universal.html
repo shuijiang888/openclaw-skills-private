@@ -342,6 +342,114 @@
     result: null,
     submissionPublicId: null
   };
+  var STORAGE_KEY_ROLE = "diag_universal_role";
+  var STORAGE_KEY_MODE = "diag_universal_sale_mode";
+
+  function isObj(x) {
+    return !!x && typeof x === "object" && !Array.isArray(x);
+  }
+
+  function normalizeRoleId(raw) {
+    var v = String(raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+    if (!v) return "";
+    if (v === "salesrep" || v === "sales_rep") return "sales_rep";
+    if (v === "salesmanager" || v === "sales_manager") return "sales_manager";
+    if (v === "marketingsystem" || v === "marketing_system") return "marketing_system";
+    return v;
+  }
+
+  function normalizeModeKey(raw) {
+    return String(raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  }
+
+  function setSessionValue(k, v) {
+    try { sessionStorage.setItem(k, String(v || "")); } catch (_) {}
+  }
+
+  function clearSessionValue(k) {
+    try { sessionStorage.removeItem(k); } catch (_) {}
+  }
+
+  function restoreRoleModeFromSession() {
+    try {
+      var r = normalizeRoleId(sessionStorage.getItem(STORAGE_KEY_ROLE));
+      var m = String(sessionStorage.getItem(STORAGE_KEY_MODE) || "").trim();
+      if (r) state.role = r;
+      if (m) state.saleMode = m;
+    } catch (_) {}
+  }
+
+  function getRolesFromQuestionnaire() {
+    var candidates = [
+      Q && Q.roles,
+      Q && Q.data && Q.data.roles,
+      Q && Q.questionnaire && Q.questionnaire.roles,
+      Q && Q.payload && Q.payload.roles
+    ];
+    for (var i = 0; i < candidates.length; i++) {
+      if (isObj(candidates[i])) return candidates[i];
+    }
+    if (isObj(Q) && (
+      Q.sales_rep || Q.salesRep ||
+      Q.sales_manager || Q.salesManager ||
+      Q.marketing_system || Q.marketingSystem
+    )) {
+      return Q;
+    }
+    console.warn("[diag] roles not found in questionnaire bundle");
+    return {};
+  }
+
+  function getRoleEntry(roleId) {
+    var roles = getRolesFromQuestionnaire();
+    var direct = roles[roleId];
+    if (isObj(direct)) return direct;
+    var aliasMap = {
+      sales_rep: ["salesRep", "salesrep"],
+      sales_manager: ["salesManager", "salesmanager"],
+      marketing_system: ["marketingSystem", "marketingsystem"]
+    };
+    var aliases = aliasMap[roleId] || [];
+    for (var i = 0; i < aliases.length; i++) {
+      var hit = roles[aliases[i]];
+      if (isObj(hit)) return hit;
+    }
+    for (var k in roles) {
+      if (!Object.prototype.hasOwnProperty.call(roles, k)) continue;
+      if (normalizeRoleId(k) === roleId && isObj(roles[k])) return roles[k];
+    }
+    console.warn("[diag] role entry missing", roleId);
+    return null;
+  }
+
+  function resolveModeEntry(roleEntry, modeKey) {
+    var modes = roleEntry && (roleEntry.modes || roleEntry.salesModes || roleEntry.modeMap);
+    if (!isObj(modes)) {
+      console.warn("[diag] modes missing for sales role");
+      return null;
+    }
+    if (modes[modeKey]) return modes[modeKey];
+    var target = normalizeModeKey(modeKey);
+    var targetLoose = target.replace(/_/g, "");
+    for (var k in modes) {
+      if (!Object.prototype.hasOwnProperty.call(modes, k)) continue;
+      var nk = normalizeModeKey(k);
+      if (nk === target || nk.replace(/_/g, "") === targetLoose) {
+        return modes[k];
+      }
+    }
+    console.warn("[diag] mode entry missing", modeKey);
+    return null;
+  }
+
+  function extractDimensions(entry) {
+    if (!isObj(entry)) return [];
+    if (Array.isArray(entry.dimensions)) return entry.dimensions;
+    if (Array.isArray(entry.dimensionList)) return entry.dimensionList;
+    return [];
+  }
+
+  restoreRoleModeFromSession();
 
   function useV1Api() {
     return !!(CONFIG.apiBaseUrl && String(CONFIG.apiBaseUrl).trim());
@@ -409,21 +517,21 @@
 
   function getDimensions() {
     try {
-      var roles = (Q && Q.roles) || {};
-      if (state.role === "sales_rep") {
-        var salesRep = roles.sales_rep || {};
-        var modes = salesRep.modes || {};
-        var m = modes[state.saleMode];
-        return m && Array.isArray(m.dimensions) ? m.dimensions : [];
+      var roleId = normalizeRoleId(state.role);
+      if (!roleId) {
+        console.warn("[diag] getDimensions: missing role");
+        return [];
       }
-      if (state.role === "sales_manager") {
-        var manager = roles.sales_manager || {};
-        return Array.isArray(manager.dimensions) ? manager.dimensions : [];
+      var roleEntry = getRoleEntry(roleId);
+      if (!roleEntry) return [];
+      if (roleId === "sales_rep") {
+        if (!state.saleMode) {
+          console.warn("[diag] getDimensions: sales role missing saleMode");
+          return [];
+        }
+        return extractDimensions(resolveModeEntry(roleEntry, state.saleMode));
       }
-      if (state.role === "marketing_system") {
-        var marketing = roles.marketing_system || {};
-        return Array.isArray(marketing.dimensions) ? marketing.dimensions : [];
-      }
+      return extractDimensions(roleEntry);
     } catch (err) {
       console.error("[diag] getDimensions", err);
     }
@@ -804,21 +912,35 @@
     }
   }
 
-  document.getElementById("btn-start").addEventListener("click", function () { showScreen("role"); });
+  document.getElementById("btn-start").addEventListener("click", function () {
+    var roleId = normalizeRoleId(state.role);
+    if (!roleId) {
+      showScreen("role");
+      return;
+    }
+    if (roleId === "sales_rep" && !state.saleMode) {
+      showScreen("mode");
+      return;
+    }
+    showScreen("profile");
+  });
 
   var rc = document.getElementById("role-choices");
   ROLE_META.forEach(function (r) {
     var b = document.createElement("button");
     b.type = "button";
     b.className = "choice";
+    b.setAttribute("data-role-id", r.id);
     b.innerHTML = "<strong>" + r.title + "</strong><br><span class='muted' style='font-size:13px'>" + r.desc + "</span>";
     b.addEventListener("click", function () {
       state.role = r.id;
+      setSessionValue(STORAGE_KEY_ROLE, state.role);
       document.querySelectorAll("#role-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
       b.classList.add("selected");
       if (r.id === "sales_rep") showScreen("mode");
       else {
         state.saleMode = null;
+        clearSessionValue(STORAGE_KEY_MODE);
         showScreen("profile");
       }
     });
@@ -830,9 +952,11 @@
     var b = document.createElement("button");
     b.type = "button";
     b.className = "choice";
+    b.setAttribute("data-mode-id", m.id);
     b.innerHTML = "<strong>" + m.title + "</strong>" + (m.desc ? "<br><span class='muted' style='font-size:13px'>" + m.desc + "</span>" : "");
     b.addEventListener("click", function () {
       state.saleMode = m.id;
+      setSessionValue(STORAGE_KEY_MODE, state.saleMode);
       document.querySelectorAll("#mode-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
       b.classList.add("selected");
       showScreen("profile");
@@ -855,9 +979,24 @@
   document.getElementById("btn-profile-next").addEventListener("click", function () {
     if (!validateProfile()) return;
     try {
+      var roleId = normalizeRoleId(state.role);
+      if (!roleId) {
+        showToast("请先选择测评角色");
+        console.warn("[diag] enter quiz: role not selected");
+        return;
+      }
+      if (roleId === "sales_rep" && !state.saleMode) {
+        showToast("请返回上一步选择四象限模式");
+        console.warn("[diag] enter quiz: sales mode not selected");
+        return;
+      }
       buildFlat();
       if (!state.flat.length) {
-        showToast("问卷数据为空，请检查数据包");
+        showToast("问卷数据为空：题本结构不兼容，请刷新后重试");
+        console.warn("[diag] enter quiz: empty flat list", {
+          role: state.role,
+          saleMode: state.saleMode
+        });
         return;
       }
       showScreen("quiz");
@@ -991,6 +1130,8 @@
 
   document.getElementById("btn-restart").addEventListener("click", function () {
     state = { role: null, saleMode: null, profile: {}, flat: [], index: 0, answers: {}, result: null, submissionPublicId: null };
+    clearSessionValue(STORAGE_KEY_ROLE);
+    clearSessionValue(STORAGE_KEY_MODE);
     document.querySelectorAll(".choice").forEach(function (c) { c.classList.remove("selected"); });
     showScreen("welcome");
   });
