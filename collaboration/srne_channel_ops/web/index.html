@@ -40,6 +40,7 @@
       <div class="brand">SRNE · Channel OS</div>
       <nav>
         <button type="button" data-nav="dashboard">运营总览</button>
+        <button type="button" data-nav="playbook">业务作战台</button>
         <button type="button" data-nav="channels">渠道商</button>
         <button type="button" data-nav="intel">市场情报</button>
         <button type="button" data-nav="sales">销售赋能</button>
@@ -88,6 +89,51 @@
           <p class="muted">
             图表数据与列表、详情同源 API；支持快捷录入渠道、补录月度出货与 JSON 导入。新种子需空库首次启动或批量导入后生效。
           </p>
+        </div>
+      </section>
+
+      <section data-view="playbook" class="hidden">
+        <div class="panel playbook-hero">
+          <h2>关键业务场景 · 作战台</h2>
+          <p class="muted" id="playbookIntro">聚合预警时效、回款与联络风险、目标脉搏与覆盖缺口；权限范围内数据（销售仅看本人负责渠道）。</p>
+          <ul id="playbookScenarioBullets" class="muted narrative-list" style="margin-top:12px"></ul>
+        </div>
+        <div class="playbook-grid">
+          <div class="panel playbook-card">
+            <h3>目标脉搏</h3>
+            <p class="muted small" id="playbookPeriod">—</p>
+            <p>年出货 roll <strong id="playbookRev">—</strong> USD</p>
+            <p>演示达成指数 <strong id="playbookAtt">—</strong>%</p>
+            <p class="muted small">参考季目标（演示） <span id="playbookTgt">—</span> USD</p>
+          </div>
+          <div class="panel playbook-card">
+            <h3>未关预警 · SLA 库龄</h3>
+            <p>合计 <strong id="playbookOpenAlerts">—</strong> · Critical <strong id="playbookCritAlerts">—</strong></p>
+            <div class="sla-buckets" id="playbookSlaBuckets"></div>
+            <p class="muted small" id="playbookSlaNote"></p>
+          </div>
+          <div class="panel playbook-card">
+            <h3>覆盖缺口</h3>
+            <p>未分配负责人的活跃渠道 <strong id="playbookUnassigned">—</strong></p>
+            <p>有渠道但缺情报卡的国家数 <strong id="playbookIntelGap">—</strong></p>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>优先动作清单（可点开渠道）</h2>
+          <p class="muted">按 Critical 预警 → 高逾期 → 长期未联系排序；用于晨会逐条过。</p>
+          <div class="table-scroll">
+            <table class="data-table" id="playbookActionsTable">
+              <thead>
+                <tr>
+                  <th>类型</th>
+                  <th>标题</th>
+                  <th>说明</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -140,6 +186,10 @@
         </div>
         <h2 id="chTitle" style="margin-top:8px">—</h2>
         <div id="chMeta"></div>
+        <div class="panel" id="panelBusinessContext">
+          <h2>业务上下文（国家 × 情报 × 预警）</h2>
+          <div id="chBusinessContextBody" class="muted">加载中…</div>
+        </div>
         <div class="panel">
           <h2>月度出货趋势</h2>
           <div class="chart-wrap"><canvas id="chartChannelMonthly" height="260"></canvas></div>
@@ -169,7 +219,7 @@
         <div class="panel">
           <h2>关联预警</h2>
           <table id="chAlerts">
-            <thead><tr><th>级别</th><th>内容</th><th>操作</th></tr></thead>
+            <thead><tr><th>级别</th><th>库龄</th><th>内容</th><th>操作</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -331,8 +381,9 @@
       <section data-view="alerts" class="hidden">
         <div class="panel">
           <h2>未确认预警</h2>
+          <p class="muted">库龄 = 自创建日起未确认的天数；≥8 天标红提示升级。</p>
           <table id="alertsTable">
-            <thead><tr><th>级别</th><th>渠道</th><th>内容</th><th>操作</th></tr></thead>
+            <thead><tr><th>级别</th><th>库龄</th><th>渠道</th><th>内容</th><th>操作</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

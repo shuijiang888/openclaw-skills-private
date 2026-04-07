@@ -86,11 +86,13 @@ docker compose up --build
 - `GET /v1/channels` · **`POST /v1/channels`**（快捷建渠道，自动生成编码）· `GET/PATCH /v1/channels/:id`
 - **`POST /v1/channels/:id/monthly-metrics`**（补录单月出货 `{ ym, revenue_usd }`）
 - `GET /v1/users`（负责人下拉，管理员/总监）
-- `GET /v1/alerts` · `POST /v1/alerts/:id/ack`
+- `GET /v1/alerts`（含未关预警 `age_days` 库龄）· `POST /v1/alerts/:id/ack`
 - `GET /v1/intel/countries` · `GET /v1/intel/:countryCode`
 - `POST /v1/tools/quote`
-- `GET /v1/performance/summary`
-- **`GET /v1/import/template`**（导入 JSON 模板）
+- `GET /v1/performance/summary` · **`GET /v1/performance/scorecard`**（BSC、区域、关注清单、负责人榜含「未分配」等）
+- **`GET /v1/scenarios/playbook`**（关键业务场景：预警 SLA 桶、目标脉搏、覆盖缺口、优先动作清单）
+- `GET /v1/channels/:id`（含 **`business_context`**：该国情报摘要、简报标题、未关预警数、提示语）
+- **`GET /v1/import/template`** · `POST /v1/import/channels/preview` · **`GET /v1/import/batches`**
 - `POST /v1/import/channels` · `POST /v1/import/channels/upload`
 
 **数据量：** 种子渠道约 **18** 条（含南亚 SCA、更多预警与情报国别）；**首次空库**启动写入 **12 个月**滚动出货曲线。已有旧库不会自动追加种子，需 **导入 JSON** 或 **更换 SQLite 文件** 后重启以体验全量演示。

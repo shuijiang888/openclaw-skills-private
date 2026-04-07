@@ -566,3 +566,70 @@ code.batch-id {
   font-size: 11px;
   word-break: break-all;
 }
+
+.playbook-hero h2 {
+  margin-top: 0;
+}
+
+.playbook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.playbook-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.sla-buckets {
+  margin-top: 12px;
+}
+
+.sla-bucket-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.sla-bucket-hot {
+  color: var(--danger);
+}
+
+.sla-pill {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.sla-pill.sla-ok {
+  background: rgba(127, 217, 154, 0.15);
+  color: var(--ok);
+}
+
+.sla-pill.sla-warn {
+  background: rgba(255, 204, 102, 0.18);
+  color: var(--warn);
+}
+
+.sla-pill.sla-bad {
+  background: rgba(240, 113, 120, 0.2);
+  color: var(--danger);
+}
+
+.hint-list {
+  margin: 8px 0 0;
+  padding-left: 1.2rem;
+  color: var(--warn);
+  font-size: 14px;
+}
+
+.hint-list li {
+  margin: 4px 0;
+}
