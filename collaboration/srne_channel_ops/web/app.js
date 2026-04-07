@@ -85,6 +85,7 @@ function showView(name) {
       intel: "市场情报",
       sales: "销售赋能",
       perf: "绩效看板",
+      playbook: "业务作战台",
       alerts: "预警中心",
       import: "数据与录入",
     }[name] || "";
@@ -127,6 +128,65 @@ function fmtUsd(n) {
   if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
   if (n >= 1e3) return Math.round(n / 1e3) + "k";
   return String(Math.round(n));
+}
+
+function slaAgeLabel(ageDays, severity) {
+  const n = Number(ageDays) || 0;
+  let cls = "sla-ok";
+  if (n >= 8) cls = "sla-bad";
+  else if (n >= 4) cls = "sla-warn";
+  if (severity === "critical" && n >= 3) cls = "sla-bad";
+  return `<span class="sla-pill ${cls}">${n} 天</span>`;
+}
+
+const PLAYBOOK_KIND_LABEL = {
+  alert_critical: "预警",
+  ar_risk: "回款",
+  stale_contact: "联络",
+};
+
+async function loadPlaybook() {
+  const pb = await api("/v1/scenarios/playbook");
+  const ul = $("#playbookScenarioBullets");
+  ul.innerHTML = (pb.scenarios_intro || []).map((t) => `<li>${escapeHtml(t)}</li>`).join("");
+
+  const tp = pb.target_pulse || {};
+  $("#playbookPeriod").textContent = tp.period_label || "—";
+  $("#playbookRev").textContent = fmtUsd(tp.annual_revenue_roll_usd);
+  $("#playbookAtt").textContent = tp.proxy_attainment_pct != null ? String(tp.proxy_attainment_pct) : "—";
+  $("#playbookTgt").textContent = fmtUsd(tp.target_ref_quarter_usd);
+
+  const sla = pb.alert_sla_open || {};
+  $("#playbookOpenAlerts").textContent = sla.total_open ?? "—";
+  $("#playbookCritAlerts").textContent = sla.critical_open ?? "—";
+  $("#playbookSlaNote").textContent = sla.note || "";
+  const b = sla.age_buckets || {};
+  $("#playbookSlaBuckets").innerHTML = `
+    <div class="sla-bucket-row"><span>0–3 天</span><strong>${b.days_0_3 ?? 0}</strong></div>
+    <div class="sla-bucket-row"><span>4–7 天</span><strong>${b.days_4_7 ?? 0}</strong></div>
+    <div class="sla-bucket-row"><span>≥8 天</span><strong class="sla-bucket-hot">${b.days_8_plus ?? 0}</strong></div>
+  `;
+
+  const cg = pb.coverage_gaps || {};
+  $("#playbookUnassigned").textContent = cg.unassigned_active_channels ?? "—";
+  $("#playbookIntelGap").textContent = cg.active_countries_without_intel ?? "—";
+
+  const tb = $("#playbookActionsTable tbody");
+  tb.innerHTML = "";
+  for (const a of pb.priority_actions || []) {
+    const tr = document.createElement("tr");
+    const label = PLAYBOOK_KIND_LABEL[a.kind] || a.kind;
+    tr.innerHTML = `
+      <td>${escapeHtml(label)}</td>
+      <td>${escapeHtml(a.title)}</td>
+      <td>${escapeHtml(a.detail)}</td>
+      <td>${a.channel_id ? `<button type="button" class="btn secondary pb-open-ch" data-cid="${a.channel_id}">打开渠道</button>` : "—"}</td>
+    `;
+    tb.appendChild(tr);
+  }
+  tb.querySelectorAll(".pb-open-ch").forEach((btn) => {
+    btn.addEventListener("click", () => openChannel(Number(btn.getAttribute("data-cid"))));
+  });
 }
 
 async function loadDashboard() {
@@ -307,6 +367,37 @@ async function openChannel(id) {
     &nbsp;|&nbsp; <span class="muted">状态</span> ${c.status}</div>
     <p class="muted">负责人：${escapeHtml(c.owner_name || "—")} ${c.owner_email ? `(${escapeHtml(c.owner_email)})` : ""}</p>
   `;
+  const ctx = res.business_context;
+  const ctxEl = $("#chBusinessContextBody");
+  if (ctx) {
+    const intel = ctx.market_intel;
+    const br = ctx.sales_brief;
+    let html = `<p><strong>未关预警</strong> ${ctx.open_alerts_count} 条（Critical <strong>${ctx.critical_open_count}</strong>）</p>`;
+    if (intel) {
+      html += `<p><strong>市场情报</strong> 机会指数 <strong>${intel.opportunity_score}</strong> · 更新 ${escapeHtml(intel.updated_at || "—")}</p>`;
+    } else {
+      html += `<p><strong>市场情报</strong> 暂无该国卡片</p>`;
+    }
+    if (br) {
+      html += `<p><strong>销售简报</strong> ${escapeHtml(br.title)} <span class="muted">(${escapeHtml(br.updated_at || "")})</span></p>`;
+    }
+    html += `<p><button type="button" class="btn secondary" id="btnChOpenIntel">在「市场情报」打开 ${escapeHtml(ctx.country_code)}</button></p>`;
+    if ((ctx.hints || []).length) {
+      html += `<ul class="hint-list">${ctx.hints.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>`;
+    }
+    ctxEl.innerHTML = html;
+    const bi = $("#btnChOpenIntel");
+    if (bi) {
+      bi.addEventListener("click", () => {
+        showView("intel");
+        loadIntelList()
+          .then(() => openIntel(ctx.country_code))
+          .catch((e) => console.error(e));
+      });
+    }
+  } else {
+    ctxEl.textContent = "—";
+  }
   $("#chNotes").value = c.notes || "";
 
   if (typeof Chart !== "undefined") {
@@ -368,6 +459,7 @@ async function openChannel(id) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.severity}</td>
+      <td>${slaAgeLabel(a.age_days, a.severity)}</td>
       <td>${escapeHtml(a.message)}</td>
       <td>${a.acknowledged_at ? "已确认" : '<button class="btn secondary ack-a" data-aid="' + a.id + '">确认</button>'}</td>
     `;
@@ -563,6 +655,7 @@ async function loadAlerts() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.severity}</td>
+      <td>${slaAgeLabel(a.age_days, a.severity)}</td>
       <td>${escapeHtml(a.channel_code)}</td>
       <td>${escapeHtml(a.message)}</td>
       <td><button class="btn secondary ack-b" data-aid="${a.id}">确认</button></td>
@@ -658,7 +751,7 @@ function renderPerfTables(sc) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(o.name)}</td>
-      <td>${escapeHtml(o.email)}</td>
+      <td>${o.email ? escapeHtml(o.email) : "—"}</td>
       <td>${o.channel_cnt}</td>
       <td>${fmtUsd(o.revenue_usd)}</td>
       <td>${o.avg_margin != null ? Math.round(o.avg_margin * 10) / 10 : "—"}</td>
@@ -1053,6 +1146,7 @@ function bindNav() {
         loadIntelList().catch((e) => console.error(e));
       }
       if (v === "alerts") loadAlerts().catch((e) => console.error(e));
+      if (v === "playbook") loadPlaybook().catch((e) => console.error(e));
       if (v === "perf") loadPerf().catch((e) => console.error(e));
       if (v === "import") loadImportBatches().catch(() => {});
     });

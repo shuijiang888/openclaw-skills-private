@@ -659,10 +659,47 @@ app.get("/v1/channels/:id", async (req, reply) => {
     .all(id);
   const alerts = db
     .prepare(
-      `SELECT * FROM alert WHERE channel_id = ? ORDER BY datetime(created_at) DESC LIMIT 20`
+      `SELECT *, CAST((julianday('now') - julianday(created_at)) AS INTEGER) AS age_days
+       FROM alert WHERE channel_id = ? ORDER BY datetime(created_at) DESC LIMIT 20`
     )
     .all(id);
-  return { channel: mapChannelRow(row), monthly: metrics, alerts };
+  const intelRow = db
+    .prepare(`SELECT country_code, opportunity_score, updated_at FROM market_intel WHERE country_code = ?`)
+    .get(row.country_code);
+  const briefRow = db
+    .prepare(`SELECT title, updated_at FROM sales_brief WHERE country_code = ?`)
+    .get(row.country_code);
+  const openCt = db
+    .prepare(`SELECT COUNT(*) AS n FROM alert WHERE channel_id = ? AND acknowledged_at IS NULL`)
+    .get(id);
+  const critCt = db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM alert WHERE channel_id = ? AND acknowledged_at IS NULL AND severity = 'critical'`
+    )
+    .get(id);
+  const business_context = {
+    country_code: row.country_code,
+    market_intel: intelRow
+      ? {
+          opportunity_score: intelRow.opportunity_score,
+          updated_at: intelRow.updated_at,
+        }
+      : null,
+    sales_brief: briefRow ? { title: briefRow.title, updated_at: briefRow.updated_at } : null,
+    open_alerts_count: openCt.n,
+    critical_open_count: critCt.n,
+    hints: [],
+  };
+  if (!intelRow) {
+    business_context.hints.push("该国尚无市场情报卡片，可在「市场情报」补录或优先拓展调研。");
+  }
+  if (critCt.n > 0) {
+    business_context.hints.push("存在未关闭的 critical 预警，建议当日闭环或升级。");
+  }
+  if ((row.ar_overdue_days || 0) > 15) {
+    business_context.hints.push("应收逾期偏高，建议财务/渠道对账联动的跟进动作。");
+  }
+  return { channel: mapChannelRow(row), monthly: metrics, alerts, business_context };
 });
 
 app.patch("/v1/channels/:id", async (req, reply) => {
@@ -713,7 +750,8 @@ app.get("/v1/alerts", async (req, reply) => {
   const onlyOpen = req.query?.open === "1" || req.query?.open === "true";
   const rows = db
     .prepare(
-      `SELECT a.*, c.channel_code, c.name_en
+      `SELECT a.*, c.channel_code, c.name_en,
+              CAST((julianday('now') - julianday(a.created_at)) AS INTEGER) AS age_days
        FROM alert a
        JOIN channel c ON c.id = a.channel_id
        WHERE ${sc.sql.replace(/c\./g, "c.")} ${onlyOpen ? "AND a.acknowledged_at IS NULL" : ""}
@@ -953,16 +991,18 @@ app.get("/v1/performance/scorecard", async (req, reply) => {
 
   const owners = db
     .prepare(
-      `SELECT u.id, u.name, u.email,
+      `SELECT COALESCE(u.id, 0) AS user_id,
+              COALESCE(u.name, '未分配') AS name,
+              COALESCE(u.email, '') AS email,
               COUNT(ch.id) AS channel_cnt,
               SUM(COALESCE(ch.annual_revenue_usd, 0)) AS revenue_usd,
               AVG(COALESCE(ch.gross_margin_pct, 0)) AS avg_margin,
               SUM(CASE WHEN ch.ar_overdue_days > 15 THEN 1 ELSE 0 END) AS ar_watch
        FROM channel ch
-       INNER JOIN app_user u ON u.id = ch.owner_user_id
+       LEFT JOIN app_user u ON u.id = ch.owner_user_id
        WHERE ch.status='ACTIVE' ${chFilter}
        GROUP BY ch.owner_user_id
-       ORDER BY revenue_usd DESC`
+       ORDER BY CASE WHEN MIN(ch.owner_user_id) IS NULL THEN 1 ELSE 0 END, revenue_usd DESC`
     )
     .all(...args);
 
@@ -1033,6 +1073,150 @@ app.get("/v1/performance/scorecard", async (req, reply) => {
         "负责人战报支撑「谁扛多少出货、谁名下回款风险集中」的一对一复盘。",
       ],
     },
+  };
+});
+
+/** 关键业务场景聚合：预警 SLA、回款/联络风险、目标脉搏、覆盖缺口（晨会 / 周会） */
+app.get("/v1/scenarios/playbook", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  const sc = channelScopeWhere(auth);
+  const chFilter = sc.sql === "1=1" ? "" : ` AND ${sc.sql.replace(/c\./g, "ch.")}`;
+  const args = [...sc.args];
+
+  const slaRow = db
+    .prepare(
+      `SELECT
+        SUM(CASE WHEN CAST((julianday('now') - julianday(a.created_at)) AS INTEGER) <= 3 THEN 1 ELSE 0 END) AS d0_3,
+        SUM(CASE WHEN CAST((julianday('now') - julianday(a.created_at)) AS INTEGER) BETWEEN 4 AND 7 THEN 1 ELSE 0 END) AS d4_7,
+        SUM(CASE WHEN CAST((julianday('now') - julianday(a.created_at)) AS INTEGER) >= 8 THEN 1 ELSE 0 END) AS d8p,
+        SUM(CASE WHEN a.severity = 'critical' AND a.acknowledged_at IS NULL THEN 1 ELSE 0 END) AS critical_open,
+        SUM(CASE WHEN a.acknowledged_at IS NULL THEN 1 ELSE 0 END) AS open_total
+       FROM alert a
+       JOIN channel ch ON ch.id = a.channel_id
+       WHERE a.acknowledged_at IS NULL ${chFilter}`
+    )
+    .get(...args);
+
+  const revTotal = db
+    .prepare(
+      `SELECT COALESCE(SUM(ch.annual_revenue_usd), 0) AS s FROM channel ch WHERE ch.status='ACTIVE' ${chFilter}`
+    )
+    .get(...args).s;
+  const revenueAttainment = Math.min(
+    199,
+    Math.round((revTotal / (SCORECARD_TARGETS.revenue_quarter_usd * 1.15)) * 1000) / 10
+  );
+
+  const unassigned = db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM channel ch WHERE ch.status='ACTIVE' AND ch.owner_user_id IS NULL ${chFilter}`
+    )
+    .get(...args);
+
+  const intelGap = db
+    .prepare(
+      `SELECT COUNT(DISTINCT ch.country_code) AS n
+       FROM channel ch
+       LEFT JOIN market_intel mi ON mi.country_code = ch.country_code
+       WHERE ch.status='ACTIVE' AND mi.country_code IS NULL ${chFilter}`
+    )
+    .get(...args);
+
+  const critAlerts = db
+    .prepare(
+      `SELECT a.id AS alert_id, a.severity, a.message, a.created_at,
+              CAST((julianday('now') - julianday(a.created_at)) AS INTEGER) AS age_days,
+              ch.id AS channel_id, ch.channel_code, ch.name_en
+       FROM alert a
+       JOIN channel ch ON ch.id = a.channel_id
+       WHERE a.acknowledged_at IS NULL AND a.severity = 'critical' ${chFilter}
+       ORDER BY datetime(a.created_at) ASC
+       LIMIT 8`
+    )
+    .all(...args);
+
+  const arHot = db
+    .prepare(
+      `SELECT ch.id, ch.channel_code, ch.name_en, ch.ar_overdue_days, ch.annual_revenue_usd
+       FROM channel ch
+       WHERE ch.status='ACTIVE' AND ch.ar_overdue_days > 25 ${chFilter}
+       ORDER BY ch.ar_overdue_days DESC
+       LIMIT 5`
+    )
+    .all(...args);
+
+  const staleContact = db
+    .prepare(
+      `SELECT ch.id, ch.channel_code, ch.name_en, ch.last_contact_date
+       FROM channel ch
+       WHERE ch.status='ACTIVE' ${chFilter}
+         AND (ch.last_contact_date IS NULL OR date(ch.last_contact_date) < date('now', '-40 days'))
+       ORDER BY
+         CASE ch.abc_class WHEN 'A' THEN 0 WHEN 'B' THEN 1 ELSE 2 END,
+         COALESCE(ch.annual_revenue_usd, 0) DESC
+       LIMIT 5`
+    )
+    .all(...args);
+
+  const priority_actions = [];
+  for (const a of critAlerts.slice(0, 5)) {
+    priority_actions.push({
+      kind: "alert_critical",
+      rank: 1,
+      title: `Critical 预警已 ${a.age_days} 天未关`,
+      detail: `${a.channel_code} · ${a.message}`,
+      channel_id: a.channel_id,
+      alert_id: a.alert_id,
+    });
+  }
+  for (const c of arHot) {
+    priority_actions.push({
+      kind: "ar_risk",
+      rank: 2,
+      title: `应收逾期 ${c.ar_overdue_days} 天 · ${c.channel_code}`,
+      detail: c.name_en,
+      channel_id: c.id,
+    });
+  }
+  for (const c of staleContact) {
+    priority_actions.push({
+      kind: "stale_contact",
+      rank: 3,
+      title: `长期未有效联系 · ${c.channel_code}`,
+      detail: c.last_contact_date ? `最近联系 ${c.last_contact_date}` : "无最近联系记录",
+      channel_id: c.id,
+    });
+  }
+  priority_actions.sort((x, y) => x.rank - y.rank);
+
+  return {
+    generated_at: new Date().toISOString(),
+    scenarios_intro: [
+      "作战台按「预警 SLA → 回款风险 → 客户联络衰减」生成优先动作，适合晨会点名与周会复盘。",
+      "目标脉搏与绩效看板同源演示口径；生产可替换为董事会/ERP 下达目标。",
+    ],
+    target_pulse: {
+      period_label: SCORECARD_TARGETS.fiscal_period_label,
+      annual_revenue_roll_usd: revTotal,
+      proxy_attainment_pct: revenueAttainment,
+      target_ref_quarter_usd: SCORECARD_TARGETS.revenue_quarter_usd,
+    },
+    alert_sla_open: {
+      total_open: slaRow?.open_total || 0,
+      critical_open: slaRow?.critical_open || 0,
+      age_buckets: {
+        days_0_3: slaRow?.d0_3 || 0,
+        days_4_7: slaRow?.d4_7 || 0,
+        days_8_plus: slaRow?.d8p || 0,
+      },
+      note: "库龄按未确认预警创建日起算；≥8 天建议升级或写入复盘纪要。",
+    },
+    coverage_gaps: {
+      unassigned_active_channels: unassigned?.n || 0,
+      active_countries_without_intel: intelGap?.n || 0,
+    },
+    priority_actions: priority_actions.slice(0, 12),
   };
 });
 
