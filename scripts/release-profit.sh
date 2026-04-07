@@ -36,6 +36,9 @@ if [[ "${SKIP_SHA_GATE}" != "1" ]]; then
   bash scripts/verify-sha-gate.sh HEAD "${BRANCH}"
 fi
 
+echo "[release-profit] standalone static gate"
+bash scripts/check-standalone-static.sh
+
 echo "[release-profit] post-deploy profit smoke"
 bash scripts/smoke-profit.sh "${BASE_URL}" "${PAGE_PREFIX}"
 
