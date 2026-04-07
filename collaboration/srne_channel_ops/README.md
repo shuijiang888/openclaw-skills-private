@@ -7,12 +7,14 @@
 | 模块 | 说明 |
 |------|------|
 | 登录与权限 | 管理员 / 总监全局可见；销售仅可见本人负责渠道 |
-| 运营总览 | 渠道数量、A/B/C、区域、SAM、活跃渠道出货汇总、未处理预警 |
-| 渠道商 | 列表筛选、详情、近 6 月出货曲线、备注保存、预警确认 |
+| **全场景价值图谱** | 长页索引：已具备能力、路线图、分场景售卖、各角色价值（`/v1/demo/value-map-html`） |
+| 运营总览 | 渠道数量、A/B/C、区域、SAM、图表、**演示开场 30 秒**话术 |
+| 业务作战台 | 预警 SLA、目标脉搏、优先动作、覆盖缺口 |
+| 渠道商 | 列表筛选、详情、业务上下文、月度补录、备注、预警 |
 | 市场情报 | 各国机会指数、政策/竞品/产品匹配摘要、预置 Markdown 简报 |
 | 销售赋能 | 规则型报价计算器（关税/运费/渠道加成假设） |
-| 绩效看板 | 按 A/B/C 聚合的演示指标 |
-| 数据导入 | JSON 提交或上传文件；`channel_code` 冲突则更新（管理员/总监） |
+| 绩效看板 | BSC、区域战报、关注清单、**高管简报一键复制** |
+| 数据导入 | JSON/CSV、校验预览、批次审计（`SRNE_DEMO_MODE=1` 时隐藏侧栏入口） |
 
 ## 线上演示（Agent1 已部署 · Cursor 已探测）
 
@@ -72,6 +74,7 @@ docker compose up --build
 | `SRNE_DB_PATH` | SQLite 路径 |
 | `JWT_SECRET` | 签名密钥（生产必须更换） |
 | `TOKEN_TTL_SEC` | Token 有效期秒数，默认 7 天 |
+| `SRNE_DEMO_MODE` | 设为 `1` 或 `true`：隐藏技术向「演示说明」与绩效 JSON 调试、隐藏侧栏「数据与录入」与快捷建档按钮（面向老板演示）；默认关闭 |
 
 ## 与生产交付的差距（刻意保留）
 
@@ -81,6 +84,7 @@ docker compose up --build
 
 ## API 摘要
 
+- `GET /v1/config`（`demo_mode` 等，无需登录）· `GET /v1/demo/value-map-html`（价值图谱 HTML 片段）
 - `POST /v1/auth/login` · `GET /v1/me`
 - `GET /v1/dashboard/summary` · **`GET /v1/analytics/overview`**（驾驶舱图表：区域出货、月度趋势、TOP 渠道、分级毛利等）
 - `GET /v1/channels` · **`POST /v1/channels`**（快捷建渠道，自动生成编码）· `GET/PATCH /v1/channels/:id`

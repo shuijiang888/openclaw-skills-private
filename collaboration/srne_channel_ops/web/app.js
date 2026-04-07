@@ -3,6 +3,8 @@
 const TOKEN_KEY = "srne_ops_token";
 const USER_KEY = "srne_ops_user";
 
+let appConfig = { demo_mode: false };
+
 const chartColors = {
   primary: "rgba(61, 158, 239, 0.85)",
   primaryDim: "rgba(61, 158, 239, 0.2)",
@@ -86,6 +88,7 @@ function showView(name) {
       sales: "销售赋能",
       perf: "绩效看板",
       playbook: "业务作战台",
+      valueMap: "全场景价值图谱",
       alerts: "预警中心",
       import: "数据与录入",
     }[name] || "";
@@ -116,11 +119,104 @@ function updateShell() {
     $("#userLabel").innerHTML = `<strong>${user.name}</strong> · ${user.role} · ${user.email}`;
   }
   const sales = !!(user && user.role === "sales");
-  $("#navImport").classList.toggle("hidden", sales);
+  const hideImport = sales || appConfig.demo_mode;
+  $("#navImport").classList.toggle("hidden", hideImport);
   const qa = $("#btnOpenQuickAdd");
   const qa2 = $("#btnOpenQuickAdd2");
-  if (qa) qa.classList.toggle("hidden", sales);
-  if (qa2) qa2.classList.toggle("hidden", sales);
+  if (qa) qa.classList.toggle("hidden", sales || appConfig.demo_mode);
+  if (qa2) qa2.classList.toggle("hidden", sales || appConfig.demo_mode);
+}
+
+async function fetchAppConfig() {
+  try {
+    const prefix = apiBase();
+    const res = await fetch(prefix + "/v1/config");
+    if (!res.ok) return;
+    appConfig = await res.json();
+    document.documentElement.classList.toggle("srne-demo-mode", !!appConfig.demo_mode);
+  } catch (_) {
+    appConfig = { demo_mode: false };
+  }
+}
+
+function showCopyToast() {
+  const t = $("#copyBriefToast");
+  if (!t) return;
+  t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), 2800);
+}
+
+async function copyExecutiveBriefing() {
+  const lines = [
+    "# 硕日海外渠道运营 · 高管简报",
+    "",
+    "生成时间: " + new Date().toLocaleString("zh-CN"),
+    "",
+  ];
+  try {
+    const pb = await api("/v1/scenarios/playbook");
+    const tp = pb.target_pulse || {};
+    const sla = pb.alert_sla_open || {};
+    lines.push("## 目标脉搏");
+    lines.push(`- ${tp.period_label || "—"}`);
+    lines.push(`- 年出货 roll（演示）: ${tp.annual_revenue_roll_usd ?? "—"} USD`);
+    lines.push(`- 演示达成指数: ${tp.proxy_attainment_pct ?? "—"}%`);
+    lines.push("");
+    lines.push("## 预警 SLA（未关）");
+    lines.push(`- 合计: ${sla.total_open ?? 0} · Critical: ${sla.critical_open ?? 0}`);
+    const b = sla.age_buckets || {};
+    lines.push(`- 库龄 0–3 天: ${b.days_0_3 ?? 0} · 4–7 天: ${b.days_4_7 ?? 0} · ≥8 天: ${b.days_8_plus ?? 0}`);
+    lines.push("");
+    const cg = pb.coverage_gaps || {};
+    lines.push("## 覆盖缺口");
+    lines.push(`- 未分配负责人活跃渠道: ${cg.unassigned_active_channels ?? 0}`);
+    lines.push(`- 有渠道但缺情报卡国家数: ${cg.active_countries_without_intel ?? 0}`);
+    lines.push("");
+    lines.push("## 优先动作（前 5）");
+    (pb.priority_actions || []).slice(0, 5).forEach((a, i) => {
+      lines.push(`${i + 1}. ${a.title} — ${a.detail}`);
+    });
+  } catch (_) {
+    lines.push("（作战台数据暂不可用）");
+  }
+  try {
+    const sc = await api("/v1/performance/scorecard");
+    lines.push("");
+    lines.push("## 绩效要点");
+    const f = sc.bsc?.financial;
+    if (f) {
+      lines.push(
+        `- 年出货 roll ${f.annual_revenue_roll_usd} USD · 达成指数 ${f.proxy_quarter_attainment_pct}% · A 类收入占比 ${f.a_class_revenue_share_pct}%`
+      );
+    }
+    (sc.operational?.narrative || []).slice(0, 4).forEach((t) => lines.push(`- ${t}`));
+  } catch (_) {
+    lines.push("");
+    lines.push("（绩效数据暂不可用）");
+  }
+  const text = lines.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    showCopyToast();
+  } catch (_) {
+    window.prompt("请手动复制：", text);
+  }
+}
+
+let valueMapLoaded = false;
+async function loadValueMap() {
+  const mount = $("#valueMapMount");
+  if (!mount || valueMapLoaded) return;
+  try {
+    const prefix = apiBase();
+    const res = await fetch(prefix + "/v1/demo/value-map-html");
+    if (!res.ok) throw new Error("bad");
+    mount.innerHTML = await res.text();
+    valueMapLoaded = true;
+  } catch (_) {
+    mount.innerHTML =
+      '<p class="muted">价值图谱加载失败，请刷新重试。若持续失败，请确认服务端已更新并包含 <code>value-map-snippet.html</code>。</p>';
+  }
 }
 
 function fmtUsd(n) {
@@ -1147,6 +1243,7 @@ function bindNav() {
       }
       if (v === "alerts") loadAlerts().catch((e) => console.error(e));
       if (v === "playbook") loadPlaybook().catch((e) => console.error(e));
+      if (v === "valueMap") loadValueMap().catch((e) => console.error(e));
       if (v === "perf") loadPerf().catch((e) => console.error(e));
       if (v === "import") loadImportBatches().catch(() => {});
     });
@@ -1175,9 +1272,28 @@ function bindNav() {
   $("#modalQuickAdd").addEventListener("click", (e) => {
     if (e.target.id === "modalQuickAdd") closeQuickAddModal();
   });
+  document.querySelectorAll("[data-nav-jump]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const v = el.getAttribute("data-nav-jump");
+      if (!v) return;
+      showView(v);
+      if (v === "valueMap") loadValueMap().catch((e) => console.error(e));
+    });
+  });
+  const briefBtns = [
+    "#btnCopyExecBrief",
+    "#btnCopyBriefDash",
+    "#btnCopyBriefPlaybook",
+    "#btnCopyBriefPerf",
+  ];
+  briefBtns.forEach((sel) => {
+    const b = $(sel);
+    if (b) b.addEventListener("click", () => copyExecutiveBriefing().catch((e) => alert(e.message)));
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  fetchAppConfig().then(() => updateShell());
   bindNav();
   $("#loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1187,6 +1303,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const r = await api("/v1/auth/login", { method: "POST", body: { email, password } });
       setAuth(r.token, r.user);
+      await fetchAppConfig();
+      updateShell();
       $("#loginError").classList.add("hidden");
       $("#loginError").textContent = "";
       showView("dashboard");
@@ -1202,7 +1320,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   updateShell();
   if (localStorage.getItem(TOKEN_KEY)) {
-    showView("dashboard");
-    loadDashboard().catch(() => setAuth(null, null));
+    fetchAppConfig()
+      .then(() => {
+        updateShell();
+        showView("dashboard");
+        return loadDashboard();
+      })
+      .catch(() => setAuth(null, null));
   }
 });

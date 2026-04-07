@@ -7,6 +7,8 @@ services:
     environment:
       PORT: "8790"
       JWT_SECRET: ${JWT_SECRET:-srne-demo-change-in-production}
+      # 高管演示：1=隐藏调试区与「数据与录入」入口、弱化技术感
+      SRNE_DEMO_MODE: ${SRNE_DEMO_MODE:-0}
     volumes:
       - srne-ops-data:/data
     restart: unless-stopped
