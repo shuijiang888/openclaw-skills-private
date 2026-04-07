@@ -158,7 +158,7 @@
         <p style="margin:0 0 12px;font-weight:600;color:var(--primary);">欢迎使用医疗器械行业营销能力快速诊断</p>
         <ul class="welcome-list">
           <li>共 <strong>30</strong> 题（企业与细分赛道信息 4 题 + 能力自评 26 题），<strong>计分规则</strong>与通用版一致</li>
-          <li>Q_B2 为「主要产品细分赛道」，便于与集采、入院、渠道等场景对齐</li>
+          <li>Q_B2「主要产品细分赛道」支持<strong>多选</strong>（跨赛道可多项勾选）</li>
           <li>结果仅用于自评与顾问沟通参考；提交后可查看雷达图并 <strong>导出 PDF</strong></li>
         </ul>
         <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-start">开始答题</button>
@@ -289,7 +289,7 @@ var CONFIG = {
   var state = {
     qIndex: 0,
     startedAt: null,
-    basic: { name: '', industry: null, scale: null, years: null },
+    basic: { name: '', industry: [], scale: null, years: null },
     single: {},
     multi: {},
     text: { q25: {}, q26: '' }
@@ -382,7 +382,7 @@ var CONFIG = {
         { k: 'd', t: '经销商/代理商为主', s: 1 },
         { k: 'e', t: '政府集中采购 / 卫健体系项目为主', s: 1 }
     ]},
-    { id: 'q2', dim: 0, type: 'mc2', title: '未来 12 个月战略重点？（最多选 2 项）', hint: '每项 2 分，合计封顶 5 分', opts: [
+    { id: 'q2', dim: 0, type: 'mc2', maxPick: 3, title: '未来 12 个月战略重点？（最多选 3 项）', hint: '每项 2 分，合计封顶 5 分', opts: [
         { k: 'm1', t: '集采中标与院内放量' }, { k: 'm2', t: '基层医疗市场覆盖' },
         { k: 'm3', t: '器械国产替代与政策窗口' }, { k: 'm4', t: '学术推广与循证/临床数据' }, { k: 'm5', t: '设备更新改造与以旧换新机会' }
     ]},
@@ -483,8 +483,14 @@ var CONFIG = {
   function hideErr() { errEl.classList.remove('show'); }
 
   function basicIndustryLabel() {
-    var x = BASIC_INDUSTRY.find(function (o) { return o.v === state.basic.industry; });
-    return x ? x.t : '—';
+    var arr = state.basic.industry || [];
+    if (!arr.length) return '—';
+    var parts = [];
+    arr.forEach(function (v) {
+      var x = BASIC_INDUSTRY.find(function (o) { return o.v === v; });
+      if (x) parts.push(x.t);
+    });
+    return parts.length ? parts.join('、') : '—';
   }
 
   function validateCurrent() {
@@ -495,7 +501,8 @@ var CONFIG = {
       return true;
     }
     if (qi === 1) {
-      if (state.basic.industry == null) { showErr('请选择主要产品细分赛道'); return false; }
+      var segs = state.basic.industry || [];
+      if (segs.length < 1) { showErr('请至少选择一项主要产品细分赛道'); return false; }
       return true;
     }
     if (qi === 2) {
@@ -513,7 +520,7 @@ var CONFIG = {
     }
     if (q.type === 'mc' || q.type === 'mc2') {
       var arr = state.multi[q.id] || [];
-      if (q.id === 'q2' && arr.length < 1) { showErr('请至少选择 1 项战略重点'); return false; }
+      if (q.id === 'q2' && arr.length < 1) { showErr('请至少选择 1 项战略重点（最多 3 项）'); return false; }
       if (q.id === 'q5' && arr.length < 1) { showErr('请至少选择一项'); return false; }
       var allowEmptyMc = (q.id === 'q8' || q.id === 'q11' || q.id === 'q15' || q.id === 'q19' || q.id === 'q23');
       if (!allowEmptyMc && arr.length < 1) { showErr('请至少选择一项'); return false; }
@@ -546,10 +553,12 @@ var CONFIG = {
         html += '<div class="section-label">📋 Q_B1</div><div class="q-title">贵司名称是？</div>';
         html += '<input type="text" class="inp" id="basic-name-inp" placeholder="请输入公司全称" value="' + esc(state.basic.name) + '" />';
       } else if (qi === 1) {
-        html += '<div class="section-label">📋 Q_B2</div><div class="q-title">主要产品细分赛道？</div>';
+        html += '<div class="section-label">📋 Q_B2</div><div class="q-title">主要产品细分赛道？（可多选）</div>';
+        html += '<p class="hint">至少选 1 项；跨赛道经营可多项勾选</p>';
+        var segArr = state.basic.industry || [];
         BASIC_INDUSTRY.forEach(function (o) {
-          var sel = state.basic.industry === o.v ? ' selected' : '';
-          html += '<button type="button" class="opt' + sel + '" data-basic="industry" data-v="' + o.v + '">' + o.t + '</button>';
+          var sel = segArr.indexOf(o.v) >= 0 ? ' multi selected' : ' multi';
+          html += '<button type="button" class="opt' + sel + '" data-seg="' + o.v + '">' + o.t + '</button>';
         });
       } else if (qi === 2) {
         html += '<div class="section-label">📋 Q_B3</div><div class="q-title">企业规模？</div>';
@@ -567,6 +576,16 @@ var CONFIG = {
       card.innerHTML = html;
       var bn = document.getElementById('basic-name-inp');
       if (bn) bn.addEventListener('input', function () { state.basic.name = bn.value; });
+      card.querySelectorAll('[data-seg]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var v = parseInt(btn.getAttribute('data-seg'), 10);
+          if (!state.basic.industry) state.basic.industry = [];
+          var arr = state.basic.industry;
+          var ix = arr.indexOf(v);
+          if (ix >= 0) arr.splice(ix, 1); else arr.push(v);
+          render();
+        });
+      });
       card.querySelectorAll('[data-basic]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           var f = btn.getAttribute('data-basic');
@@ -633,10 +652,11 @@ var CONFIG = {
         btn.addEventListener('click', function () {
           var k = btn.getAttribute('data-mc2');
           var arr = state.multi[q.id] || [];
+          var maxP = typeof q.maxPick === 'number' ? q.maxPick : 2;
           var i = arr.indexOf(k);
           if (i >= 0) arr.splice(i, 1);
           else {
-            if (arr.length >= 2) arr.shift();
+            if (arr.length >= maxP) arr.shift();
             arr.push(k);
           }
           state.multi[q.id] = arr;
@@ -911,7 +931,7 @@ var CONFIG = {
     state = {
       qIndex: 0,
       startedAt: null,
-      basic: { name: '', industry: null, scale: null, years: null },
+      basic: { name: '', industry: [], scale: null, years: null },
       single: {},
       multi: {},
       text: { q25: {}, q26: '' }
