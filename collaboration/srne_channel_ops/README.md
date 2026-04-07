@@ -10,7 +10,7 @@
 | **全场景价值图谱** | 长页索引：已具备能力、路线图、分场景售卖、各角色价值（`/v1/demo/value-map-html`） |
 | 运营总览 | 渠道数量、A/B/C、区域、SAM、图表、**演示开场 30 秒**话术 |
 | 业务作战台 | 预警 SLA、目标脉搏、优先动作、覆盖缺口 |
-| 渠道商 | 列表筛选、详情、业务上下文、月度补录、备注、预警 |
+| 渠道商 | 列表筛选、**渠道 360°**（信息流/业务流/资金流、业绩洞察、竞品、动态工单）、业务上下文、月度补录、备注、预警 |
 | 市场情报 | 各国机会指数、政策/竞品/产品匹配摘要、预置 Markdown 简报 |
 | 销售赋能 | 规则型报价计算器（关税/运费/渠道加成假设） |
 | 绩效看板 | BSC、区域战报、关注清单、**高管简报一键复制** |
@@ -95,7 +95,9 @@ docker compose up --build
 - `POST /v1/tools/quote`
 - `GET /v1/performance/summary` · **`GET /v1/performance/scorecard`**（BSC、区域、关注清单、负责人榜含「未分配」等）
 - **`GET /v1/scenarios/playbook`**（关键业务场景：预警 SLA 桶、目标脉搏、覆盖缺口、优先动作清单）
-- `GET /v1/channels/:id`（含 **`business_context`**：该国情报摘要、简报标题、未关预警数、提示语）
+- `GET /v1/channels/:id`（含 **`business_context`**：该国情报摘要、简报标题、未关预警数、提示语；含 **`channel_360`**：`static_profile`、`performance_insight`（近 3 月 vs 前 3 月出货叙事）、`flows` 三列 `{ information, business, financial }` 每项 `{ label, detail }`、`competitors`、`activities`）
+- **`POST /v1/channels/:id/competitors`** · **`DELETE /v1/channels/:id/competitors/:cid`**
+- **`POST /v1/channels/:id/activities`** · **`PATCH /v1/channels/:id/activities/:aid`**（如 `status`）
 - **`GET /v1/import/template`** · `POST /v1/import/channels/preview` · **`GET /v1/import/batches`**
 - `POST /v1/import/channels` · `POST /v1/import/channels/upload`
 

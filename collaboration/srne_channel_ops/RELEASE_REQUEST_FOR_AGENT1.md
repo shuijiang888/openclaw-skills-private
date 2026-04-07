@@ -43,6 +43,37 @@
 
 - 启动时 **`CREATE TABLE IF NOT EXISTS import_batch`**；**无需删库**；旧库升级后首次请求即建表。
 
+### 4. 第三轮 · 市场情报 v2 + 渠道 360°（信息流 / 业务流 / 资金流）
+
+**市场情报**
+
+- `market_intel` 扩展列；**`intel_note`** 表与 `POST /v1/intel/:countryCode/notes`；`PATCH /v1/intel/:countryCode`；国别列表 `GET /v1/intel/countries` 带 scope 统计等；详情含 **`cross_links`**、**`intel_notes`**（以当前 `server.mjs` 为准）。
+- `GET /v1/channels` 支持按国家筛选（如 `?country=`）。
+
+**渠道 360°**
+
+- **`GET /v1/channels/:id`** 在原有 `channel` / `monthly` / `alerts` / `business_context` 外增加 **`channel_360`**：
+  - `static_profile`、`performance_insight`（近 3 月 vs 前 3 月出货与叙事行）
+  - **`flows`**：`information` / `business` / `financial`，每项为 `{ label, detail }[]`，与情报、预警、工单、出货、毛利、应收、报价联动叙述一致
+  - `competitors`、`activities`（来自新表，见下）
+
+**竞品与活动 API**
+
+- `POST /v1/channels/:id/competitors`、`DELETE /v1/channels/:id/competitors/:cid`
+- `POST /v1/channels/:id/activities`、`PATCH /v1/channels/:id/activities/:aid`
+
+**数据库迁移（启动时自动）**
+
+- `migrateIntelV2()`、`migrateChannel360()`：**无需删库**；旧库随新版本进程启动升级。
+
+**前端**
+
+- 渠道详情 **`#ch360Mount`**：三流面板、业绩洞察、静态摘要、竞品与动态工单、跳转情报 / 销售报价 / 业务作战台。
+
+**转发与执行顺序**
+
+- 业务方转发：**`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**（含 OpenClaw 同步说明 + Agent1 验收项）。
+
 ---
 
 ## 二、须同步的制品路径（相对仓库根）
@@ -86,10 +117,16 @@
 6. **数据导入页：** 可先调用 **`POST …/v1/import/channels/preview`** 提交含故意错误行的列表，界面显示 `row_err` 与 issues；再提交合法数据 **`POST …/v1/import/channels`**，**`GET …/v1/import/batches`** 能看到新批次。
 7. **绩效看板页：** BSC/区域图/关注清单/负责人榜/会议叙事等区域可见且与接口数据一致。
 
+**第三轮相关（本次若含 v3 则必验）**
+
+8. **`GET …/v1/channels/:id`**（带 Bearer，id 为可见渠道）：响应含 **`channel_360`**，且 `flows` 三键存在。
+9. **渠道详情页（浏览器）：** 可见「渠道 360°」三流区块及业绩洞察；竞品/活动区无致命脚本错误（管理员或渠道负责人可测写入）。
+10. **情报：** `GET …/v1/intel/countries` 与 `GET …/v1/intel/:cc` 200；详情页硬刷新后仍正常。
+
 **运维**
 
-8. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
-9. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
+11. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
+12. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
 
 ---
 
@@ -103,10 +140,11 @@
 ## 六、参考文档
 
 - 协同与 Docker：`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`
+- **第三轮转发（OpenClaw + Agent1）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - 离线 ingest：`collaboration/cursor-out/AGENT1_SRNE_INGEST_AND_DEPLOY.md`
 - API 与账号：`README.md`
 - 协作状态摘要：`collaboration/STATUS.md`
 
 ---
 
-**文档版本：** v2 · 含绩效 scorecard + 导入预览/批次审计 + 累计验收项
+**文档版本：** v3 · 累计 v1/v2 + 第三轮（情报 v2、渠道 360°、竞品/活动、三流前端）

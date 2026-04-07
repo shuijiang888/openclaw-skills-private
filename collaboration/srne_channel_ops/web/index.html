@@ -173,6 +173,10 @@
               <option value="EU">欧洲 EU</option>
               <option value="SCA">南亚 SCA</option>
             </select>
+            <label class="muted" style="display:flex;align-items:center;gap:6px">
+              国家
+              <input id="filterCountry" type="text" maxlength="5" placeholder="如 PH" style="width:72px;text-transform:uppercase" title="与情报页「跳转渠道」联动" />
+            </label>
             <select id="filterAbc">
               <option value="">全部分级</option>
               <option value="A">A</option>
@@ -211,6 +215,7 @@
         </div>
         <h2 id="chTitle" style="margin-top:8px">—</h2>
         <div id="chMeta"></div>
+        <div id="ch360Mount" class="ch360-mount"></div>
         <div class="panel" id="panelBusinessContext">
           <h2>业务上下文（国家 × 情报 × 预警）</h2>
           <div id="chBusinessContextBody" class="muted">加载中…</div>
@@ -251,19 +256,41 @@
       </section>
 
       <section data-view="intel" class="hidden">
+        <div class="panel intel-intro-panel">
+          <h2>市场情报中心</h2>
+          <p class="muted">
+            输出：<strong>价值一句话、趋势、风险与窗口期</strong>；输入：管理员/总监可<strong>在线修订</strong>，全员可写<strong>现场纪要</strong>。
+            与<strong>渠道、预警、报价、作战台</strong>联动，下表已带所辖范围统计（销售仅看自己负责渠道）。
+          </p>
+        </div>
         <div class="panel chart-panel-wide">
-          <h2>各国机会指数（可点击下表联动）</h2>
+          <h2>各国机会指数（点击下钻 · 联动渠道/预警）</h2>
           <div class="chart-wrap"><canvas id="chartIntelBar" height="280"></canvas></div>
         </div>
         <div class="panel">
-          <h2>各国市场机会指数</h2>
-          <table id="intelTable">
-            <thead><tr><th>国家</th><th>机会分</th><th>政策摘要</th></tr></thead>
-            <tbody></tbody>
-          </table>
+          <h2>国别一览</h2>
+          <div class="table-scroll">
+            <table id="intelTable" class="data-table">
+              <thead>
+                <tr>
+                  <th>国家</th>
+                  <th>趋势</th>
+                  <th>机会分</th>
+                  <th>所辖活跃渠道</th>
+                  <th>所辖出货 roll</th>
+                  <th>未关预警</th>
+                  <th>价值摘要</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
-        <div id="intelDetail" class="panel hidden">
-          <h2>详情</h2>
+        <div id="intelDetail" class="panel hidden intel-detail-panel">
+          <div class="intel-detail-head row">
+            <h2 id="intelDetailTitle">国别情报</h2>
+            <button type="button" class="btn secondary" id="btnIntelCloseDetail">收起</button>
+          </div>
           <div id="intelBody"></div>
         </div>
       </section>

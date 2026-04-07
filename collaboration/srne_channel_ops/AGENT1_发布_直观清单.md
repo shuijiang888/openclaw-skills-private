@@ -3,11 +3,13 @@
 > **根因（已核实）：** `scorecard` / `import/batches` / `import/channels/preview` 曾**只存在于 Cursor 工作区**，**未进入 Git**。历史提交 `c74e182` 的 `server.mjs` 里本来就没有这些路由，因此你在 **`033aeb9` 上 no-cache 重建**后容器内 `grep` 仍没有它们——**结论正确，不是网关或缓存问题**。  
 > **现已在 open 仓库提交：** `b27fdfc`（分支 `feature/srne-channel-ops`）。请 **pull/合并到该提交或更新** 后再 `docker compose build --no-cache`，第一步 `grep` 应能在**宿主机** `collaboration/srne_channel_ops/api/server.mjs` 看到 `performance/scorecard`。
 
+> **第三轮（v3）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`** 后，除 v2 能力外，代码须含 **`channel_360`**、竞品/活动路由及前端 **`ch360Mount`**。构建前用下方「v3 快速 grep」；OpenClaw 应先完成同步并给出 **Git SHA** 再构建。
+
 ---
 
 ## 这一单要你做什么？（一句话）
 
-把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。
+把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。**若执行 v3：** 另须看到渠道详情 **360° 三流**与市场情报增强（见第四步第 4 条）。
 
 ---
 
@@ -33,7 +35,16 @@ test -f collaboration/srne_channel_ops/web/app.js && echo "OK web"
 grep -q performance/scorecard collaboration/srne_channel_ops/api/server.mjs && echo "OK 含 scorecard 接口"
 ```
 
-若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。
+**v3 快速 grep（第三轮发布时必过）：**
+
+```bash
+grep -q channel_360 collaboration/srne_channel_ops/api/server.mjs && echo "OK channel_360"
+grep -qE '/v1/channels/.*/competitors' collaboration/srne_channel_ops/api/server.mjs && echo "OK competitors"
+grep -q ch360Mount collaboration/srne_channel_ops/web/index.html && echo "OK ch360 前端挂载点"
+```
+
+若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。  
+**v3：** 须同步到 OpenClaw/业务方提供的 **含第三轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`）。
 
 ---
 
@@ -96,6 +107,7 @@ curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
 1. 登录后进 **总览**：能看到图表（不是光秃秃数字）。
 2. 打开 **绩效看板**：有多块内容（BSC、区域图、关注清单、负责人表等），**不是**一两行占位。
 3. 打开 **数据导入**：能先 **预览/校验**，再 **确认写入**，下面有 **导入批次** 列表（或接口 `import/batches` 有数据）。
+4. **（v3）渠道 360°：** 进入 **渠道商** → 打开任一渠道详情页，可见 **「信息流 / 业务流 / 资金流」** 三列及业绩洞察区块（非仅旧版业务上下文+图表）；建议 **强制刷新**（Cmd+Shift+R）避免缓存旧 `app.js`。
 
 任意一步明显还是「空壳页」→ 说明静态 `web/` 没更新到当前访问的站点，或反代指错了目录/旧容器。
 
@@ -109,6 +121,7 @@ curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
 Git 提交或镜像 tag：________________
 JWT_SECRET 已更换：是 / 否
 浏览器三步（总览图 / 绩效多块 / 导入预览+批次）：通过 / 未通过
+渠道 360°（v3）：通过 / 未通过 / 本轮不涉及
 ```
 
 ### 业务方已回传记录（便于 Agent1 对账）
@@ -167,5 +180,6 @@ curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE
 ## 和「长版发布说明」的关系
 
 - **执行发布：以本文件为准**（步骤短、可勾选项多）。
+- **第三轮转发 OpenClaw + Agent1：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - 环境变量细则、安全红线、完整 API 列表：仍看 **`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`** 和 **`README.md`**。
 - 历史完整功能列表： **`RELEASE_REQUEST_FOR_AGENT1.md`**。

@@ -394,10 +394,12 @@ async function loadChannels() {
   const region = $("#filterRegion").value;
   const abc = $("#filterAbc").value;
   const q = $("#filterQ").value.trim();
+  const country = ($("#filterCountry") && $("#filterCountry").value.trim().toUpperCase()) || "";
   const params = new URLSearchParams();
   if (region) params.set("region", region);
   if (abc) params.set("abc", abc);
   if (q) params.set("q", q);
+  if (country.length >= 2) params.set("country", country);
   params.set("limit", "100");
   const res = await api("/v1/channels?" + params.toString());
   $("#channelListMeta").textContent = `共 ${res.total} 条渠道（演示数据），当前最多展示 ${res.items.length} 条`;
@@ -448,6 +450,205 @@ function destroyChannelCharts() {
   channelMonthlyChart = channelRadarChart = null;
 }
 
+const CH_ACT_KIND_LABEL = {
+  enablement: "赋能支持",
+  issue: "问题",
+  request: "需求",
+  competitor: "竞争",
+  milestone: "里程碑",
+  visit: "拜访/现场",
+};
+
+function flowColHtml(title, items, tone) {
+  const rows = (items || [])
+    .map(
+      (x) =>
+        `<div class="flow-item"><strong>${escapeHtml(x.label)}</strong><p class="muted small">${escapeHtml(x.detail)}</p></div>`
+    )
+    .join("");
+  return `<div class="flow-col flow-col-${tone}"><h4>${escapeHtml(title)}</h4>${rows}</div>`;
+}
+
+function renderChannel360(res) {
+  const mount = $("#ch360Mount");
+  if (!mount) return;
+  const g = res.channel_360;
+  const c = res.channel;
+  if (!g) {
+    mount.innerHTML = '<p class="muted">360 聚合数据暂不可用，请更新服务端。</p>';
+    return;
+  }
+  const u = parseUser();
+  const canMutate =
+    u && (u.role === "admin" || u.role === "manager" || (u.role === "sales" && Number(u.id) === Number(c.owner_user_id)));
+  const sp = g.static_profile || {};
+  const pi = g.performance_insight || {};
+  const flows = g.flows || {};
+  const trendLab = { up: "↑ 上行", down: "↓ 承压", stable: "→ 平稳" }[pi.trend] || pi.trend;
+  const comps = g.competitors || [];
+  const acts = g.activities || [];
+
+  let html = `<div class="panel ch360-hero">
+    <h2>渠道 360° · 信息流 / 业务流 / 资金流</h2>
+    <p class="muted small">以本渠道为主键，把情报、工单、出货、毛利、应收与预警串成可讲清的闭环；下列三列对应「看见什么 → 推进什么 → 钱怎么走」。</p>
+    <div class="flow-three">
+      ${flowColHtml("信息流", flows.information, "info")}
+      ${flowColHtml("业务流", flows.business, "biz")}
+      ${flowColHtml("资金流", flows.financial, "fin")}
+    </div>
+    <div class="row flex-wrap ch360-quick-btns" style="margin-top:14px;gap:8px">
+      <button type="button" class="btn secondary" id="ch360BtnIntel">市场情报（该国）</button>
+      <button type="button" class="btn secondary" id="ch360BtnQuote">销售报价试算</button>
+      <button type="button" class="btn secondary" id="ch360BtnPlaybook">业务作战台</button>
+    </div>
+  </div>`;
+
+  html += `<div class="panel ch360-insight">
+    <h3>业绩增长趋势洞察（演示月度）</h3>
+    <p><span class="ch360-trend-tag">${escapeHtml(trendLab)}</span>
+    近 3 月约 <strong>${fmtUsd(pi.recent_3m_revenue_usd)}</strong> USD · 对比前 3 月 <strong>${fmtUsd(pi.prior_3m_revenue_usd)}</strong> USD
+    · 变化 <strong>${pi.change_pct_vs_prior != null ? pi.change_pct_vs_prior + "%" : "—"}</strong></p>
+    <ul class="muted small">${(pi.narrative_lines || []).map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>
+  </div>`;
+
+  html += `<div class="panel ch360-static">
+    <h3>静态主数据</h3>
+    <div class="ch360-static-grid">
+      <div><span class="lab">编码</span>${escapeHtml(sp.channel_code)}</div>
+      <div><span class="lab">国家/区域</span>${escapeHtml(sp.country_code)} / ${escapeHtml(sp.region)}</div>
+      <div><span class="lab">生命周期</span>${escapeHtml(sp.lifecycle_stage)}</div>
+      <div><span class="lab">协议到期</span>${escapeHtml(sp.agreement_expire_date || "—")}</div>
+      <div><span class="lab">最近联系</span>${escapeHtml(sp.last_contact_date || "—")}</div>
+      <div><span class="lab">负责人</span>${escapeHtml(sp.owner_name || "—")}</div>
+    </div>
+    <p class="muted small">动态主数据：联系日、分级、状态、备注等在列表与 PATCH 中维护；下方「动态与工单」记录过程事件。</p>
+  </div>`;
+
+  html += `<div class="panel ch360-comp">
+    <h3>竞争管理</h3>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th>竞品</th><th>威胁</th><th>备注</th>${canMutate ? "<th></th>" : ""}</tr></thead><tbody>`;
+  for (const co of comps) {
+    html += `<tr>
+      <td>${escapeHtml(co.name)}</td>
+      <td><span class="threat-${co.threat}">${escapeHtml(co.threat)}</span></td>
+      <td class="muted small">${escapeHtml(co.note || "—")}</td>
+      ${
+        canMutate
+          ? `<td><button type="button" class="btn secondary small ch360-del-comp" data-cid="${co.id}">删除</button></td>`
+          : ""
+      }
+    </tr>`;
+  }
+  html += `</tbody></table></div>`;
+  if (canMutate) {
+    html += `<div class="row flex-wrap ch360-comp-form" style="margin-top:10px;gap:8px;align-items:flex-end">
+      <label>竞品名称 <input type="text" id="ch360CompName" placeholder="品牌或联盟" style="min-width:140px" /></label>
+      <label>威胁
+        <select id="ch360CompThreat"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select>
+      </label>
+      <label style="flex:1;min-width:200px">备注 <input type="text" id="ch360CompNote" placeholder="策略要点" /></label>
+      <button type="button" class="btn" id="ch360AddComp">添加</button>
+    </div>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="panel ch360-act">
+    <h3>动态与工单（赋能 · 问题 · 需求 · 拜访）</h3>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th>时间</th><th>类型</th><th>标题</th><th>状态</th><th>记录人</th></tr></thead><tbody>`;
+  for (const a of acts) {
+    const kindL = CH_ACT_KIND_LABEL[a.kind] || a.kind;
+    html += `<tr>
+      <td class="muted small">${escapeHtml(a.created_at)}</td>
+      <td>${escapeHtml(kindL)}</td>
+      <td>${escapeHtml(a.title)}<div class="muted small">${escapeHtml(a.body || "")}</div></td>
+      <td>${
+        canMutate
+          ? `<select class="ch360-act-status" data-aid="${a.id}">
+          <option value="open" ${a.status === "open" ? "selected" : ""}>open</option>
+          <option value="doing" ${a.status === "doing" ? "selected" : ""}>doing</option>
+          <option value="done" ${a.status === "done" ? "selected" : ""}>done</option>
+          <option value="cancelled" ${a.status === "cancelled" ? "selected" : ""}>cancelled</option>
+        </select>`
+          : escapeHtml(a.status)
+      }</td>
+      <td class="muted small">${escapeHtml(a.actor_name || "—")}</td>
+    </tr>`;
+  }
+  html += `</tbody></table></div>`;
+  if (canMutate) {
+    html += `<div class="ch360-act-form" style="margin-top:12px">
+      <div class="row flex-wrap" style="gap:8px">
+        <select id="ch360ActKind">
+          <option value="visit">拜访/现场</option>
+          <option value="enablement">赋能支持</option>
+          <option value="request">需求</option>
+          <option value="issue">问题</option>
+          <option value="milestone">里程碑</option>
+          <option value="competitor">竞争动态</option>
+        </select>
+        <input type="text" id="ch360ActTitle" placeholder="标题" style="min-width:180px;flex:1" />
+      </div>
+      <textarea id="ch360ActBody" rows="2" placeholder="补充说明…" style="width:100%;margin-top:8px"></textarea>
+      <button type="button" class="btn" id="ch360AddAct" style="margin-top:8px">登记一条</button>
+    </div>`;
+  }
+  html += `</div>`;
+
+  mount.innerHTML = html;
+
+  $("#ch360BtnIntel")?.addEventListener("click", () => {
+    showView("intel");
+    loadIntelList()
+      .then(() => openIntel(c.country_code))
+      .catch((e) => console.error(e));
+  });
+  $("#ch360BtnQuote")?.addEventListener("click", () => jumpIntelToQuote(c.country_code));
+  $("#ch360BtnPlaybook")?.addEventListener("click", () => jumpIntelToPlaybook());
+
+  $("#ch360AddComp")?.addEventListener("click", async () => {
+    const name = ($("#ch360CompName") && $("#ch360CompName").value.trim()) || "";
+    if (!name) return;
+    await api(`/v1/channels/${currentChannelId}/competitors`, {
+      method: "POST",
+      body: {
+        name,
+        threat: $("#ch360CompThreat").value,
+        note: $("#ch360CompNote").value.trim(),
+      },
+    });
+    openChannel(currentChannelId);
+  });
+  mount.querySelectorAll(".ch360-del-comp").forEach((b) => {
+    b.addEventListener("click", async () => {
+      const cid = b.getAttribute("data-cid");
+      await api(`/v1/channels/${currentChannelId}/competitors/${cid}`, { method: "DELETE" });
+      openChannel(currentChannelId);
+    });
+  });
+  $("#ch360AddAct")?.addEventListener("click", async () => {
+    const title = ($("#ch360ActTitle") && $("#ch360ActTitle").value.trim()) || "";
+    if (!title) return;
+    await api(`/v1/channels/${currentChannelId}/activities`, {
+      method: "POST",
+      body: {
+        kind: $("#ch360ActKind").value,
+        title,
+        body: ($("#ch360ActBody") && $("#ch360ActBody").value) || "",
+      },
+    });
+    openChannel(currentChannelId);
+  });
+  mount.querySelectorAll(".ch360-act-status").forEach((sel) => {
+    sel.addEventListener("change", async () => {
+      const aid = sel.getAttribute("data-aid");
+      await api(`/v1/channels/${currentChannelId}/activities/${aid}`, {
+        method: "PATCH",
+        body: { status: sel.value },
+      });
+    });
+  });
+}
+
 async function openChannel(id) {
   currentChannelId = id;
   showView("channelDetail");
@@ -463,6 +664,7 @@ async function openChannel(id) {
     &nbsp;|&nbsp; <span class="muted">状态</span> ${c.status}</div>
     <p class="muted">负责人：${escapeHtml(c.owner_name || "—")} ${c.owner_email ? `(${escapeHtml(c.owner_email)})` : ""}</p>
   `;
+  renderChannel360(res);
   const ctx = res.business_context;
   const ctxEl = $("#chBusinessContextBody");
   if (ctx) {
@@ -610,6 +812,39 @@ async function addMonthlyMetric() {
 }
 
 let intelBarChart = null;
+let currentIntelCountry = null;
+
+function intelTrendLabel(d) {
+  if (d === "up") return '<span class="intel-trend intel-trend-up">↑ 上行</span>';
+  if (d === "down") return '<span class="intel-trend intel-trend-down">↓ 承压</span>';
+  if (d === "stable") return '<span class="intel-trend intel-trend-stable">→ 平稳</span>';
+  return '<span class="muted">—</span>';
+}
+
+function jumpIntelToChannels(cc) {
+  const el = $("#filterCountry");
+  if (el) el.value = cc;
+  showView("channels");
+  loadChannels().catch((e) => console.error(e));
+}
+
+function jumpIntelToPlaybook() {
+  showView("playbook");
+  loadPlaybook().catch((e) => console.error(e));
+}
+
+function jumpIntelToQuote(cc) {
+  try {
+    sessionStorage.setItem("srne_prefill_quote_country", cc);
+  } catch (_) {}
+  showView("sales");
+  const sel = $("#quoteCountry");
+  if (sel) {
+    const opt = Array.from(sel.options).find((o) => o.value === cc);
+    if (opt) sel.value = cc;
+  }
+  runQuote().catch(() => {});
+}
 
 async function loadIntelList() {
   const res = await api("/v1/intel/countries");
@@ -617,11 +852,15 @@ async function loadIntelList() {
   tb.innerHTML = "";
   for (const m of res.items) {
     const tr = document.createElement("tr");
-    const pd = String(m.policy_digest || "");
+    const hl = String(m.value_headline || m.policy_digest || "");
     tr.innerHTML = `
       <td><a href="#" data-cc="${m.country_code}" class="intel-link">${m.country_code}</a></td>
-      <td>${m.opportunity_score}</td>
-      <td>${escapeHtml(pd.length > 80 ? pd.slice(0, 80) + "…" : pd)}</td>
+      <td>${intelTrendLabel(m.trend_direction)}</td>
+      <td><strong>${m.opportunity_score}</strong></td>
+      <td>${m.scope_active_channels ?? 0}</td>
+      <td>${fmtUsd(m.scope_revenue_roll_usd)}</td>
+      <td>${m.scope_open_alerts ?? 0}</td>
+      <td class="intel-hl-cell">${escapeHtml(hl.length > 56 ? hl.slice(0, 56) + "…" : hl)}</td>
     `;
     tb.appendChild(tr);
   }
@@ -668,21 +907,199 @@ async function loadIntelList() {
 }
 
 async function openIntel(cc) {
+  currentIntelCountry = cc;
   const res = await api("/v1/intel/" + cc);
   $("#intelDetail").classList.remove("hidden");
+  $("#intelDetailTitle").textContent = `${cc} · 国别情报与联动`;
   const intel = res.intel;
   const brief = res.brief;
+  const x = res.cross_links || {};
+  const user = parseUser();
+  const canEdit = user && (user.role === "admin" || user.role === "manager");
+  const tags = (intel && intel.tags) || [];
+  const tagsHtml = tags.length
+    ? tags.map((t) => `<span class="intel-tag">${escapeHtml(t)}</span>`).join("")
+    : "";
+
   let html = "";
+
+  if (!intel && brief) {
+    html += `<p class="muted">该国暂无结构化情报卡片，以下为销售简报；仍可按下方按钮联动渠道与报价。</p>`;
+  }
+
   if (intel) {
-    html += `<h3>${intel.country_code} · 机会指数 ${intel.opportunity_score}</h3>
-      <p><strong>政策</strong><br>${escapeHtml(intel.policy_digest)}</p>
-      <p><strong>竞品</strong><br>${escapeHtml(intel.competitor_note)}</p>
-      <p><strong>产品匹配</strong><br>${escapeHtml(intel.product_fit_note)}</p>`;
+    html += `<div class="intel-hero">
+      <div class="intel-hero-score"><span class="intel-hero-n">${intel.opportunity_score}</span><span class="intel-hero-lab">机会指数</span></div>
+      <div class="intel-hero-meta">
+        ${intelTrendLabel(intel.trend_direction)}
+        <span class="muted small">更新 ${escapeHtml(intel.updated_at || "—")}</span>
+      </div>
+      <div class="intel-hero-tags">${tagsHtml}</div>
+    </div>`;
+
+    if (intel.value_headline) {
+      html += `<div class="intel-value-line">${escapeHtml(intel.value_headline)}</div>`;
+    }
+
+    html += `<div class="intel-risk-grid">
+      <div class="intel-kv"><span class="lab">关键风险</span><p>${escapeHtml(intel.key_risk || "—")}</p></div>
+      <div class="intel-kv"><span class="lab">机会窗口 / 动作焦点</span><p>${escapeHtml(intel.key_window || "—")}</p></div>
+    </div>`;
+    if (intel.trend_note) {
+      html += `<p class="intel-trend-note muted"><strong>趋势备注</strong> ${escapeHtml(intel.trend_note)}</p>`;
+    }
   }
+
+  html += `<div class="intel-cross panel-inner">
+    <h3>与业务模块联动（当前登录数据范围）</h3>
+    <div class="intel-cross-stats">
+      <div><span class="lab">活跃渠道</span><strong>${x.scope_active_channels ?? 0}</strong></div>
+      <div><span class="lab">年出货 roll</span><strong>${fmtUsd(x.scope_revenue_roll_usd)} USD</strong></div>
+      <div><span class="lab">未关预警</span><strong>${x.scope_open_alerts ?? 0}</strong></div>
+    </div>
+    <div class="row flex-wrap intel-cross-actions">
+      <button type="button" class="btn secondary intel-act-ch" data-cc="${cc}">打开渠道列表（已筛该国）</button>
+      <button type="button" class="btn secondary intel-act-pb">打开业务作战台</button>
+      <button type="button" class="btn secondary intel-act-q" data-cc="${cc}">销售报价（预填国家）</button>
+    </div>`;
+  const tops = x.top_channels || [];
+  if (tops.length) {
+    html += `<p class="muted small">TOP 出货渠道（可点进详情）：</p><ul class="intel-top-ch">`;
+    for (const ch of tops) {
+      html += `<li><a href="#" class="intel-open-ch" data-id="${ch.id}">${escapeHtml(ch.channel_code)}</a> · ${escapeHtml(ch.name_en)} · ${fmtUsd(ch.annual_revenue_usd)}</li>`;
+    }
+    html += `</ul>`;
+  }
+  html += `</div>`;
+
+  if (intel) {
+    html += `<div class="intel-pillars">
+      <div class="intel-pillar"><h4>政策</h4><p>${escapeHtml(intel.policy_digest || "—")}</p></div>
+      <div class="intel-pillar"><h4>竞品</h4><p>${escapeHtml(intel.competitor_note || "—")}</p></div>
+      <div class="intel-pillar"><h4>产品匹配</h4><p>${escapeHtml(intel.product_fit_note || "—")}</p></div>
+    </div>`;
+  }
+
   if (brief) {
-    html += `<h3>${escapeHtml(brief.title)}</h3><pre style="white-space:pre-wrap;font:inherit;color:var(--muted)">${escapeHtml(brief.body_markdown)}</pre>`;
+    html += `<div class="intel-brief-block"><h3>${escapeHtml(brief.title)}</h3>
+      <pre class="intel-brief-pre">${escapeHtml(brief.body_markdown)}</pre></div>`;
   }
-  $("#intelBody").innerHTML = html || "暂无详情";
+
+  const notes = res.intel_notes || [];
+  html += `<div class="intel-notes panel-inner">
+    <h3>现场纪要 / 拜访记录（输出沉淀）</h3>
+    <ul class="intel-note-list">`;
+  for (const n of notes) {
+    html += `<li><span class="muted small">${escapeHtml(n.created_at)} ${escapeHtml(n.actor_name || "")}</span><br>${escapeHtml(n.body)}</li>`;
+  }
+  html += `</ul>
+    <textarea id="intelNoteBody" rows="3" placeholder="写一条纪要（全员可见）…"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button type="button" class="btn" id="btnIntelPostNote">发布纪要</button>
+      <span class="muted" id="intelNoteHint"></span>
+    </div>
+  </div>`;
+
+  if (canEdit && intel && intel.country_code) {
+    html += `<details class="intel-edit panel-inner"><summary>修订情报（管理员/总监）</summary>
+      <div class="intel-edit-grid">
+        <label>机会指数 0–100 <input type="number" id="intelEdScore" min="0" max="100" value="${intel.opportunity_score}" /></label>
+        <label>趋势
+          <select id="intelEdTrend">
+            <option value="up" ${intel.trend_direction === "up" ? "selected" : ""}>上行</option>
+            <option value="stable" ${intel.trend_direction === "stable" ? "selected" : ""}>平稳</option>
+            <option value="down" ${intel.trend_direction === "down" ? "selected" : ""}>承压</option>
+          </select>
+        </label>
+      </div>
+      <label class="block-label">价值一句话</label>
+      <textarea id="intelEdHeadline" rows="2">${escapeHtml(intel.value_headline || "")}</textarea>
+      <label class="block-label">趋势备注</label>
+      <textarea id="intelEdTrendNote" rows="2">${escapeHtml(intel.trend_note || "")}</textarea>
+      <label class="block-label">关键风险</label>
+      <textarea id="intelEdRisk" rows="2">${escapeHtml(intel.key_risk || "")}</textarea>
+      <label class="block-label">机会窗口</label>
+      <textarea id="intelEdWin" rows="2">${escapeHtml(intel.key_window || "")}</textarea>
+      <label class="block-label">政策摘要</label>
+      <textarea id="intelEdPol" rows="3">${escapeHtml(intel.policy_digest || "")}</textarea>
+      <label class="block-label">竞品</label>
+      <textarea id="intelEdComp" rows="2">${escapeHtml(intel.competitor_note || "")}</textarea>
+      <label class="block-label">产品匹配</label>
+      <textarea id="intelEdFit" rows="2">${escapeHtml(intel.product_fit_note || "")}</textarea>
+      <label class="block-label">标签（英文逗号分隔）</label>
+      <input type="text" id="intelEdTags" value="${escapeHtml(tags.join(","))}" />
+      <div class="row" style="margin-top:10px">
+        <button type="button" class="btn" id="btnIntelSave">保存修订</button>
+        <span class="muted" id="intelEdHint"></span>
+      </div>
+    </details>`;
+  }
+
+  $("#intelBody").innerHTML = html || "<p class='muted'>暂无详情</p>";
+
+  $("#intelBody").querySelectorAll(".intel-act-ch").forEach((b) => {
+    b.addEventListener("click", () => jumpIntelToChannels(b.getAttribute("data-cc")));
+  });
+  const apb = $("#intelBody").querySelector(".intel-act-pb");
+  if (apb) apb.addEventListener("click", () => jumpIntelToPlaybook());
+  $("#intelBody").querySelectorAll(".intel-act-q").forEach((b) => {
+    b.addEventListener("click", () => jumpIntelToQuote(b.getAttribute("data-cc")));
+  });
+  $("#intelBody").querySelectorAll(".intel-open-ch").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openChannel(Number(a.getAttribute("data-id")));
+    });
+  });
+  const btnN = $("#intelBody").querySelector("#btnIntelPostNote");
+  if (btnN) btnN.addEventListener("click", () => postIntelNote().catch((e) => alert(e.message)));
+  const btnS = $("#intelBody").querySelector("#btnIntelSave");
+  if (btnS) btnS.addEventListener("click", () => saveIntelEdits().catch((e) => alert(e.message)));
+}
+
+async function postIntelNote() {
+  if (!currentIntelCountry) return;
+  const body = ($("#intelNoteBody") && $("#intelNoteBody").value.trim()) || "";
+  if (!body) return;
+  await api(`/v1/intel/${currentIntelCountry}/notes`, { method: "POST", body: { body } });
+  const h = $("#intelNoteHint");
+  if (h) h.textContent = "已发布";
+  setTimeout(() => {
+    if (h) h.textContent = "";
+  }, 2000);
+  if ($("#intelNoteBody")) $("#intelNoteBody").value = "";
+  openIntel(currentIntelCountry);
+}
+
+async function saveIntelEdits() {
+  if (!currentIntelCountry) return;
+  const tagStr = ($("#intelEdTags") && $("#intelEdTags").value) || "";
+  const tags = tagStr
+    .split(/[,，]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  await api(`/v1/intel/${currentIntelCountry}`, {
+    method: "PATCH",
+    body: {
+      opportunity_score: Number($("#intelEdScore").value),
+      trend_direction: $("#intelEdTrend").value,
+      value_headline: $("#intelEdHeadline").value,
+      trend_note: $("#intelEdTrendNote").value,
+      key_risk: $("#intelEdRisk").value,
+      key_window: $("#intelEdWin").value,
+      policy_digest: $("#intelEdPol").value,
+      competitor_note: $("#intelEdComp").value,
+      product_fit_note: $("#intelEdFit").value,
+      tags,
+    },
+  });
+  const h = $("#intelEdHint");
+  if (h) h.textContent = "已保存";
+  setTimeout(() => {
+    if (h) h.textContent = "";
+  }, 2000);
+  loadIntelList().catch((e) => console.error(e));
+  openIntel(currentIntelCountry);
 }
 
 let quoteDoughnut = null;
@@ -1239,6 +1656,7 @@ function bindNav() {
       if (v === "channels") loadChannels().catch((e) => console.error(e));
       if (v === "intel") {
         $("#intelDetail").classList.add("hidden");
+        currentIntelCountry = null;
         loadIntelList().catch((e) => console.error(e));
       }
       if (v === "alerts") loadAlerts().catch((e) => console.error(e));
@@ -1269,6 +1687,13 @@ function bindNav() {
   $("#qaCancel").addEventListener("click", closeQuickAddModal);
   $("#qaSubmit").addEventListener("click", () => submitQuickAdd());
   $("#btnAddMetric").addEventListener("click", () => addMonthlyMetric().catch((e) => alert(e.message)));
+  const btnIntelClose = $("#btnIntelCloseDetail");
+  if (btnIntelClose) {
+    btnIntelClose.addEventListener("click", () => {
+      $("#intelDetail").classList.add("hidden");
+      currentIntelCountry = null;
+    });
+  }
   $("#modalQuickAdd").addEventListener("click", (e) => {
     if (e.target.id === "modalQuickAdd") closeQuickAddModal();
   });
