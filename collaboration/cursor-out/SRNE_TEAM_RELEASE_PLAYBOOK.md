@@ -10,7 +10,7 @@
 ```text
 OpenClaw / 小江：把 open 仓库 feature/srne-channel-ops 的 srne 树同步到「部署用私库」并 push
         ↓
-   （宿主机四条 grep 全 OK）
+   （宿主机五条 grep 全 OK）
         ↓
 Agent1：拉取私库 → docker compose build --no-cache → up → 对外验收
         ↓
@@ -40,9 +40,10 @@ grep -q 'performance/scorecard' collaboration/srne_channel_ops/api/server.mjs &&
 grep -q 'import/batches' collaboration/srne_channel_ops/api/server.mjs && echo OK_batches || echo FAIL
 grep -q 'import/channels/preview' collaboration/srne_channel_ops/api/server.mjs && echo OK_preview || echo FAIL
 grep -q 'scenarios/playbook' collaboration/srne_channel_ops/api/server.mjs && echo OK_playbook || echo FAIL
+grep -q 'value-map-html' collaboration/srne_channel_ops/api/server.mjs && echo OK_value_map || echo FAIL
 ```
 
-**四行均为 `OK_*`** 再通知 Agent1 开工。任一为 `FAIL` → 说明合并/拷贝未带上新提交，请补同步后再交接。
+**五行均为 `OK_*`** 再通知 Agent1 开工。任一为 `FAIL` → 说明合并/拷贝未带上新提交，请补同步后再交接。
 
 ### 2.3 请你回传（给业务方 / Agent1）
 
@@ -50,7 +51,7 @@ grep -q 'scenarios/playbook' collaboration/srne_channel_ops/api/server.mjs && ec
 私库仓库名：________________
 已推送分支：________________
 tip 提交 SHA：________________
-四条 grep：全 OK / 有 FAIL（哪条：____）
+五条 grep：全 OK / 有 FAIL（哪条：____）
 已 @ Agent1 或可构建时间：________________
 ```
 
@@ -62,8 +63,8 @@ tip 提交 SHA：________________
 
 ### 3.1 前置条件
 
-- 已收到 OpenClaw / 小江通知：**私库四条 grep 全 OK**。
-- 本地或 CI `git pull` 后，在**同一工作区**再跑一遍上述四条 grep 复核。
+- 已收到 OpenClaw / 小江通知：**私库五条 grep 全 OK**。
+- 本地或 CI `git pull` 后，在**同一工作区**再跑一遍上述五条 grep 复核。
 
 ### 3.2 构建与启动（与此前一致）
 
@@ -88,24 +89,33 @@ curl -sS -o /dev/null -w "playbook %{http_code}\n" -H "Authorization: Bearer $TO
 
 curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/channels/1" | head -c 300
 # 响应 JSON 中应含 "business_context"
+
+curl -sS "$BASE/v1/config"
+# 应含 demo_mode（布尔）；生产高管演示可设环境变量 SRNE_DEMO_MODE=1
+
+curl -sS -o /dev/null -w "value-map-html %{http_code}\n" "$BASE/v1/demo/value-map-html"
 ```
 
-**期望：** `playbook` 为 **200**；`channels/1`（或任意可见渠道 id）含 **`business_context`** 字段。
+**期望：** `playbook` 为 **200**；`channels/1`（或任意可见渠道 id）含 **`business_context`**；`value-map-html` 为 **200** 且正文以 `<div class="vm-root">` 开头。
 
 ### 3.4 浏览器抽检
 
 1. 侧栏进入 **「业务作战台」**：可见目标脉搏、SLA 桶、优先动作表，且「打开渠道」可跳转。  
 2. 任意渠道 **详情**：有 **「业务上下文」** 面板，且可跳转 **市场情报**。  
 3. **预警中心**：列表含 **库龄** 列（彩色药丸）。  
-4. **绩效看板 · 负责人战报**：若有无负责人渠道，应出现 **「未分配」** 行（视种子数据而定）。
+4. **绩效看板 · 负责人战报**：若有无负责人渠道，应出现 **「未分配」** 行（视种子数据而定）。  
+5. **全场景价值图谱**：侧栏首项进入，长页分区正常；锚点导航可点。  
+6. **复制高管简报**：顶栏或总览/作战台/绩效按钮点击后提示「已复制」，粘贴为 Markdown 文本。  
+7. **（可选）** 容器环境 `SRNE_DEMO_MODE=1`：侧栏无「数据与录入」、无绩效 JSON 调试块、无总览技术说明。
 
 ### 3.5 Agent1 回传模板
 
 ```
 公网 BASE：________________
 构建用私库 tip SHA：________________
-HTTP：playbook ____  scorecard ____  batches ____
-浏览器：作战台 / 渠道上下文 / 预警库龄 / 负责人表 — 通过或说明：________________
+HTTP：playbook ____  scorecard ____  batches ____  value-map-html ____
+浏览器：作战台 / 渠道上下文 / 预警库龄 / 负责人表 / 价值图谱 / 复制简报 — 通过或说明：________________
+SRNE_DEMO_MODE 是否用于预演：是 / 否
 ```
 
 ---
@@ -116,13 +126,13 @@ HTTP：playbook ____  scorecard ____  batches ____
 |------|------|
 | 本文 **`SRNE_TEAM_RELEASE_PLAYBOOK.md`** | 本轮 **团队协作主单**（OpenClaw/小江 + Agent1） |
 | `OPENCLAW_REQUEST_SRNE_SYNC_AND_DEPLOY.md` | 首轮 OpenClaw 同步诉求（含 `b27fdfc` 背景），仍可作流程参考 |
-| `AGENT1_任务单_仅部署.md` | Agent1 **逐步命令** + 四条 grep |
+| `AGENT1_任务单_仅部署.md` | Agent1 **逐步命令** + grep 清单（请与 §2.2 五条对齐） |
 | `AGENT1_发布_直观清单.md` | 更长排障与业务方回传记录 |
 | `FORWARD_TO_AGENT1_CLOUD_DEPLOY.md` | 环境变量与安全红线 |
 
 ---
 
-**文档版本：** v1 · 第三轮（playbook / business_context / SLA / 未分配负责人）  
+**文档版本：** v2 · 含高管演示（价值图谱 / 简报复制 / SRNE_DEMO_MODE）  
 **维护：** Cursor · `feature/srne-channel-ops`
 
 ---
@@ -133,15 +143,15 @@ HTTP：playbook ____  scorecard ____  batches ____
 
 ```text
 请按 collaboration/cursor-out/SRNE_TEAM_RELEASE_PLAYBOOK.md 第二节执行：
-把 open 仓库 feature/srne-channel-ops 当前 HEAD（须含 4987b0a 与 SRNE_TEAM_RELEASE_PLAYBOOK.md）下的 collaboration/srne_channel_ops/ 与本文档同步到部署私库并 push；
-宿主机跑文档里四条 grep，全 OK 后把 tip SHA 和结果回给我，并通知 Agent1 可构建。
+把 open 仓库 feature/srne-channel-ops 当前 HEAD（须含 4987b0a、高管演示相关提交如 ba98871、及 SRNE_TEAM_RELEASE_PLAYBOOK.md）下的 collaboration/srne_channel_ops/ 与本文档同步到部署私库并 push；
+宿主机跑文档里五条 grep，全 OK 后把 tip SHA 和结果回给我，并通知 Agent1 可构建。
 ```
 
 **发给 Agent1：**
 
 ```text
-请等私库同步完成（四条 grep 已 OK）后，按 collaboration/srne_channel_ops/AGENT1_任务单_仅部署.md 构建部署；
-并额外验收 SRNE_TEAM_RELEASE_PLAYBOOK.md 第三节：GET /v1/scenarios/playbook 200、渠道详情含 business_context、浏览器作战台与预警库龄。回传该文档里的 Agent1 回传模板。
+请等私库同步完成（五条 grep 已 OK）后，按 collaboration/srne_channel_ops/AGENT1_任务单_仅部署.md 构建部署；
+并验收 SRNE_TEAM_RELEASE_PLAYBOOK.md 第三节与 3.4（含 value-map-html、价值图谱页、复制高管简报）。回传该文档里的 Agent1 回传模板。
 ```
 
 **发群 / 汇总一条：**
