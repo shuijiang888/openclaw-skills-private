@@ -269,12 +269,12 @@
 (function () {
   var CONFIG = {
     /** 优先：自有诊断 API 根（无末尾 /），如 http://localhost:8787 或 http://119.45.205.137/api/diag */
-    apiBaseUrl: "",
+    apiBaseUrl: "http://119.45.205.137/api/diag",
     /**
      * API 路径前缀。本地 MVP（universal/api）："/v1"。
      * profit-web 现网（/api/diag 已为完整前缀）：填 ""，请求将变为 /submissions、/leads。
      */
-    apiPathPrefix: "/v1",
+    apiPathPrefix: "",
     /** 若 API 启用 API_KEY，填此处并发 X-API-Key */
     API_KEY: "",
     /** 兼容旧网关 */
