@@ -31,91 +31,209 @@
       "opportunity_score": 88,
       "policy_digest": "微网与离网补贴延续，配储率提升；进口组件关税稳定。",
       "competitor_note": "固德威、首航在户储渠道加密；控制器细分仍有机会。",
-      "product_fit_note": "耐高温控制器 + 微网储能 bundle 与本地集成商诉求匹配度高。"
+      "product_fit_note": "耐高温控制器 + 微网储能 bundle 与本地集成商诉求匹配度高。",
+      "value_headline": "微网补贴延续 + 配储率提升，控制器细分窗口仍开",
+      "trend_direction": "up",
+      "trend_note": "机会指数环比演示 +2",
+      "key_risk": "户储渠道加密挤压毛利",
+      "key_window": "2026H1 绑定头部集成商",
+      "tags": [
+        "微网",
+        "户储",
+        "认证"
+      ]
     },
     {
       "country_code": "ID",
       "opportunity_score": 82,
       "policy_digest": "岛屿微电网项目增多，工商业峰谷价差扩大。",
       "competitor_note": "阳光电源在大储品牌强；中小集成商侧 SRNE 性价比敏感。",
-      "product_fit_note": "控制器贴牌 + 本地化固件语言包为切入点。"
+      "product_fit_note": "控制器贴牌 + 本地化固件语言包为切入点。",
+      "value_headline": "岛屿微网项目增多，性价比敏感集成商入口",
+      "trend_direction": "stable",
+      "trend_note": "政策清晰化中",
+      "key_risk": "大储品牌虹吸",
+      "key_window": "贴牌+本地化语言包",
+      "tags": [
+        "岛屿",
+        "集成商"
+      ]
     },
     {
       "country_code": "VN",
       "opportunity_score": 85,
       "policy_digest": "光伏装机高增，储能配套政策逐步清晰。",
       "competitor_note": "价格竞争激烈，需绑定头部分销商账期能力。",
-      "product_fit_note": "光储控制一体化方案 + 快速交付 SLA。"
+      "product_fit_note": "光储控制一体化方案 + 快速交付 SLA。",
+      "value_headline": "光储配套政策逐步清晰，交付 SLA 是分水岭",
+      "trend_direction": "up",
+      "trend_note": "装机高增延续",
+      "key_risk": "价格竞争",
+      "key_window": "头部分销商账期",
+      "tags": [
+        "光储",
+        "交付"
+      ]
     },
     {
       "country_code": "SA",
       "opportunity_score": 79,
       "policy_digest": "Vision 2030 下大型光储项目招标密集，本地化要求提高。",
       "competitor_note": "多家中资集成商已入场，渠道以 EPC 与总包为主。",
-      "product_fit_note": "大型离网/弱网控制器 + 项目型技术支持。"
+      "product_fit_note": "大型离网/弱网控制器 + 项目型技术支持。",
+      "value_headline": "Vision2030 大项目密集，本地化门槛抬高",
+      "trend_direction": "stable",
+      "trend_note": "招标节奏稳",
+      "key_risk": "中资扎堆",
+      "key_window": "EPC/总包绑定",
+      "tags": [
+        "大储",
+        "项目型"
+      ]
     },
     {
       "country_code": "AE",
       "opportunity_score": 76,
       "policy_digest": "离网别墅与工商业备电需求稳定；认证门槛明确。",
       "competitor_note": "欧洲品牌溢价仍存，性价比窗口在中小型渠道。",
-      "product_fit_note": "户用光储控制器 + 认证清单预置包。"
+      "product_fit_note": "户用光储控制器 + 认证清单预置包。",
+      "value_headline": "别墅/工商备电稳态，认证清单可缩短成交周期",
+      "trend_direction": "stable",
+      "trend_note": "—",
+      "key_risk": "欧系溢价",
+      "key_window": "性价比渠道",
+      "tags": [
+        "备电",
+        "认证"
+      ]
     },
     {
       "country_code": "ES",
       "opportunity_score": 81,
       "policy_digest": "2026Q1 光伏新增同比高位，储能配套率继续抬升。",
       "competitor_note": "德语区巨头集中；南欧更适合差异化代理切入。",
-      "product_fit_note": "户储系统方案 + 南欧认证路径咨询。"
+      "product_fit_note": "户储系统方案 + 南欧认证路径咨询。",
+      "value_headline": "南欧户储渗透抬升，差异化代理仍有机会",
+      "trend_direction": "up",
+      "trend_note": "储能配套率↑",
+      "key_risk": "德巨头外溢",
+      "key_window": "南欧认证路径",
+      "tags": [
+        "户储",
+        "南欧"
+      ]
     },
     {
       "country_code": "IT",
       "opportunity_score": 80,
       "policy_digest": "Superbonus 退坡后转向市场化PPA与工商储。",
       "competitor_note": "渠道分散，需强化技术服务响应。",
-      "product_fit_note": "户储一体机渠道培训与联合品牌活动素材包。"
+      "product_fit_note": "户储一体机渠道培训与联合品牌活动素材包。",
+      "value_headline": "补贴退坡后市场驱动，技术服务响应决定留存",
+      "trend_direction": "down",
+      "trend_note": "政策红利收敛",
+      "key_risk": "渠道分散",
+      "key_window": "联合品牌活动",
+      "tags": [
+        "户储",
+        "服务"
+      ]
     },
     {
       "country_code": "MY",
       "opportunity_score": 84,
       "policy_digest": "工商业屋顶光伏配额与净计量政策并行，储能配套起步。",
       "competitor_note": "本土集成商对价格敏感，账期与备货能力是分水岭。",
-      "product_fit_note": "控制器 + 小型工商储 bundle，强调 MTBF 与本地服务网点。"
+      "product_fit_note": "控制器 + 小型工商储 bundle，强调 MTBF 与本地服务网点。",
+      "value_headline": "工商业+净计量并行，备货与账期是分水岭",
+      "trend_direction": "up",
+      "trend_note": "储能起步",
+      "key_risk": "本土集成商压价",
+      "key_window": "MTBF+本地网点故事",
+      "tags": [
+        "工商",
+        "账期"
+      ]
     },
     {
       "country_code": "TH",
       "opportunity_score": 83,
       "policy_digest": "可再生能源目标上调，EPC 与租赁模式并行。",
       "competitor_note": "日韩品牌认知度高，需案例与认证背书。",
-      "product_fit_note": "离网/弱网场景控制器与户用光储套餐。"
+      "product_fit_note": "离网/弱网场景控制器与户用光储套餐。",
+      "value_headline": "可再生目标上调，日韩品牌认知高需案例背书",
+      "trend_direction": "stable",
+      "trend_note": "—",
+      "key_risk": "品牌认知",
+      "key_window": "认证+案例",
+      "tags": [
+        "EPC",
+        "认证"
+      ]
     },
     {
       "country_code": "EG",
       "opportunity_score": 72,
       "policy_digest": "大型光伏招标增加，外汇与付款条款需关注。",
       "competitor_note": "项目周期长，需与有实力的本地 EPC 绑定。",
-      "product_fit_note": "大型控制器与项目型技术支持包。"
+      "product_fit_note": "大型控制器与项目型技术支持包。",
+      "value_headline": "大标增多，外汇与付款条款优先于单价",
+      "trend_direction": "stable",
+      "trend_note": "—",
+      "key_risk": "项目周期/回款",
+      "key_window": "强 EPC 绑定",
+      "tags": [
+        "招标",
+        "回款"
+      ]
     },
     {
       "country_code": "PL",
       "opportunity_score": 74,
       "policy_digest": "欧盟框架下储能激励试探性推出，户储渗透提升。",
       "competitor_note": "德语区品牌外溢竞争，性价比与交付确定性重要。",
-      "product_fit_note": "户储一体机组件认证预检清单。"
+      "product_fit_note": "户储一体机组件认证预检清单。",
+      "value_headline": "欧盟储能激励试探，交付确定性胜过低价",
+      "trend_direction": "up",
+      "trend_note": "户储渗透↑",
+      "key_risk": "德语区品牌外溢",
+      "key_window": "认证预检清单",
+      "tags": [
+        "欧盟",
+        "户储"
+      ]
     },
     {
       "country_code": "IN",
       "opportunity_score": 71,
       "policy_digest": "大型地面电站主导，分布式政策因地而异。",
       "competitor_note": "价格极度敏感，渠道碎片化。",
-      "product_fit_note": "控制器贴牌与低成本 SKU 组合。"
+      "product_fit_note": "控制器贴牌与低成本 SKU 组合。",
+      "value_headline": "地面电站主导，分布式碎片化需低成本 SKU",
+      "trend_direction": "stable",
+      "trend_note": "—",
+      "key_risk": "极度价格敏感",
+      "key_window": "贴牌组合",
+      "tags": [
+        "地面",
+        "贴牌"
+      ]
     },
     {
       "country_code": "BD",
       "opportunity_score": 69,
       "policy_digest": "缺电地区微网需求稳态增长。",
       "competitor_note": "信用风险需保理或信用证。",
-      "product_fit_note": "微网控制器 + 备电场景方案。"
+      "product_fit_note": "微网控制器 + 备电场景方案。",
+      "value_headline": "缺电微网稳增，信用结构决定能否起量",
+      "trend_direction": "up",
+      "trend_note": "微网需求稳",
+      "key_risk": "信用/保理",
+      "key_window": "备电方案包",
+      "tags": [
+        "微网",
+        "保理"
+      ]
     }
   ],
   "sales_briefs": [
@@ -183,7 +301,7 @@
       "region": "SEA",
       "lifecycle_stage": "active",
       "abc_class": "B",
-      "clv_score": 198.0,
+      "clv_score": 198,
       "agreement_expire_date": "2026-09-15",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -293,7 +411,7 @@
       "region": "SEA",
       "lifecycle_stage": "growth",
       "abc_class": "B",
-      "clv_score": 228.0,
+      "clv_score": 228,
       "agreement_expire_date": "2027-08-01",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -315,7 +433,7 @@
       "region": "SEA",
       "lifecycle_stage": "active",
       "abc_class": "A",
-      "clv_score": 395.0,
+      "clv_score": 395,
       "agreement_expire_date": "2028-03-15",
       "sam_flag": 1,
       "status": "ACTIVE",
@@ -337,7 +455,7 @@
       "region": "SEA",
       "lifecycle_stage": "active",
       "abc_class": "B",
-      "clv_score": 186.0,
+      "clv_score": 186,
       "agreement_expire_date": "2026-11-30",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -359,7 +477,7 @@
       "region": "SEA",
       "lifecycle_stage": "prospect",
       "abc_class": "C",
-      "clv_score": 72.0,
+      "clv_score": 72,
       "agreement_expire_date": "2026-06-01",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -381,7 +499,7 @@
       "region": "MENA",
       "lifecycle_stage": "active",
       "abc_class": "B",
-      "clv_score": 168.0,
+      "clv_score": 168,
       "agreement_expire_date": "2027-02-28",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -403,7 +521,7 @@
       "region": "MENA",
       "lifecycle_stage": "growth",
       "abc_class": "B",
-      "clv_score": 205.0,
+      "clv_score": 205,
       "agreement_expire_date": "2027-09-10",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -425,7 +543,7 @@
       "region": "EU",
       "lifecycle_stage": "active",
       "abc_class": "B",
-      "clv_score": 192.0,
+      "clv_score": 192,
       "agreement_expire_date": "2027-04-20",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -447,7 +565,7 @@
       "region": "EU",
       "lifecycle_stage": "prospect",
       "abc_class": "C",
-      "clv_score": 88.0,
+      "clv_score": 88,
       "agreement_expire_date": "2026-07-15",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -469,7 +587,7 @@
       "region": "SCA",
       "lifecycle_stage": "active",
       "abc_class": "C",
-      "clv_score": 95.0,
+      "clv_score": 95,
       "agreement_expire_date": "2026-10-01",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -491,7 +609,7 @@
       "region": "SCA",
       "lifecycle_stage": "active",
       "abc_class": "B",
-      "clv_score": 158.0,
+      "clv_score": 158,
       "agreement_expire_date": "2027-01-05",
       "sam_flag": 0,
       "status": "ACTIVE",
@@ -513,7 +631,7 @@
       "region": "SEA",
       "lifecycle_stage": "dormant",
       "abc_class": "C",
-      "clv_score": 45.0,
+      "clv_score": 45,
       "agreement_expire_date": "2025-12-31",
       "sam_flag": 0,
       "status": "SLEEP",
@@ -564,6 +682,82 @@
       "alert_type": "sam_review",
       "severity": "info",
       "message": "SAM 账户季度联合营销预算待确认。"
+    }
+  ],
+  "channel_competitors": [
+    {
+      "channel_code": "SRNE-SEA-001",
+      "name": "Growatt 户储",
+      "threat": "high",
+      "note": "渠道重叠度高，需差异化控制器+服务 SLA。"
+    },
+    {
+      "channel_code": "SRNE-SEA-001",
+      "name": "本地集成商联盟",
+      "threat": "medium",
+      "note": "价格联盟倾向，关注账期条款。"
+    },
+    {
+      "channel_code": "SRNE-MENA-001",
+      "name": "中资 EPC 总包",
+      "threat": "medium",
+      "note": "项目型压价，靠技术支持与交付绑定。"
+    },
+    {
+      "channel_code": "SRNE-EU-001",
+      "name": "南欧头部逆变品牌",
+      "threat": "high",
+      "note": "品牌溢价强，窗口在中小渠道性价比。"
+    }
+  ],
+  "channel_activities": [
+    {
+      "channel_code": "SRNE-SEA-001",
+      "actor_email": "sam.zhang@srne.demo",
+      "kind": "visit",
+      "title": "马尼拉总部复盘",
+      "body": "确认 Q2 控制器备货与促销包材。",
+      "status": "done"
+    },
+    {
+      "channel_code": "SRNE-SEA-001",
+      "actor_email": "manager@srne.demo",
+      "kind": "enablement",
+      "title": "技术培训周",
+      "body": "微网保护策略与故障录波解读。",
+      "status": "doing"
+    },
+    {
+      "channel_code": "SRNE-SEA-001",
+      "actor_email": "sam.zhang@srne.demo",
+      "kind": "request",
+      "title": "索要南岛项目授权价",
+      "body": "待财务批复特价梯度。",
+      "status": "open"
+    },
+    {
+      "channel_code": "SRNE-SEA-001",
+      "actor_email": "sam.zhang@srne.demo",
+      "kind": "issue",
+      "title": "竞品捆绑逆变器套餐",
+      "body": "客户反馈对方买赠冲击控制器单品。",
+      "status": "open"
+    },
+    {
+      "channel_code": "SRNE-MENA-001",
+      "actor_email": "li.wei@srne.demo",
+      "kind": "milestone",
+      "title": "中标备件框架",
+      "body": "首批 PO 预计下月到港。",
+      "status": "doing"
+    },
+    {
+      "channel_code": "SRNE-EU-001",
+      "actor_email": "manager@srne.demo",
+      "kind": "visit",
+      "title": "巴塞罗那渠道日",
+      "body": "对齐认证清单与样机排期。",
+      "status": "done"
     }
   ]
 }

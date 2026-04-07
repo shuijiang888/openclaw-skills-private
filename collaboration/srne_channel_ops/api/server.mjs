@@ -116,6 +116,59 @@ CREATE TABLE IF NOT EXISTS import_batch (
 CREATE INDEX IF NOT EXISTS idx_import_batch_created ON import_batch(created_at);
 `);
 
+(function migrateIntelV2() {
+  const cols = [
+    ["value_headline", "TEXT"],
+    ["trend_direction", "TEXT"],
+    ["trend_note", "TEXT"],
+    ["key_risk", "TEXT"],
+    ["key_window", "TEXT"],
+    ["tags_json", "TEXT"],
+  ];
+  for (const [name, typ] of cols) {
+    try {
+      db.exec(`ALTER TABLE market_intel ADD COLUMN ${name} ${typ}`);
+    } catch (_) {
+      /* already exists */
+    }
+  }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS intel_note (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      country_code TEXT NOT NULL,
+      actor_user_id INTEGER REFERENCES app_user(id),
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_intel_note_cc ON intel_note(country_code, created_at);
+  `);
+})();
+
+(function migrateChannel360() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS channel_competitor (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel_id INTEGER NOT NULL REFERENCES channel(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      threat TEXT NOT NULL DEFAULT 'medium' CHECK(threat IN ('low','medium','high')),
+      note TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_ch_comp_ch ON channel_competitor(channel_id);
+    CREATE TABLE IF NOT EXISTS channel_activity (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel_id INTEGER NOT NULL REFERENCES channel(id) ON DELETE CASCADE,
+      actor_user_id INTEGER REFERENCES app_user(id),
+      kind TEXT NOT NULL CHECK(kind IN ('enablement','issue','request','competitor','milestone','visit')),
+      title TEXT NOT NULL,
+      body TEXT,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','doing','done','cancelled')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_ch_act_ch ON channel_activity(channel_id, created_at);
+  `);
+})();
+
 function signToken(payload) {
   const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
   const sig = createHmac("sha256", JWT_SECRET).update(body).digest("base64url");
@@ -196,16 +249,30 @@ function ensureSeed() {
   }
 
   const insIntel = db.prepare(`
-    INSERT INTO market_intel (country_code, opportunity_score, policy_digest, competitor_note, product_fit_note)
-    VALUES (?,?,?,?,?)
+    INSERT INTO market_intel (
+      country_code, opportunity_score, policy_digest, competitor_note, product_fit_note,
+      value_headline, trend_direction, trend_note, key_risk, key_window, tags_json
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
   `);
   for (const m of seed.market_intel || []) {
+    const tagsJson =
+      m.tags_json != null
+        ? String(m.tags_json)
+        : m.tags != null
+          ? JSON.stringify(m.tags)
+          : null;
     insIntel.run(
       m.country_code,
       m.opportunity_score,
       m.policy_digest ?? "",
       m.competitor_note ?? "",
-      m.product_fit_note ?? ""
+      m.product_fit_note ?? "",
+      m.value_headline ?? null,
+      m.trend_direction ?? null,
+      m.trend_note ?? null,
+      m.key_risk ?? null,
+      m.key_window ?? null,
+      tagsJson
     );
   }
 
@@ -225,6 +292,38 @@ function ensureSeed() {
   for (const a of seed.alerts || []) {
     const cid = codeToId.get(a.channel_code);
     if (cid) insAl.run(cid, a.alert_type, a.severity, a.message);
+  }
+
+  const insComp = db.prepare(
+    `INSERT INTO channel_competitor (channel_id, name, threat, note) VALUES (?,?,?,?)`
+  );
+  for (const x of seed.channel_competitors || []) {
+    const cid = codeToId.get(x.channel_code);
+    if (cid) {
+      insComp.run(cid, String(x.name).slice(0, 200), x.threat || "medium", x.note != null ? String(x.note).slice(0, 2000) : "");
+    }
+  }
+  const insAct = db.prepare(
+    `INSERT INTO channel_activity (channel_id, actor_user_id, kind, title, body, status) VALUES (?,?,?,?,?,?)`
+  );
+  const emailToUserId = new Map(
+    db.prepare(`SELECT id, lower(email) AS e FROM app_user`).all().map((r) => [r.e, r.id])
+  );
+  const actKinds = new Set(["enablement", "issue", "request", "competitor", "milestone", "visit"]);
+  for (const x of seed.channel_activities || []) {
+    const cid = codeToId.get(x.channel_code);
+    if (!cid) continue;
+    const kind = String(x.kind || "visit");
+    if (!actKinds.has(kind)) continue;
+    const aid = x.actor_email ? emailToUserId.get(String(x.actor_email).toLowerCase()) : null;
+    insAct.run(
+      cid,
+      aid ?? null,
+      kind,
+      String(x.title || "").slice(0, 200),
+      x.body != null ? String(x.body).slice(0, 4000) : "",
+      ["open", "doing", "done", "cancelled"].includes(x.status) ? x.status : "open"
+    );
   }
 
   seedMonthlyForAllChannels();
@@ -606,6 +705,11 @@ app.get("/v1/channels", async (req, reply) => {
     const s = `%${search}%`;
     args.push(s, s, s);
   }
+  const country = typeof q.country === "string" ? q.country.trim().toUpperCase() : "";
+  if (country.length >= 2 && country.length <= 5) {
+    conds.push(`c.country_code = ?`);
+    args.push(country);
+  }
   const where = conds.join(" AND ");
   const rows = db
     .prepare(
@@ -652,6 +756,178 @@ function mapChannelRow(r) {
   };
 }
 
+function parseIntelTags(jsonStr) {
+  if (!jsonStr) return [];
+  try {
+    const x = JSON.parse(jsonStr);
+    return Array.isArray(x) ? x.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function mapIntelRow(r) {
+  if (!r) return null;
+  return {
+    country_code: r.country_code,
+    opportunity_score: r.opportunity_score,
+    policy_digest: r.policy_digest,
+    competitor_note: r.competitor_note,
+    product_fit_note: r.product_fit_note,
+    updated_at: r.updated_at,
+    value_headline: r.value_headline,
+    trend_direction: r.trend_direction,
+    trend_note: r.trend_note,
+    key_risk: r.key_risk,
+    key_window: r.key_window,
+    tags: parseIntelTags(r.tags_json),
+  };
+}
+
+function computeChannelPerformanceInsight(monthlyRows, ch) {
+  const rows = [...(monthlyRows || [])].sort((a, b) => String(a.ym).localeCompare(String(b.ym)));
+  const n = rows.length;
+  const tail = rows.slice(Math.max(0, n - 3));
+  const prev = rows.slice(Math.max(0, n - 6), Math.max(0, n - 3));
+  const sum = (arr) => arr.reduce((s, x) => s + (Number(x.revenue_usd) || 0), 0);
+  const sT = sum(tail);
+  const sP = sum(prev);
+  let trend = "stable";
+  let pct = 0;
+  if (sP > 0) {
+    pct = Math.round(((sT - sP) / sP) * 1000) / 10;
+    if (pct >= 8) trend = "up";
+    else if (pct <= -8) trend = "down";
+  } else if (sT > 0) trend = "up";
+  const lines = [];
+  lines.push(
+    `近 3 个有数据月份出货合计约 ${Math.round(sT)} USD；对比再往前 3 个月约 ${Math.round(sP)} USD（演示月度明细）。`
+  );
+  if (trend === "up") lines.push("趋势洞察：回暖 / 扩张，可加大赋能资源与联合案例投入。");
+  else if (trend === "down") lines.push("趋势洞察：承压，建议对齐预警、竞品与需求工单排查根因。");
+  else lines.push("趋势洞察：相对稳定，可用目标阶梯与分级策略微调激励。");
+  if (ch.abc_class === "A") lines.push("A 级渠道：资金流与信息流应优先保障，便于区域战报达成。");
+  return {
+    trend,
+    recent_3m_revenue_usd: Math.round(sT),
+    prior_3m_revenue_usd: Math.round(sP),
+    change_pct_vs_prior: pct,
+    narrative_lines: lines,
+  };
+}
+
+function buildChannelFlows(ch, _metrics, bc, competitors, activities) {
+  const info = [];
+  const biz = [];
+  const fin = [];
+  info.push({
+    key: "intel",
+    label: "国家情报",
+    detail: bc?.market_intel
+      ? `${ch.country_code} 机会指数 ${bc.market_intel.opportunity_score}，政策/竞品摘要与市场情报模块同源。`
+      : `${ch.country_code} 尚无情报卡片 — 信息流缺口，建议优先补录。`,
+  });
+  if (bc?.sales_brief?.title) {
+    info.push({
+      key: "brief",
+      label: "销售简报",
+      detail: `已挂载《${bc.sales_brief.title}》，拜访前可读 + 纪要回写活动动态。`,
+    });
+  }
+  info.push({
+    key: "master",
+    label: "主数据档案",
+    detail:
+      "静态：编码/国家/区域/分级/协议期；动态：联系日、生命周期、备注与下方活动流 — 构成 360 信息底座。",
+  });
+  const visitN = (activities || []).filter((a) => a.kind === "visit").length;
+  if (visitN)
+    info.push({ key: "visit", label: "现场输入", detail: `已登记 ${visitN} 条拜访/现场类记录，可反哺情报与需求。` });
+
+  biz.push({
+    key: "lifecycle",
+    label: "业务流程",
+    detail: `生命周期 ${ch.lifecycle_stage} · 运营状态 ${ch.status}${ch.sam_flag ? " · SAM 战略客户" : ""}，对应准入—培育—复盘闭环。`,
+  });
+  biz.push({
+    key: "alerts",
+    label: "预警 / SLA",
+    detail: `${bc?.open_alerts_count ?? 0} 条未关预警与作战台 SLA 同源，关闭即业务流节点完成。`,
+  });
+  const reqOpen = (activities || []).filter((a) => a.kind === "request" && a.status !== "done" && a.status !== "cancelled").length;
+  const issOpen = (activities || []).filter((a) => a.kind === "issue" && a.status !== "done" && a.status !== "cancelled").length;
+  biz.push({
+    key: "demand",
+    label: "问题与需求工单",
+    detail: `打开中：需求 ${reqOpen} · 问题 ${issOpen}（演示，可对接 CRM/工单）。`,
+  });
+  biz.push({
+    key: "enable",
+    label: "赋能动态",
+    detail: `培训/物料/样机等活动见「赋能支持」类记录；竞品条目 ${competitors?.length ?? 0} 家支撑竞争策略。`,
+  });
+
+  fin.push({
+    key: "roll",
+    label: "出货节奏",
+    detail: `年出货 roll（演示）约 ${Math.round(Number(ch.annual_revenue_usd) || 0)} USD；月度曲线即「资金流」时间展开。`,
+  });
+  fin.push({
+    key: "margin_ar",
+    label: "毛利 × 应收",
+    detail: `毛利率 ${ch.gross_margin_pct != null ? ch.gross_margin_pct + "%" : "—"}；应收逾期 ${ch.ar_overdue_days ?? 0} 天 — 信用与回款压力指标。`,
+  });
+  fin.push({
+    key: "quote",
+    label: "报价联动",
+    detail: "销售赋能按国家估算到岸与建议零售价，可与本渠道国家代码一键联动试算。",
+  });
+  return { information: info, business: biz, financial: fin };
+}
+
+function getChannelRowScoped(auth, id) {
+  const sc = channelScopeWhere(auth);
+  return db
+    .prepare(
+      `SELECT c.*, u.name AS owner_name, u.email AS owner_email
+       FROM channel c
+       LEFT JOIN app_user u ON u.id = c.owner_user_id
+       WHERE c.id = ? AND ${sc.sql}`
+    )
+    .get(id, ...sc.args);
+}
+
+function intelCrossLinksForCountry(countryCode, auth) {
+  const cc = String(countryCode || "").toUpperCase();
+  const sc = channelScopeWhere(auth);
+  const chWhere = `c.country_code = ? AND c.status = 'ACTIVE' AND ${sc.sql}`;
+  const args = [cc, ...sc.args];
+  const agg = db.prepare(`SELECT COUNT(*) AS n, COALESCE(SUM(c.annual_revenue_usd), 0) AS rev FROM channel c WHERE ${chWhere}`).get(...args);
+  const alWhere = `c.country_code = ? AND a.acknowledged_at IS NULL AND ${sc.sql}`;
+  const alArgs = [cc, ...sc.args];
+  const openAlerts = db
+    .prepare(`SELECT COUNT(*) AS n FROM alert a JOIN channel c ON c.id = a.channel_id WHERE ${alWhere}`)
+    .get(...alArgs).n;
+  const topCh = db
+    .prepare(
+      `SELECT c.id, c.channel_code, c.name_en, COALESCE(c.annual_revenue_usd, 0) AS annual_revenue_usd
+       FROM channel c WHERE ${chWhere}
+       ORDER BY COALESCE(c.annual_revenue_usd, 0) DESC LIMIT 5`
+    )
+    .all(...args);
+  return {
+    scope_active_channels: agg.n,
+    scope_revenue_roll_usd: agg.rev,
+    scope_open_alerts: openAlerts,
+    top_channels: topCh.map((c) => ({
+      id: c.id,
+      channel_code: c.channel_code,
+      name_en: c.name_en,
+      annual_revenue_usd: c.annual_revenue_usd,
+    })),
+  };
+}
+
 app.get("/v1/channels/:id", async (req, reply) => {
   const auth = getAuth(req);
   if (!auth) return reply.code(401).send({ error: "unauthorized" });
@@ -678,7 +954,10 @@ app.get("/v1/channels/:id", async (req, reply) => {
     )
     .all(id);
   const intelRow = db
-    .prepare(`SELECT country_code, opportunity_score, updated_at FROM market_intel WHERE country_code = ?`)
+    .prepare(
+      `SELECT country_code, opportunity_score, updated_at, value_headline, trend_direction, tags_json
+       FROM market_intel WHERE country_code = ?`
+    )
     .get(row.country_code);
   const briefRow = db
     .prepare(`SELECT title, updated_at FROM sales_brief WHERE country_code = ?`)
@@ -697,6 +976,9 @@ app.get("/v1/channels/:id", async (req, reply) => {
       ? {
           opportunity_score: intelRow.opportunity_score,
           updated_at: intelRow.updated_at,
+          value_headline: intelRow.value_headline,
+          trend_direction: intelRow.trend_direction,
+          tags: parseIntelTags(intelRow.tags_json),
         }
       : null,
     sales_brief: briefRow ? { title: briefRow.title, updated_at: briefRow.updated_at } : null,
@@ -706,6 +988,11 @@ app.get("/v1/channels/:id", async (req, reply) => {
   };
   if (!intelRow) {
     business_context.hints.push("该国尚无市场情报卡片，可在「市场情报」补录或优先拓展调研。");
+  } else if (intelRow.value_headline) {
+    business_context.hints.push(`情报摘要：${intelRow.value_headline}`);
+  }
+  if (intelRow && parseIntelTags(intelRow.tags_json).length) {
+    business_context.hints.push(`情报标签：${parseIntelTags(intelRow.tags_json).join(" · ")}`);
   }
   if (critCt.n > 0) {
     business_context.hints.push("存在未关闭的 critical 预警，建议当日闭环或升级。");
@@ -713,7 +1000,51 @@ app.get("/v1/channels/:id", async (req, reply) => {
   if ((row.ar_overdue_days || 0) > 15) {
     business_context.hints.push("应收逾期偏高，建议财务/渠道对账联动的跟进动作。");
   }
-  return { channel: mapChannelRow(row), monthly: metrics, alerts, business_context };
+
+  const competitors = db
+    .prepare(`SELECT id, name, threat, note, updated_at FROM channel_competitor WHERE channel_id = ? ORDER BY id`)
+    .all(id);
+  const activities = db
+    .prepare(
+      `SELECT a.id, a.kind, a.title, a.body, a.status, a.created_at, u.name AS actor_name
+       FROM channel_activity a
+       LEFT JOIN app_user u ON u.id = a.actor_user_id
+       WHERE a.channel_id = ?
+       ORDER BY datetime(a.created_at) DESC
+       LIMIT 50`
+    )
+    .all(id);
+  const performance_insight = computeChannelPerformanceInsight(metrics, row);
+  const flows = buildChannelFlows(row, metrics, business_context, competitors, activities);
+  const static_profile = {
+    channel_code: row.channel_code,
+    name_en: row.name_en,
+    name_cn: row.name_cn,
+    country_code: row.country_code,
+    region: row.region,
+    lifecycle_stage: row.lifecycle_stage,
+    abc_class: row.abc_class,
+    status: row.status,
+    agreement_expire_date: row.agreement_expire_date,
+    last_contact_date: row.last_contact_date,
+    owner_name: row.owner_name,
+    owner_email: row.owner_email,
+    sam_flag: !!row.sam_flag,
+  };
+
+  return {
+    channel: mapChannelRow(row),
+    monthly: metrics,
+    alerts,
+    business_context,
+    channel_360: {
+      static_profile,
+      performance_insight,
+      flows,
+      competitors,
+      activities,
+    },
+  };
 });
 
 app.patch("/v1/channels/:id", async (req, reply) => {
@@ -757,6 +1088,94 @@ app.patch("/v1/channels/:id", async (req, reply) => {
   return { channel: mapChannelRow(updated) };
 });
 
+app.post("/v1/channels/:id/competitors", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  const id = Number(req.params.id);
+  const row = getChannelRowScoped(auth, id);
+  if (!row) return reply.code(404).send({ error: "not_found" });
+  if (auth.role === "sales" && row.owner_user_id !== auth.sub) {
+    return reply.code(403).send({ error: "forbidden" });
+  }
+  const body = req.body || {};
+  const name = String(body.name || "").trim();
+  if (!name) return reply.code(400).send({ error: "name_required" });
+  const threat = ["low", "medium", "high"].includes(String(body.threat || "").toLowerCase())
+    ? String(body.threat).toLowerCase()
+    : "medium";
+  const note = body.note != null ? String(body.note).slice(0, 2000) : "";
+  const info = db
+    .prepare(`INSERT INTO channel_competitor (channel_id, name, threat, note) VALUES (?,?,?,?)`)
+    .run(id, name.slice(0, 200), threat, note);
+  const c = db.prepare(`SELECT * FROM channel_competitor WHERE id = ?`).get(info.lastInsertRowid);
+  return { competitor: c };
+});
+
+app.delete("/v1/channels/:id/competitors/:cid", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  const id = Number(req.params.id);
+  const cid = Number(req.params.cid);
+  const row = getChannelRowScoped(auth, id);
+  if (!row) return reply.code(404).send({ error: "not_found" });
+  if (auth.role === "sales" && row.owner_user_id !== auth.sub) {
+    return reply.code(403).send({ error: "forbidden" });
+  }
+  const r = db.prepare(`SELECT id FROM channel_competitor WHERE id = ? AND channel_id = ?`).get(cid, id);
+  if (!r) return reply.code(404).send({ error: "not_found" });
+  db.prepare(`DELETE FROM channel_competitor WHERE id = ?`).run(cid);
+  return { ok: true };
+});
+
+app.post("/v1/channels/:id/activities", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  const id = Number(req.params.id);
+  const row = getChannelRowScoped(auth, id);
+  if (!row) return reply.code(404).send({ error: "not_found" });
+  const body = req.body || {};
+  const kind = String(body.kind || "visit").toLowerCase();
+  if (!["enablement", "issue", "request", "competitor", "milestone", "visit"].includes(kind)) {
+    return reply.code(400).send({ error: "invalid_kind" });
+  }
+  const title = String(body.title || "").trim();
+  if (!title) return reply.code(400).send({ error: "title_required" });
+  const b = body.body != null ? String(body.body).slice(0, 4000) : "";
+  const st = String(body.status || "open");
+  const status = ["open", "doing", "done", "cancelled"].includes(st) ? st : "open";
+  const info = db
+    .prepare(`INSERT INTO channel_activity (channel_id, actor_user_id, kind, title, body, status) VALUES (?,?,?,?,?,?)`)
+    .run(id, auth.sub, kind, title.slice(0, 200), b, status);
+  const a = db
+    .prepare(
+      `SELECT a.*, u.name AS actor_name FROM channel_activity a LEFT JOIN app_user u ON u.id = a.actor_user_id WHERE a.id = ?`
+    )
+    .get(info.lastInsertRowid);
+  return { activity: a };
+});
+
+app.patch("/v1/channels/:id/activities/:aid", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  const id = Number(req.params.id);
+  const aid = Number(req.params.aid);
+  const row = getChannelRowScoped(auth, id);
+  if (!row) return reply.code(404).send({ error: "not_found" });
+  const ex = db.prepare(`SELECT id FROM channel_activity WHERE id = ? AND channel_id = ?`).get(aid, id);
+  if (!ex) return reply.code(404).send({ error: "not_found" });
+  const body = req.body || {};
+  if (body.status === undefined) return reply.code(400).send({ error: "no_updates" });
+  const st = String(body.status);
+  if (!["open", "doing", "done", "cancelled"].includes(st)) return reply.code(400).send({ error: "invalid_status" });
+  db.prepare(`UPDATE channel_activity SET status = ? WHERE id = ?`).run(st, aid);
+  const a = db
+    .prepare(
+      `SELECT a.*, u.name AS actor_name FROM channel_activity a LEFT JOIN app_user u ON u.id = a.actor_user_id WHERE a.id = ?`
+    )
+    .get(aid);
+  return { activity: a };
+});
+
 app.get("/v1/alerts", async (req, reply) => {
   const auth = getAuth(req);
   if (!auth) return reply.code(401).send({ error: "unauthorized" });
@@ -794,10 +1213,17 @@ app.post("/v1/alerts/:id/ack", async (req, reply) => {
 app.get("/v1/intel/countries", async (req, reply) => {
   const auth = getAuth(req);
   if (!auth) return reply.code(401).send({ error: "unauthorized" });
-  const rows = db
-    .prepare(`SELECT * FROM market_intel ORDER BY opportunity_score DESC`)
-    .all();
-  return { items: rows };
+  const rows = db.prepare(`SELECT * FROM market_intel ORDER BY opportunity_score DESC`).all();
+  const items = rows.map((r) => {
+    const x = intelCrossLinksForCountry(r.country_code, auth);
+    return {
+      ...mapIntelRow(r),
+      scope_active_channels: x.scope_active_channels,
+      scope_revenue_roll_usd: x.scope_revenue_roll_usd,
+      scope_open_alerts: x.scope_open_alerts,
+    };
+  });
+  return { items };
 });
 
 app.get("/v1/intel/:countryCode", async (req, reply) => {
@@ -807,7 +1233,98 @@ app.get("/v1/intel/:countryCode", async (req, reply) => {
   const row = db.prepare(`SELECT * FROM market_intel WHERE country_code = ?`).get(cc);
   const brief = db.prepare(`SELECT * FROM sales_brief WHERE country_code = ?`).get(cc);
   if (!row && !brief) return reply.code(404).send({ error: "not_found" });
-  return { intel: row, brief };
+  const cross_links = intelCrossLinksForCountry(cc, auth);
+  const notes = row
+    ? db
+        .prepare(
+          `SELECT n.id, n.body, n.created_at, u.name AS actor_name
+           FROM intel_note n
+           LEFT JOIN app_user u ON u.id = n.actor_user_id
+           WHERE n.country_code = ?
+           ORDER BY datetime(n.created_at) DESC
+           LIMIT 25`
+        )
+        .all(cc)
+    : [];
+  return {
+    intel: row ? mapIntelRow(row) : null,
+    brief,
+    cross_links,
+    intel_notes: notes,
+  };
+});
+
+app.patch("/v1/intel/:countryCode", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  if (auth.role !== "admin" && auth.role !== "manager") {
+    return reply.code(403).send({ error: "forbidden" });
+  }
+  const cc = String(req.params.countryCode || "").toUpperCase();
+  const exists = db.prepare(`SELECT 1 FROM market_intel WHERE country_code = ?`).get(cc);
+  if (!exists) return reply.code(404).send({ error: "not_found" });
+  const body = req.body || {};
+  const allowed = [
+    "opportunity_score",
+    "policy_digest",
+    "competitor_note",
+    "product_fit_note",
+    "value_headline",
+    "trend_direction",
+    "trend_note",
+    "key_risk",
+    "key_window",
+  ];
+  const sets = [];
+  const vals = [];
+  for (const k of allowed) {
+    if (body[k] === undefined) continue;
+    if (k === "opportunity_score") {
+      const n = Number(body[k]);
+      if (Number.isNaN(n) || n < 0 || n > 100) continue;
+      sets.push(`${k} = ?`);
+      vals.push(Math.round(n));
+    } else if (k === "trend_direction") {
+      const t = String(body[k]).toLowerCase();
+      if (!["up", "stable", "down"].includes(t)) continue;
+      sets.push(`${k} = ?`);
+      vals.push(t);
+    } else {
+      sets.push(`${k} = ?`);
+      vals.push(String(body[k]).slice(0, 8000));
+    }
+  }
+  if (body.tags !== undefined) {
+    const arr = Array.isArray(body.tags) ? body.tags : [];
+    sets.push(`tags_json = ?`);
+    vals.push(JSON.stringify(arr.map((x) => String(x).slice(0, 40)).slice(0, 16)));
+  }
+  if (!sets.length) return reply.code(400).send({ error: "no_updates" });
+  sets.push(`updated_at = datetime('now')`);
+  db.prepare(`UPDATE market_intel SET ${sets.join(", ")} WHERE country_code = ?`).run(...vals, cc);
+  const row = db.prepare(`SELECT * FROM market_intel WHERE country_code = ?`).get(cc);
+  return { intel: mapIntelRow(row) };
+});
+
+app.post("/v1/intel/:countryCode/notes", async (req, reply) => {
+  const auth = getAuth(req);
+  if (!auth) return reply.code(401).send({ error: "unauthorized" });
+  const cc = String(req.params.countryCode || "").toUpperCase();
+  const row = db.prepare(`SELECT 1 FROM market_intel WHERE country_code = ?`).get(cc);
+  if (!row) return reply.code(404).send({ error: "not_found" });
+  const body = req.body || {};
+  const text = String(body.body ?? "").trim();
+  if (!text) return reply.code(400).send({ error: "empty_body" });
+  const info = db
+    .prepare(`INSERT INTO intel_note (country_code, actor_user_id, body) VALUES (?,?,?)`)
+    .run(cc, auth.sub, text.slice(0, 4000));
+  const n = db
+    .prepare(
+      `SELECT n.id, n.body, n.created_at, u.name AS actor_name
+       FROM intel_note n LEFT JOIN app_user u ON u.id = n.actor_user_id WHERE n.id = ?`
+    )
+    .get(info.lastInsertRowid);
+  return { note: n };
 });
 
 /** 规则型报价演示：关税/运费/建议价为估算，非真实报价法律依据 */

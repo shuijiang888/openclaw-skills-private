@@ -1028,3 +1028,123 @@ code.batch-id {
   font-size: 12px;
   margin-top: 20px;
 }
+
+/* Channel 360 — 信息流 / 业务流 / 资金流 */
+.ch360-mount {
+  margin-bottom: 16px;
+}
+
+.ch360-hero h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.flow-three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 960px) {
+  .flow-three {
+    grid-template-columns: 1fr;
+  }
+}
+
+.flow-col {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  background: var(--surface2);
+}
+
+.flow-col h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.flow-col-info {
+  border-top: 3px solid rgba(61, 158, 239, 0.55);
+}
+
+.flow-col-biz {
+  border-top: 3px solid rgba(127, 217, 154, 0.5);
+}
+
+.flow-col-fin {
+  border-top: 3px solid rgba(255, 204, 102, 0.55);
+}
+
+.flow-item {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.flow-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.flow-item strong {
+  font-size: 13px;
+}
+
+.ch360-trend-tag {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--primary-dim);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ch360-static-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px 16px;
+  margin-top: 10px;
+}
+
+.ch360-static-grid .lab {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.threat-high {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.threat-medium {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.threat-low {
+  color: var(--muted);
+}
+
+.btn.small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.ch360-act-status {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}

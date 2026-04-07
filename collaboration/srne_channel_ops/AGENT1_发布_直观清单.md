@@ -1,8 +1,15 @@
 # Agent1：硕日系统发布 — 直观版（按顺序做）
 
+> **根因（已核实）：** `scorecard` / `import/batches` / `import/channels/preview` 曾**只存在于 Cursor 工作区**，**未进入 Git**。历史提交 `c74e182` 的 `server.mjs` 里本来就没有这些路由，因此你在 **`033aeb9` 上 no-cache 重建**后容器内 `grep` 仍没有它们——**结论正确，不是网关或缓存问题**。  
+> **现已在 open 仓库提交：** `b27fdfc`（分支 `feature/srne-channel-ops`）。请 **pull/合并到该提交或更新** 后再 `docker compose build --no-cache`，第一步 `grep` 应能在**宿主机** `collaboration/srne_channel_ops/api/server.mjs` 看到 `performance/scorecard`。
+
+> **第三轮（v3）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`** 后，除 v2 能力外，代码须含 **`channel_360`**、竞品/活动路由及前端 **`ch360Mount`**。构建前用下方「v3 快速 grep」；OpenClaw 应先完成同步并给出 **Git SHA** 再构建。
+
+---
+
 ## 这一单要你做什么？（一句话）
 
-把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。
+把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。**若执行 v3：** 另须看到渠道详情 **360° 三流**与市场情报增强（见第四步第 4 条）。
 
 ---
 
@@ -28,7 +35,16 @@ test -f collaboration/srne_channel_ops/web/app.js && echo "OK web"
 grep -q performance/scorecard collaboration/srne_channel_ops/api/server.mjs && echo "OK 含 scorecard 接口"
 ```
 
-若 `grep` 没有输出，说明代码还是旧的，需要先 **pull / 解压 tar** 拿到最新 `srne_channel_ops`。
+**v3 快速 grep（第三轮发布时必过）：**
+
+```bash
+grep -q channel_360 collaboration/srne_channel_ops/api/server.mjs && echo "OK channel_360"
+grep -qE '/v1/channels/.*/competitors' collaboration/srne_channel_ops/api/server.mjs && echo "OK competitors"
+grep -q ch360Mount collaboration/srne_channel_ops/web/index.html && echo "OK ch360 前端挂载点"
+```
+
+若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。  
+**v3：** 须同步到 OpenClaw/业务方提供的 **含第三轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`）。
 
 ---
 
@@ -91,6 +107,7 @@ curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
 1. 登录后进 **总览**：能看到图表（不是光秃秃数字）。
 2. 打开 **绩效看板**：有多块内容（BSC、区域图、关注清单、负责人表等），**不是**一两行占位。
 3. 打开 **数据导入**：能先 **预览/校验**，再 **确认写入**，下面有 **导入批次** 列表（或接口 `import/batches` 有数据）。
+4. **（v3）渠道 360°：** 进入 **渠道商** → 打开任一渠道详情页，可见 **「信息流 / 业务流 / 资金流」** 三列及业绩洞察区块（非仅旧版业务上下文+图表）；建议 **强制刷新**（Cmd+Shift+R）避免缓存旧 `app.js`。
 
 任意一步明显还是「空壳页」→ 说明静态 `web/` 没更新到当前访问的站点，或反代指错了目录/旧容器。
 
@@ -104,85 +121,43 @@ curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
 Git 提交或镜像 tag：________________
 JWT_SECRET 已更换：是 / 否
 浏览器三步（总览图 / 绩效多块 / 导入预览+批次）：通过 / 未通过
+渠道 360°（v3）：通过 / 未通过 / 本轮不涉及
 ```
-
----
-
-## 本次执行结果（2026-04-08，按本单落地）
-
-### 第 1 步三条 grep
-
-已执行且全通过：
-
-- `OK server`
-- `OK web`
-- `OK 含 scorecard 接口`
-
-### 构建与部署
-
-已在 `collaboration/srne_channel_ops/` 执行：
-
-```bash
-docker compose down
-docker compose build --no-cache
-docker compose up -d --force-recreate
-docker compose ps
-```
-
-本次镜像与容器：
-
-- 新镜像 ID：`c22aa842c0d2`
-- 新容器 ID：`571a97ac6f5f`
-
-### 接口复测（Bearer）
-
-- `GET /srne/v1/performance/scorecard` -> **200**
-- `GET /srne/v1/import/batches` -> **200**
-- `POST /srne/v1/import/channels/preview` -> **200**
-
-### 容器内 grep 复核（运行中 8790）
-
-容器内 `/app/api/server.mjs` 已命中：
-
-- `app.get("/v1/performance/scorecard", ...)`
-- `app.post("/v1/import/channels/preview", ...)`
-- `app.get("/v1/import/batches", ...)`
-- `import_batch` 表与写入逻辑
-
-结论：本次已从“404”切换为“新能力可用”状态。
 
 ### 业务方已回传记录（便于 Agent1 对账）
 
-| 项 | 结果 |
-|----|------|
-| **Git 提交** | `e5ba48d`（以你方部署仓库为准） |
-| **已验证可用** | `/srne/`、`/srne/v1/health`、登录、`dashboard`、`performance/summary`、`import/channels`、重启后持久化 |
-| **仍为 404** | `GET /v1/performance/scorecard`、`GET /v1/import/batches` |
+| 轮次 | Git 提交（你方部署仓库） | 已验证可用 | 仍为 404 / 说明 |
+|------|-------------------------|------------|-----------------|
+| 1 | `e5ba48d` | `/srne/`、`/srne/v1/health`、登录、`dashboard`、`performance/summary`、`import/channels`、持久化 | `performance/scorecard`、`import/batches` |
+| 2 | `033aeb9` | 容器内 `grep`：仅有 `performance/summary`、`import/channels`、`import/channels/upload`；已 `down` + `build --no-cache` + `up --force-recreate`；网关复测同上 | `scorecard`、`batches` 仍 404 — **构建源 `server.mjs` 本身无这两段路由** |
 
 ---
 
-## 给 Agent1 的纠偏（404 ≠ 功能未做）
+## 给 Agent1 的说明（与上一轮纠偏的关系）
 
-业务侧曾判断「代码里还没这两个路由」——**在 Cursor 维护的源码树里，这两条路已经存在**，与 `performance/summary`、`import/channels` 同属 `server.mjs`。若公网 404，说明 **当前对外提供流量的进程里加载的 `server.mjs` 仍是旧文件**（镜像未重建、指错容器、或构建时用的不是含以下内容的目录）。
+上一轮写「404 = 镜像没更新」在**真源已进 Git**的前提下成立。本轮实机证明：**你们当时拉取的 Git 里根本没有这两段路由**（与历史 `c74e182` 一致），no-cache 也只能打出「忠实于旧文件」的镜像——**你们判断正确**。
 
-**在本仓库中可核对（路径相对仓库根）：**
+**当前对策：**
 
-- `app.get("/v1/performance/scorecard", …)` — 见 `collaboration/srne_channel_ops/api/server.mjs`
-- `app.get("/v1/import/batches", …)` — 同上
-- 同一文件内还有：`POST /v1/import/channels/preview`（若 scorecard 404，preview 往往也 404）
+1. 在**宿主机**（构建前）执行：  
+   `grep -n "performance/scorecard" collaboration/srne_channel_ops/api/server.mjs`  
+   无输出 → **禁止**指望 Docker 自愈，必须先 **同步代码**。
+2. open 仓库已提交含完整路由的版本：**`b27fdfc`**（`feature/srne-channel-ops`）。请 merge / cherry-pick / 由 OpenClaw 同步后再构建。
+3. 同步后再做容器内 `grep`（应与宿主机一致），然后对外 curl。
 
-**请在「实际跑 8790 的容器」里验证（避免只看宿主机 git）：**
+**可选：不依赖 pull 时**，用 `git show b27fdfc:collaboration/srne_channel_ops/api/server.mjs` 对比你方文件是否出现 `app.get("/v1/performance/scorecard"`。
+
+**容器内验证（同步代码并重建后）：**
 
 ```bash
-# 将 CONTAINER 换成你们 srne 容器名或 ID
 docker exec CONTAINER grep -n "performance/scorecard" /app/api/server.mjs
 docker exec CONTAINER grep -n "import/batches" /app/api/server.mjs
 ```
 
-- **有输出**：路由在镜像里，却仍 404 → 查网关是否把 `/srne/v1/performance` 错配到别的服务，或路径被 strip。
-- **无输出**：镜像仍是旧代码 → 在 **`collaboration/srne_channel_ops/`** 下 **`docker compose build --no-cache`** 再 `up -d`，并确认负载均衡只指向新容器。
+- **仍无输出**：构建 context 或 COPY 路径仍不对，或打的不是新镜像。
+- **有输出** 但网关 404：再查反代路径、是否打到别服务。
 
-**合并后对外再验（与管理台同 BASE）：**
+**对外复测：**
 
 ```bash
 BASE="http://<IP>/srne"
@@ -205,5 +180,6 @@ curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE
 ## 和「长版发布说明」的关系
 
 - **执行发布：以本文件为准**（步骤短、可勾选项多）。
+- **第三轮转发 OpenClaw + Agent1：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - 环境变量细则、安全红线、完整 API 列表：仍看 **`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`** 和 **`README.md`**。
 - 历史完整功能列表： **`RELEASE_REQUEST_FOR_AGENT1.md`**。
