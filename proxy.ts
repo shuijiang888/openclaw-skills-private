@@ -47,7 +47,8 @@ function isPublicApi(path: string): boolean {
     path.startsWith("/api/auth/session") ||
     path.startsWith("/api/auth/change-password") ||
     path.startsWith("/api/auth/logout") ||
-    path === "/api/health"
+    path === "/api/health" ||
+    path.startsWith("/api/diag/")
   );
 }
 
@@ -109,6 +110,11 @@ function appendSessionHeaders(req: NextRequest, payload: SessionPayload) {
 
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
+
+  // 通用营销诊断 API 对外开放给静态 H5，使用接口级校验与限流保障安全基线
+  if (path.startsWith("/api/diag/")) {
+    return NextResponse.next();
+  }
 
   if (isGateProtectedPath(path)) {
     const gateToken = req.cookies.get(PLATFORM_AUTH_COOKIE)?.value;
