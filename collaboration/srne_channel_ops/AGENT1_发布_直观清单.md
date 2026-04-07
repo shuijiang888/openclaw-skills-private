@@ -106,6 +106,51 @@ JWT_SECRET 已更换：是 / 否
 浏览器三步（总览图 / 绩效多块 / 导入预览+批次）：通过 / 未通过
 ```
 
+---
+
+## 本次执行结果（2026-04-08，按本单落地）
+
+### 第 1 步三条 grep
+
+已执行且全通过：
+
+- `OK server`
+- `OK web`
+- `OK 含 scorecard 接口`
+
+### 构建与部署
+
+已在 `collaboration/srne_channel_ops/` 执行：
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d --force-recreate
+docker compose ps
+```
+
+本次镜像与容器：
+
+- 新镜像 ID：`c22aa842c0d2`
+- 新容器 ID：`571a97ac6f5f`
+
+### 接口复测（Bearer）
+
+- `GET /srne/v1/performance/scorecard` -> **200**
+- `GET /srne/v1/import/batches` -> **200**
+- `POST /srne/v1/import/channels/preview` -> **200**
+
+### 容器内 grep 复核（运行中 8790）
+
+容器内 `/app/api/server.mjs` 已命中：
+
+- `app.get("/v1/performance/scorecard", ...)`
+- `app.post("/v1/import/channels/preview", ...)`
+- `app.get("/v1/import/batches", ...)`
+- `import_batch` 表与写入逻辑
+
+结论：本次已从“404”切换为“新能力可用”状态。
+
 ### 业务方已回传记录（便于 Agent1 对账）
 
 | 项 | 结果 |
