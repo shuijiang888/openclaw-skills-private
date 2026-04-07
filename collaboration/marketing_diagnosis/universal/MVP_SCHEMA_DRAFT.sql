@@ -1,0 +1,72 @@
+-- Universal Marketing Diagnosis System - MVP schema draft
+-- Target: MySQL 8.0+
+-- Notes:
+-- 1) Keep submission payload and computed report snapshot immutable.
+-- 2) Use version fields to guarantee replayability and auditability.
+-- 3) CRM sync is async and idempotent.
+
+CREATE TABLE IF NOT EXISTS diag_submission (
+  id VARCHAR(36) PRIMARY KEY,
+  industry_edition VARCHAR(64) NOT NULL,
+  questionnaire_version VARCHAR(64) NOT NULL,
+  scoring_model_version VARCHAR(64) NOT NULL,
+  source_page VARCHAR(255) NOT NULL,
+  submitter_ip VARCHAR(64) NULL,
+  user_agent VARCHAR(512) NULL,
+  qb_payload JSON NOT NULL,
+  answers_payload JSON NOT NULL,
+  score_payload JSON NOT NULL,
+  report_payload JSON NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'submitted',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_diag_submission_industry_created (industry_edition, created_at),
+  INDEX idx_diag_submission_status_created (status, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS diag_lead (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  submission_id VARCHAR(36) NOT NULL,
+  name VARCHAR(128) NOT NULL,
+  phone VARCHAR(64) NOT NULL,
+  company VARCHAR(255) NOT NULL,
+  role_title VARCHAR(128) NULL,
+  booking_intent TINYINT(1) NOT NULL DEFAULT 0,
+  consent_version VARCHAR(32) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_diag_lead_submission (submission_id),
+  INDEX idx_diag_lead_phone_created (phone, created_at),
+  CONSTRAINT fk_diag_lead_submission
+    FOREIGN KEY (submission_id) REFERENCES diag_submission(id)
+);
+
+CREATE TABLE IF NOT EXISTS diag_sync_job (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  submission_id VARCHAR(36) NOT NULL,
+  target VARCHAR(64) NOT NULL,
+  operation VARCHAR(64) NOT NULL,
+  idempotency_key VARCHAR(128) NOT NULL,
+  payload JSON NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'pending',
+  retry_count INT NOT NULL DEFAULT 0,
+  last_error TEXT NULL,
+  next_retry_at TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_diag_sync_job_idempotency (idempotency_key),
+  INDEX idx_diag_sync_job_status_next_retry (status, next_retry_at),
+  INDEX idx_diag_sync_job_submission (submission_id),
+  CONSTRAINT fk_diag_sync_job_submission
+    FOREIGN KEY (submission_id) REFERENCES diag_submission(id)
+);
+
+-- Optional denormalized aggregate table for management dashboard
+CREATE TABLE IF NOT EXISTS diag_daily_stat (
+  stat_date DATE NOT NULL,
+  industry_edition VARCHAR(64) NOT NULL,
+  submission_count INT NOT NULL DEFAULT 0,
+  lead_count INT NOT NULL DEFAULT 0,
+  avg_total_score DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (stat_date, industry_edition)
+);
