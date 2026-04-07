@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<!-- universal-chenwei-h5 fingerprint: open-repo 三角色×四模式 非轻诊断10步 首屏为「通用营销诊断」说明+开始测评 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>通用营销诊断 · 全行业能力测评</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="./data/questionnaire.bundle.js"></script>
+  <script src="./data/rubrics.bundle.js"></script>
+  <style>
+    :root {
+      --primary: #0a2540;
+      --accent: #2e8bc0;
+      --bg: #e6edf5;
+      --card: #fff;
+      --text: #1a1a2e;
+      --muted: #5c6b7a;
+      --danger: #c0392b;
+      --ok: #1e8449;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(10, 37, 64, 0.1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 48px; }
+    .wrap.wide { max-width: 720px; }
+    header.hero { text-align: center; padding: 16px 0 8px; }
+    header.hero h1 { margin: 0; font-size: 1.25rem; color: var(--primary); font-weight: 800; }
+    header.hero p { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 16px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(10, 37, 64, 0.06);
+    }
+    .section-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
+    .muted { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .choice-grid { display: flex; flex-direction: column; gap: 10px; }
+    .choice {
+      text-align: left; padding: 14px 16px; border: 2px solid #d0dbe6; border-radius: 10px;
+      background: #fafbfc; font-size: 15px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .choice:active { transform: scale(0.99); }
+    .choice.selected { border-color: var(--primary); background: rgba(10, 37, 64, 0.06); font-weight: 600; }
+    .label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
+    .inp {
+      width: 100%; padding: 12px 14px; font-size: 16px; border: 2px solid #d0dbe6; border-radius: 10px; margin-bottom: 10px;
+    }
+    textarea.inp { min-height: 80px; resize: vertical; }
+    .nav-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      flex: 1; min-width: 120px; min-height: 46px; font-size: 16px; font-weight: 600; border: none; border-radius: 10px; cursor: pointer;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-ghost { background: #eef2f6; color: var(--primary); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .progress-outer { height: 8px; background: #c5d4e3; border-radius: 4px; overflow: hidden; margin: 12px 0; }
+    .progress-inner { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; transition: width 0.2s; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .dim-tag { display: inline-block; font-size: 12px; color: var(--accent); background: rgba(46, 139, 192, 0.12); padding: 4px 10px; border-radius: 20px; margin-bottom: 8px; font-weight: 600; }
+    .q-title { font-size: 16px; font-weight: 600; line-height: 1.45; margin: 0 0 12px; }
+    .opt { display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 8px; border: 2px solid #d0dbe6; border-radius: 10px; background: #fafbfc; font-size: 15px; cursor: pointer; }
+    .opt.selected { border-color: var(--primary); background: rgba(10, 37, 64, 0.06); font-weight: 500; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .score-pill { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(46, 139, 192, 0.15); color: var(--primary); font-weight: 800; font-size: 18px; }
+    .band { font-weight: 800; color: var(--accent); }
+    .report-block { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8eef4; }
+    .report-block h4 { margin: 0 0 8px; font-size: 14px; color: var(--primary); }
+    .report-block p { margin: 0 0 8px; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-wrap; }
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+    .bar-name { width: 88px; flex-shrink: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex: 1; height: 8px; background: #e4ebf3; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; }
+    .bar-val { width: 52px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #1a1a2e; color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 14px; z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.2s; max-width: 90%; text-align: center; }
+    .toast.show { opacity: 0.95; }
+    .legal { font-size: 11px; color: #8899a8; margin-top: 12px; line-height: 1.45; }
+    #pdf-area { background: #fff; }
+    .rep-table-wrap { overflow-x: auto; margin-top: 8px; -webkit-overflow-scrolling: touch; }
+    table.rep-table { width: 100%; border-collapse: collapse; font-size: 11px; color: var(--text); }
+    table.rep-table th, table.rep-table td {
+      border: 1px solid #c5d4e3; padding: 6px 8px; vertical-align: top; text-align: left;
+    }
+    table.rep-table th { background: #e8f0f7; font-weight: 700; color: var(--primary); white-space: nowrap; }
+    table.rep-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.rep-table caption { caption-side: top; text-align: left; font-weight: 700; font-size: 13px; color: var(--primary); padding-bottom: 8px; }
+    /* PDF / 打印分页：html2pdf.js 的 css 模式会识别 break-*；浏览器「打印→PDF」同样受益 */
+    #rep-pdf-section-detail,
+    #rep-appendix {
+      break-before: page;
+      page-break-before: always;
+    }
+    .rep-pdf-q-dim { margin-top: 12px; }
+    .rep-pdf-q-dim.rep-pdf-q-dim--newpage {
+      break-before: page;
+      page-break-before: always;
+      margin-top: 0;
+    }
+    .rep-pdf-q-dim-title {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    table.rep-table tr.rep-q-row {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .rep-pdf-dim-detail {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .rep-appendix-block { margin-top: 18px; padding-top: 14px; border-top: 1px dashed #c5d4e3; break-inside: avoid; page-break-inside: avoid; }
+    .rep-appendix-block h4 { margin: 0 0 8px; font-size: 13px; color: var(--primary); }
+    .rep-appendix-block p, .rep-appendix-block li { margin: 0 0 6px; font-size: 12px; line-height: 1.55; color: var(--text); }
+    .rep-appendix-block ul { margin: 6px 0 0; padding-left: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app-wrap">
+    <header class="hero">
+      <h1>通用营销诊断</h1>
+      <p>三角色 × 四销售模式 · 即时报告 · 可对接 CRM 线索与商机</p>
+    </header>
+
+    <div id="screen-welcome" class="screen active">
+      <div class="card">
+        <div class="section-title">说明</div>
+        <p class="muted">本测评基于自评，结果用于能力盘点与改进方向参考。请按最近 6–12 个月的真实情况作答。题干中涉及竞争与招投标等表述已做合规化表述，核心语义保持不变。</p>
+        <p class="muted" style="margin-top:10px">销售人员需先选择销售模式；销售管理者与营销体系为统一题本（与源表一致）。</p>
+        <div class="nav-row">
+          <button type="button" class="btn btn-primary" id="btn-start">开始测评</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-role" class="screen">
+      <div class="card">
+        <div class="section-title">选择您的角色</div>
+        <div class="choice-grid" id="role-choices"></div>
+        <div class="nav-row">
+          <button type="button" class="btn btn-ghost" data-back="welcome">返回</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-mode" class="screen">
+      <div class="card">
+        <div class="section-title">选择销售模式</div>
+        <p class="muted">不同模式题量与维度权重不同，总分均为 100 分。</p>
+        <div class="choice-grid" id="mode-choices"></div>
+        <div class="nav-row">
+          <button type="button" class="btn btn-ghost" data-back="role">返回</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-profile" class="screen">
+      <div class="card">
+        <div class="section-title">基本信息（用于报告与 CRM 线索）</div>
+        <p class="muted">以下信息仅用于生成报告与后续顾问联络，请如实填写带 * 项。</p>
+        <label class="label">公司 / 组织 *</label>
+        <input class="inp" id="pf-company" autocomplete="organization" />
+        <label class="label">姓名 *</label>
+        <input class="inp" id="pf-name" autocomplete="name" />
+        <label class="label">手机 *</label>
+        <input class="inp" id="pf-phone" type="tel" inputmode="tel" autocomplete="tel" />
+        <label class="label">邮箱</label>
+        <input class="inp" id="pf-email" type="email" autocomplete="email" />
+        <label class="label">职位</label>
+        <input class="inp" id="pf-title" autocomplete="organization-title" />
+        <label class="label">行业 / 主营（选填）</label>
+        <input class="inp" id="pf-industry" />
+        <div class="nav-row">
+          <button type="button" class="btn btn-ghost" data-back="profile-back">返回</button>
+          <button type="button" class="btn btn-primary" id="btn-profile-next">进入问卷</button>
+        </div>
+        <p class="legal">提交即表示您知晓本测评为自评工具，不构成法律或投资意见；如需进一步诊断，可联系专家沟通。</p>
+      </div>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+      <div class="card">
+        <div class="progress-meta"><span id="quiz-dim"></span><span id="quiz-idx"></span></div>
+        <div class="progress-outer"><div class="progress-inner" id="quiz-bar"></div></div>
+        <div class="dim-tag" id="quiz-dim-tag"></div>
+        <p class="q-title" id="quiz-text"></p>
+        <div id="quiz-options"></div>
+        <div class="nav-row">
+          <button type="button" class="btn btn-ghost" id="btn-prev">上一题</button>
+          <button type="button" class="btn btn-primary" id="btn-next" disabled>下一题</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-report" class="screen">
+      <div class="wrap wide" style="padding-top:0">
+        <div id="pdf-area" class="card" style="margin-bottom:12px">
+          <div id="rep-meta-block" style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #e8eef4;font-size:13px;color:var(--muted);line-height:1.65">
+            <p style="margin:0 0 10px;font-weight:800;color:var(--primary);font-size:16px;letter-spacing:-0.02em" id="rep-doc-title-line">陈玮体系 · 通用营销能力测评报告</p>
+            <div id="rep-meta-lines"></div>
+          </div>
+          <div style="text-align:center;margin-bottom:12px">
+            <div class="score-pill" id="rep-total"></div>
+            <p class="muted" id="rep-intro" style="margin-top:10px"></p>
+          </div>
+          <div class="section-title">维度得分</div>
+          <div id="rep-bars"></div>
+          <div class="section-title" style="margin-top:16px">关键结论摘要</div>
+          <p class="muted" id="rep-summary"></p>
+          <div id="rep-dim-details"></div>
+          <div id="rep-pdf-section-detail">
+            <div class="section-title" style="margin-top:18px">各题得分明细</div>
+            <p class="muted" style="margin-top:4px;margin-bottom:0">与 Excel 源表全卷序号一致；按维度分表。导出 PDF 时从新页起排，维度之间另起页，并尽量避免单行题干被截断。</p>
+            <div id="rep-q-table-wrap"></div>
+          </div>
+          <div id="rep-appendix"></div>
+          <p class="legal" style="margin-top:16px">行业对标文案中的「高于/低于行业平均水平」需结合贵司行业数据校准，此处为占位表述。</p>
+        </div>
+        <div class="card">
+          <div class="section-title">报告与线索</div>
+          <div class="nav-row">
+            <button type="button" class="btn btn-accent" id="btn-pdf">下载 PDF</button>
+            <button type="button" class="btn btn-primary" id="btn-lead">同步线索到 CRM</button>
+          </div>
+          <p class="muted" style="margin-top:10px">未配置 CRM 地址时，将在浏览器控制台输出演示载荷，便于联调。</p>
+          <div class="nav-row">
+            <button type="button" class="btn btn-ghost" id="btn-expert">联系专家进一步交流</button>
+            <button type="button" class="btn btn-ghost" id="btn-restart">重新测评</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-expert" class="screen">
+      <div class="card">
+        <div class="section-title">联系专家进一步交流</div>
+        <p class="muted">请描述您的诉求与方便联系的时间。提交后系统将关键信息作为<strong>商机</strong>写入 CRM（需配置接口）。</p>
+        <label class="label">希望沟通的主题 *</label>
+        <textarea class="inp" id="ex-need" placeholder="例如：希望针对华东区域渠道体系做深度诊断与训战安排"></textarea>
+        <label class="label">方便联系时间（选填）</label>
+        <input class="inp" id="ex-time" placeholder="例如：工作日下午" />
+        <label class="label">补充说明（选填）</label>
+        <textarea class="inp" id="ex-note"></textarea>
+        <div class="nav-row">
+          <button type="button" class="btn btn-ghost" data-back="report">返回报告</button>
+          <button type="button" class="btn btn-primary" id="btn-expert-submit">提交商机</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+(function () {
+  var CONFIG = {
+    /** 优先：自有诊断 API 根（无末尾 /），如 http://localhost:8787 或 http://119.45.205.137/api/diag */
+    apiBaseUrl: "",
+    /**
+     * API 路径前缀。本地 MVP（universal/api）："/v1"。
+     * profit-web 现网（/api/diag 已为完整前缀）：填 ""，请求将变为 /submissions、/leads。
+     */
+    apiPathPrefix: "/v1",
+    /** 若 API 启用 API_KEY，填此处并发 X-API-Key */
+    API_KEY: "",
+    /** 兼容旧网关 */
+    CRM_BASE_URL: "",
+    CRM_LEAD_PATH: "/api/marketing-diagnosis/lead",
+    CRM_OPPORTUNITY_PATH: "/api/marketing-diagnosis/opportunity",
+    BRIDGE_TOKEN: ""
+  };
+
+  var Q = window.UNIVERSAL_QUESTIONNAIRE;
+  var R = window.UNIVERSAL_RUBRICS;
+  if (!Q || !R) {
+    document.body.innerHTML = "<p style='padding:24px'>数据加载失败：请通过本地或静态服务器打开，并确保 data/questionnaire.bundle.js 与 rubrics.bundle.js 可访问。</p>";
+    return;
+  }
+
+  var state = {
+    role: null,
+    saleMode: null,
+    profile: {},
+    flat: [],
+    index: 0,
+    answers: {},
+    result: null,
+    submissionPublicId: null
+  };
+
+  function useV1Api() {
+    return !!(CONFIG.apiBaseUrl && String(CONFIG.apiBaseUrl).trim());
+  }
+
+  function apiRoot() {
+    var b = (CONFIG.apiBaseUrl || CONFIG.CRM_BASE_URL || "").trim();
+    return b.replace(/\/$/, "");
+  }
+
+  /** @param path 以 / 开头，如 /submissions */
+  function apiUrl(path) {
+    var seg =
+      CONFIG.apiPathPrefix === ""
+        ? ""
+        : CONFIG.apiPathPrefix != null
+          ? String(CONFIG.apiPathPrefix).replace(/\/$/, "")
+          : "/v1";
+    return apiRoot() + (seg ? seg : "") + path;
+  }
+
+  /** 供 postJson：去掉 apiRoot 后的路径段，如 /v1/leads 或 /leads */
+  function apiRel(p) {
+    var full = apiUrl(p);
+    var root = apiRoot();
+    if (full.indexOf(root) !== 0) return p;
+    return full.slice(root.length);
+  }
+
+  var ROLE_META = [
+    { id: "sales_rep", title: "销售人员", desc: "按四象限销售模式匹配题本" },
+    { id: "sales_manager", title: "销售管理者", desc: "6 大管理维度 · 30 题" },
+    { id: "marketing_system", title: "营销体系", desc: "战略到组织激励 · 40 题" }
+  ];
+
+  var MODE_META = [
+    { id: "raw_material", title: "原材料", desc: "偏大宗 / 上游" },
+    { id: "semi_custom", title: "半成品 / 定制件", desc: "" },
+    { id: "standard_product", title: "单品 / 标品", desc: "" },
+    { id: "solution", title: "解决方案", desc: "含商机培育等完整维度" }
+  ];
+
+  function showToast(msg) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    setTimeout(function () { el.classList.remove("show"); }, 2800);
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("active"); });
+    var map = {
+      welcome: "screen-welcome",
+      role: "screen-role",
+      mode: "screen-mode",
+      profile: "screen-profile",
+      quiz: "screen-quiz",
+      report: "screen-report",
+      expert: "screen-expert"
+    };
+    var id = map[name];
+    if (id) document.getElementById(id).classList.add("active");
+    document.getElementById("app-wrap").classList.toggle("wide", name === "report");
+  }
+
+  function getDimensions() {
+    if (state.role === "sales_rep") {
+      var m = Q.roles.sales_rep.modes[state.saleMode];
+      return m ? m.dimensions : [];
+    }
+    if (state.role === "sales_manager") return Q.roles.sales_manager.dimensions;
+    if (state.role === "marketing_system") return Q.roles.marketing_system.dimensions;
+    return [];
+  }
+
+  function buildFlat() {
+    var dims = getDimensions();
+    var list = [];
+    dims.forEach(function (d, di) {
+      d.questions.forEach(function (q, qi) {
+        list.push({ dimIndex: di, qIndex: qi, dim: d, question: q, key: di + "_" + qi });
+      });
+    });
+    state.flat = list;
+    state.index = 0;
+    state.answers = {};
+  }
+
+  function overallBand(total) {
+    if (total <= R.gradeBands.C[1]) return "C";
+    if (total <= R.gradeBands.B[1]) return "B";
+    return "A";
+  }
+
+  function dimBand(score, maxP) {
+    if (!maxP || maxP <= 0) return "B";
+    var r = score / maxP;
+    if (r < 0.6) return "C";
+    if (r < 0.8) return "B";
+    return "A";
+  }
+
+  function bandLabel(b) {
+    return b === "C" ? "C 级（待提升）" : b === "B" ? "B 级（良好）" : "A 级（优秀）";
+  }
+
+  function escHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function roleLabel(id) {
+    var m = ROLE_META.find(function (x) { return x.id === id; });
+    return m ? m.title : id || "—";
+  }
+
+  function modeLabel(id) {
+    if (!id) return "—";
+    var m = MODE_META.find(function (x) { return x.id === id; });
+    return m ? m.title : id;
+  }
+
+  function snippetForDimension(role, dimName, band) {
+    var g = R.generic_by_band[band];
+    if (role === "sales_manager" && R.sales_manager_by_dimension[dimName]) {
+      return R.sales_manager_by_dimension[dimName][band];
+    }
+    return {
+      evaluation: g.evaluation.replace(/\{dimension\}/g, dimName),
+      suggestion: g.suggestion.replace(/\{dimension\}/g, dimName),
+      training: (g.training || "").replace(/\{dimension\}/g, dimName)
+    };
+  }
+
+  function computeResult() {
+    var dims = getDimensions();
+    var dimScores = dims.map(function (d, di) {
+      var s = 0;
+      d.questions.forEach(function (q, qi) {
+        var k = di + "_" + qi;
+        var ans = state.answers[k];
+        if (!ans) return;
+        var opt = q.options.find(function (o) { return o.key === ans; });
+        if (opt) s += opt.score;
+      });
+      return { name: d.name, score: Math.round(s * 100) / 100, maxPoints: d.maxPoints || 0, band: dimBand(s, d.maxPoints) };
+    });
+    var total = Math.round(dimScores.reduce(function (a, x) { return a + x.score; }, 0) * 100) / 100;
+    var ob = overallBand(total);
+    var sorted = dimScores.slice().sort(function (a, b) { return a.score / (a.maxPoints || 1) - b.score / (b.maxPoints || 1); });
+    var gaps = sorted.slice(0, 3).filter(function (x) { return x.maxPoints > 0; });
+    var strengths = sorted.slice(-3).reverse().filter(function (x) { return x.maxPoints > 0; });
+
+    var questionDetails = [];
+    var globalNo = 1;
+    dims.forEach(function (d, di) {
+      d.questions.forEach(function (q, qi) {
+        var k = di + "_" + qi;
+        var ansKey = state.answers[k];
+        var opt = ansKey ? q.options.find(function (o) { return o.key === ansKey; }) : null;
+        var maxScore = 0;
+        q.options.forEach(function (o) {
+          if (o.score > maxScore) maxScore = o.score;
+        });
+        questionDetails.push({
+          no: globalNo++,
+          dimKey: d.id || "",
+          dimName: d.name,
+          qLocalIndex: qi + 1,
+          qId: q.id || "",
+          qText: q.text,
+          answerKey: ansKey || "",
+          optionLabel: opt ? opt.label : "—",
+          score: opt != null ? opt.score : null,
+          maxScore: maxScore
+        });
+      });
+    });
+
+    state.result = {
+      total: total,
+      overallBand: ob,
+      dimScores: dimScores,
+      gaps: gaps,
+      strengths: strengths,
+      questionDetails: questionDetails,
+      intro: (R.defaultIntroTemplate || "")
+        .replace(/XX/g, String(total))
+        .replace(/X级/g, ob + "级")
+    };
+    return state.result;
+  }
+
+  function renderReport() {
+    var res = state.result;
+    var p = state.profile || {};
+    var metaHtml =
+      "<p style='margin:4px 0'><strong>企业 / 组织</strong>：" + escHtml(p.company) + "</p>" +
+      "<p style='margin:4px 0'><strong>姓名</strong>：" + escHtml(p.name) + "</p>" +
+      "<p style='margin:4px 0'><strong>手机</strong>：" + escHtml(p.phone) + "</p>" +
+      (p.email ? "<p style='margin:4px 0'><strong>邮箱</strong>：" + escHtml(p.email) + "</p>" : "") +
+      (p.jobTitle ? "<p style='margin:4px 0'><strong>职位</strong>：" + escHtml(p.jobTitle) + "</p>" : "") +
+      (p.industry ? "<p style='margin:4px 0'><strong>行业 / 主营</strong>：" + escHtml(p.industry) + "</p>" : "") +
+      "<p style='margin:4px 0'><strong>测评角色</strong>：" + escHtml(roleLabel(state.role)) + "</p>" +
+      "<p style='margin:4px 0'><strong>销售模式</strong>：" +
+        escHtml(state.role === "sales_rep" ? modeLabel(state.saleMode) : "本角色不适用四象限模式") +
+      "</p>" +
+      "<p style='margin:4px 0'><strong>问卷数据版本</strong>：" + escHtml(Q.version != null ? String(Q.version) : "—") + "</p>" +
+      "<p style='margin:4px 0'><strong>报告生成时间</strong>：" + escHtml(new Date().toLocaleString("zh-CN", { hour12: false })) + "</p>";
+    document.getElementById("rep-meta-lines").innerHTML = metaHtml;
+
+    document.getElementById("rep-total").textContent = "总分 " + res.total + " / 100 · " + bandLabel(res.overallBand);
+    document.getElementById("rep-intro").textContent = res.intro;
+    var bars = document.getElementById("rep-bars");
+    bars.innerHTML = "";
+    res.dimScores.forEach(function (d) {
+      var pct = d.maxPoints ? Math.min(100, Math.round((d.score / d.maxPoints) * 100)) : 0;
+      var row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML = "<span class='bar-name' title='" + d.name + "'>" + d.name + "</span>" +
+        "<div class='bar-track'><div class='bar-fill' style='width:" + pct + "%'></div></div>" +
+        "<span class='bar-val'>" + d.score + "/" + (d.maxPoints || "—") + "</span>";
+      bars.appendChild(row);
+    });
+    var sumParts = [];
+    if (res.strengths.length) {
+      sumParts.push("相对优势维度：" + res.strengths.map(function (x) { return x.name; }).join("、"));
+    }
+    if (res.gaps.length) {
+      sumParts.push("优先改进维度：" + res.gaps.map(function (x) { return x.name; }).join("、"));
+    }
+    sumParts.push("综合等级：" + res.overallBand + " 级（按总分 " + R.gradeBands.C[0] + "–" + R.gradeBands.C[1] + " / " +
+      R.gradeBands.B[0] + "–" + R.gradeBands.B[1] + " / " + R.gradeBands.A[0] + "–" + R.gradeBands.A[1] + " 划分）。");
+    document.getElementById("rep-summary").textContent = sumParts.join(" ");
+
+    var det = document.getElementById("rep-dim-details");
+    det.innerHTML = "";
+    res.dimScores.forEach(function (d) {
+      var sn = snippetForDimension(state.role, d.name, d.band);
+      var blk = document.createElement("div");
+      blk.className = "report-block rep-pdf-dim-detail";
+      blk.innerHTML = "<h4>" + d.name + " · 维度得分 " + d.score + "/" + (d.maxPoints || "—") + " · 解读档 " + d.band + " 档</h4>" +
+        "<p><strong>评价：</strong>" + sn.evaluation + "</p>" +
+        "<p><strong>建议：</strong>" + sn.suggestion + "</p>" +
+        (sn.training ? "<p><strong>培训参考：</strong>" + sn.training + "</p>" : "");
+      det.appendChild(blk);
+    });
+
+    var qWrap = document.getElementById("rep-q-table-wrap");
+    var rows = res.questionDetails || [];
+    var dimCounts = {};
+    rows.forEach(function (r) {
+      dimCounts[r.dimName] = (dimCounts[r.dimName] || 0) + 1;
+    });
+    var html = "";
+    var currentDim = null;
+    var dimFirst = true;
+    rows.forEach(function (r) {
+      if (r.dimName !== currentDim) {
+        if (currentDim !== null) {
+          html += "</tbody></table></div></div>";
+        }
+        currentDim = r.dimName;
+        var newPageCls = dimFirst ? "" : " rep-pdf-q-dim--newpage";
+        dimFirst = false;
+        var cnt = dimCounts[currentDim] || 0;
+        html +=
+          "<div class='rep-pdf-q-dim" + newPageCls + "'>" +
+          "<h5 class='rep-pdf-q-dim-title'>" + escHtml(currentDim) + " · 本维度 " + cnt + " 题</h5>" +
+          "<div class='rep-table-wrap'><table class='rep-table' aria-label='" + escHtml(currentDim) + " 得分明细'>" +
+          "<thead><tr>" +
+          "<th>全卷序号</th><th>题号</th><th>题干</th><th>所选档位</th><th>得分</th><th>本题满分</th>" +
+          "</tr></thead><tbody>";
+      }
+      var sc = r.score != null ? String(r.score) : "—";
+      html +=
+        "<tr class='rep-q-row'>" +
+        "<td class='num'>" + r.no + "</td>" +
+        "<td class='num'>" + r.qLocalIndex + "</td>" +
+        "<td>" + escHtml(r.qText) + "</td>" +
+        "<td>" + escHtml(r.optionLabel) + "</td>" +
+        "<td class='num'>" + escHtml(sc) + "</td>" +
+        "<td class='num'>" + r.maxScore + "</td>" +
+        "</tr>";
+    });
+    if (currentDim !== null) {
+      html += "</tbody></table></div></div>";
+    }
+    qWrap.innerHTML = html;
+
+    var ap = document.getElementById("rep-appendix");
+    var dimRows = res.dimScores.map(function (d) {
+      return "<tr><td>" + escHtml(d.name) + "</td><td class='num'>" + (d.maxPoints || "—") + "</td></tr>";
+    }).join("");
+    var gc = R.gradeBands || {};
+    var cR = gc.C || [0, 59];
+    var bR = gc.B || [60, 79];
+    var aR = gc.A || [80, 100];
+    ap.innerHTML =
+      "<div class='rep-appendix-block'>" +
+      "<h4>附录一 · 计分与等级规则（与 Excel 源表一致）</h4>" +
+      "<ul>" +
+      "<li>每题在「能够做到 / 基本做到 / 有难度」三档中择一，按该题对应分值计分；各题具体分值见上表明细「本题满分」为「能够做到」档分值。</li>" +
+      "<li>维度得分 = 该维度下各题得分之和；维度满分见下表「附录二」。</li>" +
+      "<li>总分 = 各维度得分之和，满分 100 分（与本题本结构一致）。</li>" +
+      "<li>综合等级：C 档 " + cR[0] + "–" + cR[1] + " 分；B 档 " + bR[0] + "–" + bR[1] + " 分；A 档 " + aR[0] + "–" + aR[1] + " 分。</li>" +
+      "</ul></div>" +
+      "<div class='rep-appendix-block'>" +
+      "<h4>附录二 · 维度满分对照表</h4>" +
+      "<div class='rep-table-wrap'><table class='rep-table' aria-label='维度满分'>" +
+      "<thead><tr><th>维度</th><th>满分</th></tr></thead><tbody>" + dimRows + "</tbody></table></div></div>" +
+      "<div class='rep-appendix-block'>" +
+      "<h4>附录三 · 选项档位与数据版本</h4>" +
+      "<p><strong>档位名称：</strong>能够做到（该题最高分）、基本做到、有难度（该题最低分）。不同题目三档分值可能不同，以本题本导出数据为准。</p>" +
+      "<p><strong>角色与模式：</strong>" + escHtml(roleLabel(state.role)) +
+      (state.role === "sales_rep" ? " · " + escHtml(modeLabel(state.saleMode)) : "") + "</p>" +
+      "<p><strong>问卷数据包版本：</strong>" + escHtml(Q.version != null ? String(Q.version) : "—") +
+      " · <strong>研判规则包版本：</strong>" + escHtml(R.version != null ? String(R.version) : "—") + "</p>" +
+      "<p><strong>说明：</strong>本附录用于与《能力测评问卷》Excel 工作簿及「问卷结构」页对照归档；合规化题干以线上题本为准。</p>" +
+      "</div>";
+  }
+
+  function renderQuestion() {
+    var item = state.flat[state.index];
+    if (!item) return;
+    var total = state.flat.length;
+    document.getElementById("quiz-idx").textContent = (state.index + 1) + " / " + total;
+    document.getElementById("quiz-dim").textContent = item.dim.name;
+    document.getElementById("quiz-dim-tag").textContent = item.dim.name;
+    document.getElementById("quiz-text").textContent = item.question.text;
+    document.getElementById("quiz-bar").style.width = ((state.index + 1) / total * 100) + "%";
+    var opts = document.getElementById("quiz-options");
+    opts.innerHTML = "";
+    var sel = state.answers[item.key];
+    item.question.options.forEach(function (o) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt" + (sel === o.key ? " selected" : "");
+      b.textContent = o.label;
+      b.addEventListener("click", function () {
+        state.answers[item.key] = o.key;
+        renderQuestion();
+        document.getElementById("btn-next").disabled = false;
+      });
+      opts.appendChild(b);
+    });
+    document.getElementById("btn-next").disabled = !state.answers[item.key];
+    document.getElementById("btn-prev").style.visibility = state.index === 0 ? "hidden" : "visible";
+  }
+
+  function collectProfile() {
+    state.profile = {
+      company: document.getElementById("pf-company").value.trim(),
+      name: document.getElementById("pf-name").value.trim(),
+      phone: document.getElementById("pf-phone").value.trim(),
+      email: document.getElementById("pf-email").value.trim(),
+      jobTitle: document.getElementById("pf-title").value.trim(),
+      industry: document.getElementById("pf-industry").value.trim()
+    };
+  }
+
+  function validateProfile() {
+    collectProfile();
+    if (!state.profile.company || !state.profile.name || !state.profile.phone) {
+      showToast("请填写公司、姓名与手机");
+      return false;
+    }
+    return true;
+  }
+
+  function buildAssessmentPayload() {
+    var res = state.result;
+    return {
+      source: "universal_marketing_diagnosis",
+      version: Q.version,
+      role: state.role,
+      saleMode: state.saleMode,
+      profile: state.profile,
+      completedAt: new Date().toISOString(),
+      scores: {
+        total: res.total,
+        overallBand: res.overallBand,
+        dimensions: res.dimScores.map(function (d) {
+          return { name: d.name, score: d.score, maxPoints: d.maxPoints, band: d.band };
+        }),
+        questionDetails: (res.questionDetails || []).map(function (r) {
+          return {
+            no: r.no,
+            dimension: r.dimName,
+            questionIndexInDimension: r.qLocalIndex,
+            questionId: r.qId,
+            text: r.qText,
+            selectedLabel: r.optionLabel,
+            score: r.score,
+            maxScore: r.maxScore
+          };
+        })
+      },
+      summary: {
+        intro: res.intro,
+        strengths: res.strengths.map(function (x) { return x.name; }),
+        gaps: res.gaps.map(function (x) { return x.name; })
+      },
+      answers: state.answers
+    };
+  }
+
+  async function postJson(path, body) {
+    var url = apiRoot() + path;
+    var headers = { "Content-Type": "application/json" };
+    if (CONFIG.BRIDGE_TOKEN) headers.Authorization = "Bearer " + CONFIG.BRIDGE_TOKEN;
+    if (CONFIG.API_KEY) headers["X-API-Key"] = CONFIG.API_KEY;
+    var res = await fetch(url, { method: "POST", headers: headers, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json().catch(function () { return {}; });
+  }
+
+  async function syncSubmissionToServer() {
+    if (!useV1Api() || !apiRoot()) return;
+    if (state.submissionPublicId) return;
+    try {
+      var pl = buildAssessmentPayload();
+      var hdr = { "Content-Type": "application/json" };
+      if (CONFIG.API_KEY) hdr["X-API-Key"] = CONFIG.API_KEY;
+      var res = await fetch(apiUrl("/submissions"), {
+        method: "POST",
+        headers: hdr,
+        body: JSON.stringify(pl)
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var j = await res.json();
+      if (j.publicId) state.submissionPublicId = j.publicId;
+      else if (j.submissionPublicId) state.submissionPublicId = j.submissionPublicId;
+      else if (j.submissionId != null) state.submissionPublicId = String(j.submissionId);
+    } catch (e) {
+      console.error("[diag] submission sync", e);
+      showToast("报告已生成，但测评未同步到服务器，请检查网络或 apiBaseUrl");
+    }
+  }
+
+  document.getElementById("btn-start").addEventListener("click", function () { showScreen("role"); });
+
+  var rc = document.getElementById("role-choices");
+  ROLE_META.forEach(function (r) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "choice";
+    b.innerHTML = "<strong>" + r.title + "</strong><br><span class='muted' style='font-size:13px'>" + r.desc + "</span>";
+    b.addEventListener("click", function () {
+      state.role = r.id;
+      document.querySelectorAll("#role-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
+      b.classList.add("selected");
+      if (r.id === "sales_rep") showScreen("mode");
+      else {
+        state.saleMode = null;
+        showScreen("profile");
+      }
+    });
+    rc.appendChild(b);
+  });
+
+  var mc = document.getElementById("mode-choices");
+  MODE_META.forEach(function (m) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "choice";
+    b.innerHTML = "<strong>" + m.title + "</strong>" + (m.desc ? "<br><span class='muted' style='font-size:13px'>" + m.desc + "</span>" : "");
+    b.addEventListener("click", function () {
+      state.saleMode = m.id;
+      document.querySelectorAll("#mode-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
+      b.classList.add("selected");
+      showScreen("profile");
+    });
+    mc.appendChild(b);
+  });
+
+  document.querySelectorAll("[data-back]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = btn.getAttribute("data-back");
+      if (t === "welcome") showScreen("welcome");
+      else if (t === "role") showScreen("role");
+      else if (t === "profile-back") {
+        if (state.role === "sales_rep") showScreen("mode");
+        else showScreen("role");
+      } else if (t === "report") showScreen("report");
+    });
+  });
+
+  document.getElementById("btn-profile-next").addEventListener("click", function () {
+    if (!validateProfile()) return;
+    buildFlat();
+    if (!state.flat.length) {
+      showToast("问卷数据为空，请检查数据包");
+      return;
+    }
+    showScreen("quiz");
+    renderQuestion();
+  });
+
+  document.getElementById("btn-next").addEventListener("click", function () {
+    if (state.index >= state.flat.length - 1) {
+      computeResult();
+      state.submissionPublicId = null;
+      showScreen("report");
+      renderReport();
+      syncSubmissionToServer();
+      return;
+    }
+    state.index++;
+    renderQuestion();
+  });
+
+  document.getElementById("btn-prev").addEventListener("click", function () {
+    if (state.index > 0) {
+      state.index--;
+      renderQuestion();
+    }
+  });
+
+  document.getElementById("btn-pdf").addEventListener("click", function () {
+    var el = document.getElementById("pdf-area");
+    var opt = {
+      margin: [10, 10, 12, 10],
+      filename: "通用营销诊断报告_" + (state.profile.company || "未命名") + ".pdf",
+      image: { type: "jpeg", quality: 0.96 },
+      pagebreak: {
+        mode: ["css", "legacy"],
+        before: ["#rep-pdf-section-detail", "#rep-appendix"],
+        avoid: ["tr.rep-q-row", ".rep-appendix-block", ".rep-pdf-dim-detail"]
+      },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        scrollY: 0,
+        windowWidth: el.scrollWidth
+      },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+    html2pdf().set(opt).from(el).save().catch(function () {
+      showToast("PDF 生成失败，可尝试使用浏览器打印");
+    });
+  });
+
+  document.getElementById("btn-lead").addEventListener("click", async function () {
+    var inner = { type: "lead", payload: buildAssessmentPayload() };
+    try {
+      if (useV1Api()) {
+        var leadBody = { leadKind: "diagnosis_summary", payload: inner };
+        if (state.submissionPublicId) leadBody.submissionPublicId = state.submissionPublicId;
+        await postJson(apiRel("/leads"), leadBody);
+        showToast("线索已提交");
+        return;
+      }
+      if (!CONFIG.CRM_BASE_URL) {
+        console.info("[CRM lead demo]", inner);
+        showToast("演示模式：已输出线索载荷到控制台");
+        return;
+      }
+      await postJson(CONFIG.CRM_LEAD_PATH, inner);
+      showToast("线索已提交 CRM");
+    } catch (e) {
+      console.error(e);
+      showToast("提交失败，请检查网络或接口配置");
+    }
+  });
+
+  document.getElementById("btn-expert").addEventListener("click", function () {
+    showScreen("expert");
+  });
+
+  document.getElementById("btn-expert-submit").addEventListener("click", async function () {
+    var need = document.getElementById("ex-need").value.trim();
+    if (!need) {
+      showToast("请填写沟通主题");
+      return;
+    }
+    var opp = {
+      type: "opportunity",
+      payload: {
+        source: "universal_marketing_diagnosis_expert",
+        profile: state.profile,
+        assessmentSummary: state.result ? {
+          total: state.result.total,
+          overallBand: state.result.overallBand,
+          role: state.role,
+          saleMode: state.saleMode
+        } : null,
+        expert: {
+          need: need,
+          preferredTime: document.getElementById("ex-time").value.trim(),
+          note: document.getElementById("ex-note").value.trim()
+        },
+        submittedAt: new Date().toISOString()
+      }
+    };
+    try {
+      if (useV1Api()) {
+        var oppBody = { leadKind: "expert_opportunity", payload: opp };
+        if (state.submissionPublicId) oppBody.submissionPublicId = state.submissionPublicId;
+        await postJson(apiRel("/leads"), oppBody);
+        showToast("商机已提交");
+        showScreen("report");
+        return;
+      }
+      if (!CONFIG.CRM_BASE_URL) {
+        console.info("[CRM opportunity demo]", opp);
+        showToast("演示模式：已输出商机载荷到控制台");
+        showScreen("report");
+        return;
+      }
+      await postJson(CONFIG.CRM_OPPORTUNITY_PATH, opp);
+      showToast("商机已提交 CRM");
+      showScreen("report");
+    } catch (e) {
+      console.error(e);
+      showToast("提交失败，请检查网络或接口配置");
+    }
+  });
+
+  document.getElementById("btn-restart").addEventListener("click", function () {
+    state = { role: null, saleMode: null, profile: {}, flat: [], index: 0, answers: {}, result: null, submissionPublicId: null };
+    document.querySelectorAll(".choice").forEach(function (c) { c.classList.remove("selected"); });
+    showScreen("welcome");
+  });
+})();
+  </script>
+</body>
+</html>
