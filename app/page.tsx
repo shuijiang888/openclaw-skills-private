@@ -53,7 +53,7 @@ const sharedToolCards: SharedToolCard[] = [
     eyebrow: "UNIVERSAL MARKETING DIAG",
     title: "通用营销诊断系统（实战试点）",
     description: "统一接入医疗器械、能源电力、智能制造三行业问卷与诊断 API，支持落库、统计与后续 CRM 对接。",
-    href: "/diag/h5_medical.html",
+    href: "/diag/universal/h5_universal.html",
     cta: "进入通用诊断系统",
     tone: "cyan",
   },

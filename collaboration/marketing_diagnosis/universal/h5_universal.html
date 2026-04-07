@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>通用营销诊断系统</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --line: #dbe4f0;
+      --text: #14213d;
+      --muted: #5f6f86;
+      --primary: #0f62fe;
+      --danger: #d90429;
+      --ok: #2b9348;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 18px 14px 28px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(15, 34, 61, 0.06);
+    }
+    .hide { display: none; }
+    h1, h2, h3 { margin: 0 0 10px; }
+    .sub { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .welcome-list { margin: 8px 0 0 18px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.ghost { background: #f8fbff; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .progress {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .bar-wrap {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e8eef8;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .bar { height: 100%; width: 0; background: var(--primary); transition: width .2s ease; }
+    .q-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; line-height: 1.6; }
+    .hint { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+    .opt {
+      width: 100%;
+      margin: 6px 0;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    .opt.sel { border-color: var(--primary); background: #eff5ff; }
+    .inp, textarea.inp {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-top: 8px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+    textarea.inp { min-height: 90px; resize: vertical; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 12px;
+      color: #26415f;
+      background: #f6f9ff;
+    }
+    .score {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+    .score strong { font-size: 26px; }
+    .kv {
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .kv-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      border-top: 1px solid var(--line);
+    }
+    .kv-row:first-child { border-top: 0; }
+    .kv-row .k {
+      background: #f8fbff;
+      color: #3c5572;
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .kv-row .v { padding: 10px; font-size: 13px; }
+    .ok { color: var(--ok); }
+    .err {
+      margin-top: 8px;
+      color: #fff;
+      background: var(--danger);
+      border: 1px solid var(--danger);
+      border-radius: 9px;
+      padding: 8px 10px;
+      font-size: 12px;
+      display: none;
+    }
+    .footer-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 640px) {
+      .kv-row { grid-template-columns: 1fr; }
+      .kv-row .k { border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="screenWelcome" class="card">
+      <h1>通用营销诊断系统</h1>
+      <p class="sub">
+        统一支持医疗器械、能源电力、智能制造三行业。先完成 10 步轻诊断查看初估，
+        再解锁完整版生成正式报告，并可提交线索到生产接口。
+      </p>
+      <ul class="welcome-list">
+        <li>QB：行业、企业名称、细分赛道（Q_B2 多选）、规模、年限</li>
+        <li>10 步轻诊断 -> 初估页 -> 续答完整版（断点续答）</li>
+        <li>报告页可提交诊断线索与预约专家线索</li>
+      </ul>
+      <div class="actions">
+        <button id="btnStart" class="btn primary">全新开始</button>
+        <button id="btnResume" class="btn ghost hide">继续上次</button>
+      </div>
+      <div class="footer-note">入口建议：/diag/universal/h5_universal.html（依赖 ./data/ 相对路径）</div>
+    </div>
+
+    <div id="screenQuiz" class="card hide">
+      <div class="progress">
+        <span id="stepTag">轻诊断阶段</span>
+        <span id="stepText">1 / 10</span>
+      </div>
+      <div class="bar-wrap"><div id="bar" class="bar"></div></div>
+      <div id="qCard"></div>
+      <div class="actions">
+        <button id="btnPrev" class="btn">上一步</button>
+        <button id="btnNext" class="btn primary">下一步</button>
+      </div>
+      <div id="errQuiz" class="err"></div>
+    </div>
+
+    <div id="screenPreview" class="card hide">
+      <h2>初估画像</h2>
+      <p class="sub">已完成轻诊断，以下为当前估算结果。</p>
+      <div class="score"><span>初估总分</span><strong id="previewScore">--</strong><span>/ 100</span></div>
+      <div class="actions">
+        <button id="btnContinueFull" class="btn primary">继续完成完整版</button>
+      </div>
+    </div>
+
+    <div id="screenReport" class="card hide">
+      <h2 id="reportTitle">通用营销诊断报告</h2>
+      <div class="score"><span>综合评分</span><strong id="finalScore">--</strong><span>/ 100</span></div>
+      <p class="sub" id="levelText">等级：--</p>
+
+      <div class="kv">
+        <div class="kv-row"><div class="k">行业</div><div class="v" id="repIndustry">-</div></div>
+        <div class="kv-row"><div class="k">企业名称</div><div class="v" id="repCompany">-</div></div>
+        <div class="kv-row"><div class="k">Q_B2 细分赛道</div><div class="v"><div id="repSegments" class="chips"></div></div></div>
+      </div>
+
+      <div class="actions">
+        <button id="btnSubmitSummary" class="btn primary">提交诊断线索</button>
+        <button id="btnBook" class="btn">预约专家（先二次确认）</button>
+        <button id="btnReset" class="btn ghost">重新填写</button>
+      </div>
+      <div id="reportMsg" class="footer-note"></div>
+      <div id="errReport" class="err"></div>
+    </div>
+  </div>
+
+  <script src="./data/questionnaire.bundle.js"></script>
+  <script src="./data/rubrics.bundle.js"></script>
+  <script>
+    var CONFIG = {
+      companyName: "纷享销客·中西南",
+      bookingUrl: "https://www.fxiaoke.com/",
+      hotline: "400-000-0000",
+      reportTitle: "通用营销诊断报告",
+      apiBaseUrl: "http://119.45.205.137/api/diag",
+      apiPathPrefix: "",
+      questionnaireVersion: "universal_v1",
+      scoringModelVersion: "score_v1_9",
+      storageKey: "diag_universal_v1"
+    };
+
+    (function () {
+      var STORAGE_VERSION = 1;
+      var LITE_LIMIT = 10;
+      var FULL_RESUME_QI = 5;
+      var LIGHT_TAIL_QI = 9;
+
+      var qb = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.qb) || [];
+      var questions = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.questions) || [];
+      var segsByIndustry = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.segsByIndustry) || {};
+      var industries = (window.UNIVERSAL_QUESTIONNAIRE_BUNDLE && window.UNIVERSAL_QUESTIONNAIRE_BUNDLE.industries) || [];
+
+      var rubrics = (window.UNIVERSAL_RUBRICS_BUNDLE && window.UNIVERSAL_RUBRICS_BUNDLE) || {};
+      var dims = rubrics.dims || [];
+
+      var TOTAL_STEPS = qb.length + questions.length;
+
+      var screenWelcome = document.getElementById("screenWelcome");
+      var screenQuiz = document.getElementById("screenQuiz");
+      var screenPreview = document.getElementById("screenPreview");
+      var screenReport = document.getElementById("screenReport");
+      var qCard = document.getElementById("qCard");
+      var stepTag = document.getElementById("stepTag");
+      var stepText = document.getElementById("stepText");
+      var bar = document.getElementById("bar");
+      var btnResume = document.getElementById("btnResume");
+      var errQuiz = document.getElementById("errQuiz");
+      var errReport = document.getElementById("errReport");
+
+      var state = {
+        v: STORAGE_VERSION,
+        phase: "welcome",
+        qIndex: 0,
+        unlockedFull: false,
+        basic: {
+          industryEdition: "",
+          companyName: "",
+          q_b2: [],
+          scale: "",
+          years: ""
+        },
+        answers: {},
+        contact: { name: "", phone: "", role: "" },
+        submissionId: "",
+        generated: false
+      };
+
+      function safeSetError(el, msg) {
+        el.textContent = msg || "";
+        el.style.display = msg ? "block" : "none";
+      }
+
+      function save() {
+        localStorage.setItem(CONFIG.storageKey, JSON.stringify(state));
+      }
+
+      function clearSaved() {
+        localStorage.removeItem(CONFIG.storageKey);
+      }
+
+      function loadSaved() {
+        try {
+          var raw = localStorage.getItem(CONFIG.storageKey);
+          if (!raw) return false;
+          var obj = JSON.parse(raw);
+          if (!obj || obj.v !== STORAGE_VERSION || obj.generated) return false;
+          state = obj;
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function apiBase() {
+        var raw = (CONFIG.apiBaseUrl || "").trim().replace(/\/+$/, "");
+        var pfx = (CONFIG.apiPathPrefix || "").trim();
+        if (pfx) pfx = pfx.charAt(0) === "/" ? pfx : "/" + pfx;
+        return raw + pfx;
+      }
+
+      function setVisible(which) {
+        screenWelcome.classList.add("hide");
+        screenQuiz.classList.add("hide");
+        screenPreview.classList.add("hide");
+        screenReport.classList.add("hide");
+        if (which === "welcome") screenWelcome.classList.remove("hide");
+        if (which === "quiz") screenQuiz.classList.remove("hide");
+        if (which === "preview") screenPreview.classList.remove("hide");
+        if (which === "report") screenReport.classList.remove("hide");
+      }
+
+      function currentQuestion() {
+        return (state.qIndex >= qb.length) ? questions[state.qIndex - qb.length] : null;
+      }
+
+      function renderProgress() {
+        var isLite = !state.unlockedFull && state.qIndex <= LIGHT_TAIL_QI;
+        if (isLite) {
+          stepTag.textContent = "轻诊断阶段";
+          stepText.textContent = (state.qIndex + 1) + " / " + LITE_LIMIT;
+          bar.style.width = Math.round(((state.qIndex + 1) / LITE_LIMIT) * 100) + "%";
+        } else {
+          stepTag.textContent = "完整版阶段";
+          stepText.textContent = (state.qIndex + 1) + " / " + TOTAL_STEPS;
+          bar.style.width = Math.round(((state.qIndex + 1) / TOTAL_STEPS) * 100) + "%";
+        }
+      }
+
+      function renderBasic(step) {
+        if (step === 1) {
+          var html = '<div class="q-title">选择行业</div>';
+          for (var i = 0; i < industries.length; i++) {
+            var it = industries[i];
+            var sel = state.basic.industryEdition === it.id ? " sel" : "";
+            html += '<button type="button" class="opt' + sel + '" data-industry="' + it.id + '">' + it.label + '</button>';
+          }
+          return html;
+        }
+        if (step === 2) {
+          return '<div class="q-title">企业名称</div><input id="inp-company" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || "") + '" />';
+        }
+        if (step === 3) {
+          var items = segsByIndustry[state.basic.industryEdition] || [];
+          var out = '<div class="q-title">Q_B2 细分赛道（可多选）</div><p class="hint">报告中会展示多选标签。</p>';
+          for (var j = 0; j < items.length; j++) {
+            var seg = items[j];
+            var selected = (state.basic.q_b2 || []).indexOf(seg.id) >= 0 ? " sel" : "";
+            out += '<button type="button" class="opt' + selected + '" data-seg="' + seg.id + '">' + seg.text + '</button>';
+          }
+          return out;
+        }
+        if (step === 4) {
+          var scales = ["100人以下", "100-500人", "500-2000人", "2000人以上"];
+          var html2 = '<div class="q-title">企业规模</div>';
+          for (var s = 0; s < scales.length; s++) {
+            var sc = scales[s];
+            var sel2 = state.basic.scale === sc ? " sel" : "";
+            html2 += '<button type="button" class="opt' + sel2 + '" data-scale="' + sc + '">' + sc + '</button>';
+          }
+          return html2;
+        }
+        var years = ["3年以下", "3-10年", "10-20年", "20年以上"];
+        var html3 = '<div class="q-title">成立年限</div>';
+        for (var y = 0; y < years.length; y++) {
+          var ys = years[y];
+          var sel3 = state.basic.years === ys ? " sel" : "";
+          html3 += '<button type="button" class="opt' + sel3 + '" data-years="' + ys + '">' + ys + '</button>';
+        }
+        return html3;
+      }
+
+      function renderAbility(q) {
+        if (!q) return "";
+        var ans = state.answers[q.id];
+        var html = '<div class="q-title">' + q.title + '</div>';
+        if (q.type === "mc") html += '<p class="hint">多选计分，分值封顶 5 分。</p>';
+        for (var i = 0; i < q.options.length; i++) {
+          var opt = q.options[i];
+          var selected = q.type === "mc" ? ((ans || []).indexOf(opt.k) >= 0) : ans === opt.k;
+          html += '<button type="button" class="opt' + (selected ? " sel" : "") + '" data-qid="' + q.id + '" data-key="' + opt.k + '">' + opt.t + '</button>';
+        }
+        return html;
+      }
+
+      function renderQuestion() {
+        renderProgress();
+        var q = currentQuestion();
+        qCard.innerHTML = q ? renderAbility(q) : renderBasic(state.qIndex + 1);
+        bindEvents();
+      }
+
+      function bindEvents() {
+        var inpCompany = document.getElementById("inp-company");
+        if (inpCompany) {
+          inpCompany.addEventListener("input", function () {
+            state.basic.companyName = inpCompany.value;
+            save();
+          });
+        }
+        var industryBtns = qCard.querySelectorAll("[data-industry]");
+        for (var i = 0; i < industryBtns.length; i++) {
+          industryBtns[i].addEventListener("click", function () {
+            state.basic.industryEdition = this.getAttribute("data-industry");
+            state.basic.q_b2 = [];
+            save();
+            renderQuestion();
+          });
+        }
+        var segBtns = qCard.querySelectorAll("[data-seg]");
+        for (var j = 0; j < segBtns.length; j++) {
+          segBtns[j].addEventListener("click", function () {
+            var id = this.getAttribute("data-seg");
+            var arr = state.basic.q_b2 || [];
+            var idx = arr.indexOf(id);
+            if (idx >= 0) arr.splice(idx, 1); else arr.push(id);
+            state.basic.q_b2 = arr;
+            save();
+            renderQuestion();
+          });
+        }
+        var scaleBtns = qCard.querySelectorAll("[data-scale]");
+        for (var s = 0; s < scaleBtns.length; s++) {
+          scaleBtns[s].addEventListener("click", function () {
+            state.basic.scale = this.getAttribute("data-scale");
+            save();
+            renderQuestion();
+          });
+        }
+        var yearsBtns = qCard.querySelectorAll("[data-years]");
+        for (var y = 0; y < yearsBtns.length; y++) {
+          yearsBtns[y].addEventListener("click", function () {
+            state.basic.years = this.getAttribute("data-years");
+            save();
+            renderQuestion();
+          });
+        }
+        var opts = qCard.querySelectorAll("[data-qid]");
+        for (var x = 0; x < opts.length; x++) {
+          opts[x].addEventListener("click", function () {
+            var qid = this.getAttribute("data-qid");
+            var key = this.getAttribute("data-key");
+            var q = currentQuestion();
+            if (!q || q.id !== qid) return;
+            if (q.type === "mc") {
+              var arr = state.answers[qid] || [];
+              var ix = arr.indexOf(key);
+              if (ix >= 0) arr.splice(ix, 1); else arr.push(key);
+              state.answers[qid] = arr;
+            } else {
+              state.answers[qid] = key;
+            }
+            save();
+            renderQuestion();
+          });
+        }
+      }
+
+      function validCurrent() {
+        if (state.qIndex === 0) return !!state.basic.industryEdition;
+        if (state.qIndex === 1) return !!(state.basic.companyName || "").trim();
+        if (state.qIndex === 2) return (state.basic.q_b2 || []).length > 0;
+        if (state.qIndex === 3) return !!state.basic.scale;
+        if (state.qIndex === 4) return !!state.basic.years;
+        var q = currentQuestion();
+        if (!q) return true;
+        var ans = state.answers[q.id];
+        if (q.type === "mc") return (ans || []).length > 0;
+        return !!ans;
+      }
+
+      function scoreQuestion(q) {
+        var ans = state.answers[q.id];
+        if (!ans) return 0;
+        if (q.type === "sc") {
+          for (var i = 0; i < q.options.length; i++) {
+            if (q.options[i].k === ans) return q.options[i].s;
+          }
+          return 0;
+        }
+        var sum = 0;
+        for (var j = 0; j < q.options.length; j++) {
+          if ((ans || []).indexOf(q.options[j].k) >= 0) sum += q.options[j].s;
+        }
+        return Math.min(5, sum);
+      }
+
+      function computeScore() {
+        var raw = [];
+        var max = [];
+        for (var i = 0; i < dims.length; i++) {
+          raw.push(0);
+          max.push(0);
+        }
+        for (var q = 0; q < questions.length; q++) {
+          var item = questions[q];
+          if (item.dim < 0 || item.dim >= dims.length) continue;
+          raw[item.dim] += scoreQuestion(item);
+          max[item.dim] += 5;
+        }
+        var weighted = [];
+        var total = 0;
+        for (var d = 0; d < dims.length; d++) {
+          var ratio = max[d] ? (raw[d] / max[d]) : 0;
+          var w = Math.round(ratio * dims[d].maxW * 10) / 10;
+          weighted.push(w);
+          total += w;
+        }
+        total = Math.round(total * 10) / 10;
+        var level = total >= 85 ? "卓越" : total >= 70 ? "良好" : total >= 50 ? "一般" : "薄弱";
+        return { weighted: weighted, total: total, level: level };
+      }
+
+      function postJson(url, body) {
+        return fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body)
+        }).then(function (res) {
+          return res.json().then(function (json) {
+            if (!res.ok || !json || json.code !== 0) {
+              throw new Error((json && json.message) || ("HTTP " + res.status));
+            }
+            return json.data;
+          });
+        });
+      }
+
+      function segTextChips() {
+        var map = {};
+        var arr = segsByIndustry[state.basic.industryEdition] || [];
+        for (var i = 0; i < arr.length; i++) map[arr[i].id] = arr[i].text;
+        var chosen = state.basic.q_b2 || [];
+        if (!chosen.length) return '<span class="chip">未填写</span>';
+        var html = "";
+        for (var j = 0; j < chosen.length; j++) {
+          html += '<span class="chip">' + (map[chosen[j]] || chosen[j]) + '</span>';
+        }
+        return html;
+      }
+
+      function gotoPreview() {
+        var score = computeScore();
+        document.getElementById("previewScore").textContent = String(score.total);
+        state.phase = "preview";
+        save();
+        setVisible("preview");
+      }
+
+      function renderReport(score) {
+        document.getElementById("reportTitle").textContent = CONFIG.reportTitle;
+        document.getElementById("finalScore").textContent = String(score.total);
+        document.getElementById("levelText").textContent = "等级：" + score.level;
+        var ind = industries.find(function (x) { return x.id === state.basic.industryEdition; });
+        document.getElementById("repIndustry").textContent = ind ? ind.label : state.basic.industryEdition;
+        document.getElementById("repCompany").textContent = state.basic.companyName || "未填写";
+        document.getElementById("repSegments").innerHTML = segTextChips();
+      }
+
+      function createSubmission() {
+        var score = computeScore();
+        renderReport(score);
+        setVisible("report");
+        state.phase = "report";
+        state.generated = true;
+        clearSaved();
+        safeSetError(errReport, "");
+        document.getElementById("reportMsg").textContent = "提交中...";
+
+        var payload = {
+          industryEdition: state.basic.industryEdition || "medical_device",
+          questionnaireVersion: CONFIG.questionnaireVersion,
+          scoringModelVersion: CONFIG.scoringModelVersion,
+          sourcePage: "/diag/universal/h5_universal.html",
+          type: "questionnaire_submission",
+          payload: {
+            totalSteps: TOTAL_STEPS,
+            liteLimit: LITE_LIMIT,
+            resumeFromQIndex: FULL_RESUME_QI
+          },
+          qbPayload: {
+            q_b1_companyName: state.basic.companyName || "",
+            q_b2_segments: state.basic.q_b2 || [],
+            q_b3_scale: state.basic.scale || "",
+            q_b4_years: state.basic.years || ""
+          },
+          answersPayload: state.answers,
+          clientScorePayload: score
+        };
+
+        return postJson(apiBase() + "/submissions", payload)
+          .then(function (data) {
+            var sid = (data && (data.publicId || data.submissionId)) || "";
+            state.submissionId = sid;
+            document.getElementById("reportMsg").textContent = sid
+              ? ("提交成功，submissionId: " + sid)
+              : "提交成功（未返回 submissionId）";
+            return sid;
+          })
+          .catch(function (e) {
+            document.getElementById("reportMsg").textContent = "";
+            safeSetError(errReport, "提交失败：" + (e && e.message ? e.message : "未知错误"));
+            return "";
+          });
+      }
+
+      function submitSummaryLead() {
+        safeSetError(errReport, "");
+        if (!state.submissionId) {
+          safeSetError(errReport, "请先完成报告提交，再提交线索。");
+          return;
+        }
+        document.getElementById("reportMsg").textContent = "线索提交中...";
+        postJson(apiBase() + "/leads", {
+          submissionId: state.submissionId,
+          leadKind: "diagnosis_summary",
+          name: state.contact.name || "报告访客",
+          phone: state.contact.phone || "H5-N/A",
+          company: state.basic.companyName || "未填写",
+          role: state.contact.role || "访客",
+          bookingIntent: false
+        }).then(function () {
+          document.getElementById("reportMsg").textContent = "诊断线索提交成功。";
+        }).catch(function (e) {
+          document.getElementById("reportMsg").textContent = "";
+          safeSetError(errReport, "线索提交失败：" + (e && e.message ? e.message : "未知错误"));
+        });
+      }
+
+      function submitExpertLeadAndOpen() {
+        if (!confirm("将提交预约专家线索并打开预约链接，是否继续？")) return;
+        if (!state.submissionId) {
+          window.open(CONFIG.bookingUrl, "_blank", "noopener");
+          return;
+        }
+        postJson(apiBase() + "/leads", {
+          submissionId: state.submissionId,
+          leadKind: "expert_opportunity",
+          name: state.contact.name || "预约访客",
+          phone: state.contact.phone || "H5-N/A",
+          company: state.basic.companyName || "未填写",
+          role: state.contact.role || "访客",
+          bookingIntent: true
+        }).finally(function () {
+          window.open(CONFIG.bookingUrl, "_blank", "noopener");
+        });
+      }
+
+      document.getElementById("btnStart").addEventListener("click", function () {
+        state = {
+          v: STORAGE_VERSION,
+          phase: "quiz",
+          qIndex: 0,
+          unlockedFull: false,
+          basic: { industryEdition: "", companyName: "", q_b2: [], scale: "", years: "" },
+          answers: {},
+          contact: { name: "", phone: "", role: "" },
+          submissionId: "",
+          generated: false
+        };
+        save();
+        safeSetError(errQuiz, "");
+        safeSetError(errReport, "");
+        setVisible("quiz");
+        renderQuestion();
+      });
+
+      document.getElementById("btnResume").addEventListener("click", function () {
+        safeSetError(errQuiz, "");
+        if (state.phase === "preview") setVisible("preview");
+        else if (state.phase === "report") setVisible("report");
+        else { state.phase = "quiz"; setVisible("quiz"); renderQuestion(); }
+      });
+
+      document.getElementById("btnPrev").addEventListener("click", function () {
+        if (state.qIndex > 0) {
+          state.qIndex -= 1;
+          state.phase = "quiz";
+          save();
+          renderQuestion();
+        }
+      });
+
+      document.getElementById("btnNext").addEventListener("click", function () {
+        safeSetError(errQuiz, "");
+        if (!validCurrent()) {
+          safeSetError(errQuiz, "请先完成当前题目。");
+          return;
+        }
+        if (!state.unlockedFull && state.qIndex === LIGHT_TAIL_QI) {
+          gotoPreview();
+          return;
+        }
+        if (state.qIndex < TOTAL_STEPS - 1) {
+          state.qIndex += 1;
+          state.phase = "quiz";
+          save();
+          renderQuestion();
+          return;
+        }
+        createSubmission();
+      });
+
+      document.getElementById("btnContinueFull").addEventListener("click", function () {
+        state.unlockedFull = true;
+        state.phase = "quiz";
+        state.qIndex = FULL_RESUME_QI;
+        save();
+        setVisible("quiz");
+        renderQuestion();
+      });
+
+      document.getElementById("btnSubmitSummary").addEventListener("click", function () {
+        submitSummaryLead();
+      });
+
+      document.getElementById("btnBook").addEventListener("click", function () {
+        submitExpertLeadAndOpen();
+      });
+
+      document.getElementById("btnReset").addEventListener("click", function () {
+        clearSaved();
+        state = {
+          v: STORAGE_VERSION,
+          phase: "welcome",
+          qIndex: 0,
+          unlockedFull: false,
+          basic: { industryEdition: "", companyName: "", q_b2: [], scale: "", years: "" },
+          answers: {},
+          contact: { name: "", phone: "", role: "" },
+          submissionId: "",
+          generated: false
+        };
+        btnResume.classList.add("hide");
+        setVisible("welcome");
+      });
+
+      if (loadSaved()) btnResume.classList.remove("hide");
+    })();
+  </script>
+</body>
+</html>
