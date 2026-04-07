@@ -1,0 +1,15 @@
+# 硕日海外渠道运营 — 演示原型（API + Web + SQLite 持久化）
+services:
+  srne-channel-ops:
+    build: .
+    ports:
+      - "8790:8790"
+    environment:
+      PORT: "8790"
+      JWT_SECRET: ${JWT_SECRET:-srne-demo-change-in-production}
+    volumes:
+      - srne-ops-data:/data
+    restart: unless-stopped
+
+volumes:
+  srne-ops-data:

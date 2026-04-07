@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>硕日海外渠道拓展运营管理系统 · 演示原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="shellLogin" class="login-page">
+    <div class="login-card">
+      <h1>硕日海外渠道拓展运营管理系统</h1>
+      <p class="muted">高保真演示原型 · 数据为虚构样例，演示后请删除或脱敏</p>
+      <div id="loginError" class="error-banner hidden"></div>
+      <form id="loginForm">
+        <div class="row" style="flex-direction:column;align-items:stretch">
+          <label class="muted" for="loginEmail">邮箱</label>
+          <input id="loginEmail" type="email" autocomplete="username" value="admin@srne.demo" required />
+        </div>
+        <div class="row" style="flex-direction:column;align-items:stretch;margin-top:12px">
+          <label class="muted" for="loginPassword">密码</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" value="Demo2026!" required />
+        </div>
+        <div class="row" style="margin-top:18px">
+          <button type="submit" class="btn">进入系统</button>
+        </div>
+      </form>
+      <p class="muted" style="margin-top:20px;font-size:12px">
+        演示账号：admin@srne.demo / manager@srne.demo / sam.zhang@srne.demo / li.wei@srne.demo — 密码均为 <code>Demo2026!</code><br />
+        销售账号仅可见自己负责渠道；管理员与总监可见全部并可导入数据。
+      </p>
+    </div>
+  </div>
+
+  <div id="shellApp" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">SRNE · Channel OS</div>
+      <nav>
+        <button type="button" data-nav="dashboard">运营总览</button>
+        <button type="button" data-nav="channels">渠道商</button>
+        <button type="button" data-nav="intel">市场情报</button>
+        <button type="button" data-nav="sales">销售赋能</button>
+        <button type="button" data-nav="perf">绩效看板</button>
+        <button type="button" data-nav="alerts">预警中心</button>
+        <button type="button" data-nav="import" id="navImport">数据导入</button>
+      </nav>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <h1 id="viewTitle">运营总览</h1>
+        <div class="user-pill">
+          <span id="userLabel"></span>
+          <button type="button" class="btn secondary" id="btnLogout" style="margin-left:12px;padding:6px 12px;font-size:12px">退出</button>
+        </div>
+      </div>
+
+      <section data-view="dashboard">
+        <div class="grid-kpi">
+          <div class="kpi"><div class="label">渠道商数量</div><div class="value" id="kpiChannels">—</div></div>
+          <div class="kpi"><div class="label">活跃渠道年出货(演示汇总)</div><div class="value" id="kpiRevenue">—</div></div>
+          <div class="kpi"><div class="label">待处理预警</div><div class="value" id="kpiAlerts">—</div></div>
+          <div class="kpi"><div class="label">SAM 账户</div><div class="value" id="kpiSam">—</div></div>
+          <div class="kpi"><div class="label">A/B/C 分布</div><div class="value" id="kpiAbc" style="font-size:1rem">—</div></div>
+        </div>
+        <div class="panel">
+          <h2>演示说明</h2>
+          <p class="muted">
+            本原型覆盖设计说明书中的渠道主数据、市场情报、销售赋能（简报 + 规则型报价）、预警与权限分层。
+            生产环境需替换为真实 ERP/CRM 同步、LLM 情报流水线与安全加固。
+          </p>
+        </div>
+      </section>
+
+      <section data-view="channels" class="hidden">
+        <div class="panel">
+          <div class="row">
+            <input id="filterQ" placeholder="搜索编码 / 中英文名称" style="min-width:200px" />
+            <select id="filterRegion">
+              <option value="">全部区域</option>
+              <option value="SEA">东南亚 SEA</option>
+              <option value="MENA">中东非 MENA</option>
+              <option value="EU">欧洲 EU</option>
+            </select>
+            <select id="filterAbc">
+              <option value="">全部分级</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+            <button type="button" class="btn secondary" id="btnApplyFilters">筛选</button>
+          </div>
+          <table id="channelTable">
+            <thead>
+              <tr>
+                <th>编码</th>
+                <th>名称</th>
+                <th>国家</th>
+                <th>区域</th>
+                <th>分级</th>
+                <th>CLV</th>
+                <th>SAM</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section data-view="channelDetail" class="hidden">
+        <div class="row">
+          <button type="button" class="btn secondary" id="btnBackChannels">← 返回列表</button>
+        </div>
+        <h2 id="chTitle" style="margin-top:8px">—</h2>
+        <div id="chMeta"></div>
+        <div class="panel">
+          <h2>近 6 个月出货（演示曲线）</h2>
+          <div class="bar-chart" id="monthlyChart"></div>
+        </div>
+        <div class="panel">
+          <h2>备注 / 协作记录</h2>
+          <textarea id="chNotes" placeholder="现场拜访记录、协议要点…"></textarea>
+          <div class="row">
+            <button type="button" class="btn" id="btnSaveNotes">保存备注</button>
+            <span class="muted" id="chSaveHint"></span>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>关联预警</h2>
+          <table id="chAlerts">
+            <thead><tr><th>级别</th><th>内容</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section data-view="intel" class="hidden">
+        <div class="panel">
+          <h2>各国市场机会指数</h2>
+          <table id="intelTable">
+            <thead><tr><th>国家</th><th>机会分</th><th>政策摘要</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="intelDetail" class="panel hidden">
+          <h2>详情</h2>
+          <div id="intelBody"></div>
+        </div>
+      </section>
+
+      <section data-view="sales" class="hidden">
+        <div class="panel">
+          <h2>规则型报价计算器（演示）</h2>
+          <p class="muted">含关税、运费与渠道加成假设；非法律或财务承诺。</p>
+          <div class="row">
+            <select id="quoteCountry">
+              <option value="PH">PH 菲律宾</option>
+              <option value="VN">VN 越南</option>
+              <option value="ID">ID 印尼</option>
+              <option value="SA">SA 沙特</option>
+              <option value="ES">ES 西班牙</option>
+            </select>
+            <select id="quoteCat">
+              <option value="controller">控制器</option>
+              <option value="hybrid_inverter">混合逆变器</option>
+              <option value="battery_pack">电池包</option>
+            </select>
+            <input id="quoteQty" type="number" min="1" value="500" style="width:100px" />
+            <input id="quoteFob" type="number" min="0" step="0.01" value="45" style="width:100px" title="FOB USD/台" />
+            <button type="button" class="btn" id="btnRunQuote">计算</button>
+          </div>
+          <pre id="quoteOut" class="muted" style="margin-top:14px;white-space:pre-wrap;font-size:13px"></pre>
+        </div>
+        <div class="panel">
+          <h2>市场简报</h2>
+          <p class="muted">在「市场情报」中点击国家代码查看预置简报（Markdown）。</p>
+        </div>
+      </section>
+
+      <section data-view="perf" class="hidden">
+        <div class="panel">
+          <h2>按分级聚合（演示）</h2>
+          <pre id="perfOut" class="muted" style="white-space:pre-wrap;font-size:13px"></pre>
+        </div>
+      </section>
+
+      <section data-view="alerts" class="hidden">
+        <div class="panel">
+          <h2>未确认预警</h2>
+          <table id="alertsTable">
+            <thead><tr><th>级别</th><th>渠道</th><th>内容</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section data-view="import" class="hidden">
+        <div class="panel">
+          <h2>导入渠道 JSON</h2>
+          <p class="muted">请求体格式：<code>{"channels":[{...}]}</code>，与种子文件中单条结构一致；<code>channel_code</code> 唯一，重复则更新。</p>
+          <textarea id="importJson" placeholder='{"channels":[]}'></textarea>
+          <div class="row">
+            <button type="button" class="btn" id="btnImportJson">提交 JSON</button>
+            <input type="file" id="importFile" accept=".json,application/json" />
+            <button type="button" class="btn secondary" id="btnImportFile">上传文件</button>
+          </div>
+          <pre id="importResult" class="muted" style="margin-top:12px;white-space:pre-wrap;font-size:13px"></pre>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
