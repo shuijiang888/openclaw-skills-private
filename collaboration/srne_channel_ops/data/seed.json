@@ -1,0 +1,289 @@
+{
+  "users": [
+    {
+      "email": "admin@srne.demo",
+      "password": "Demo2026!",
+      "name": "系统管理员",
+      "role": "admin"
+    },
+    {
+      "email": "manager@srne.demo",
+      "password": "Demo2026!",
+      "name": "海外销售总监",
+      "role": "manager"
+    },
+    {
+      "email": "sam.zhang@srne.demo",
+      "password": "Demo2026!",
+      "name": "张敏（东南亚）",
+      "role": "sales"
+    },
+    {
+      "email": "li.wei@srne.demo",
+      "password": "Demo2026!",
+      "name": "李伟（中东欧）",
+      "role": "sales"
+    }
+  ],
+  "market_intel": [
+    {
+      "country_code": "PH",
+      "opportunity_score": 88,
+      "policy_digest": "微网与离网补贴延续，配储率提升；进口组件关税稳定。",
+      "competitor_note": "固德威、首航在户储渠道加密；控制器细分仍有机会。",
+      "product_fit_note": "耐高温控制器 + 微网储能 bundle 与本地集成商诉求匹配度高。"
+    },
+    {
+      "country_code": "ID",
+      "opportunity_score": 82,
+      "policy_digest": "岛屿微电网项目增多，工商业峰谷价差扩大。",
+      "competitor_note": "阳光电源在大储品牌强；中小集成商侧 SRNE 性价比敏感。",
+      "product_fit_note": "控制器贴牌 + 本地化固件语言包为切入点。"
+    },
+    {
+      "country_code": "VN",
+      "opportunity_score": 85,
+      "policy_digest": "光伏装机高增，储能配套政策逐步清晰。",
+      "competitor_note": "价格竞争激烈，需绑定头部分销商账期能力。",
+      "product_fit_note": "光储控制一体化方案 + 快速交付 SLA。"
+    },
+    {
+      "country_code": "SA",
+      "opportunity_score": 79,
+      "policy_digest": "Vision 2030 下大型光储项目招标密集，本地化要求提高。",
+      "competitor_note": "多家中资集成商已入场，渠道以 EPC 与总包为主。",
+      "product_fit_note": "大型离网/弱网控制器 + 项目型技术支持。"
+    },
+    {
+      "country_code": "AE",
+      "opportunity_score": 76,
+      "policy_digest": "离网别墅与工商业备电需求稳定；认证门槛明确。",
+      "competitor_note": "欧洲品牌溢价仍存，性价比窗口在中小型渠道。",
+      "product_fit_note": "户用光储控制器 + 认证清单预置包。"
+    },
+    {
+      "country_code": "ES",
+      "opportunity_score": 81,
+      "policy_digest": "2026Q1 光伏新增同比高位，储能配套率继续抬升。",
+      "competitor_note": "德语区巨头集中；南欧更适合差异化代理切入。",
+      "product_fit_note": "户储系统方案 + 南欧认证路径咨询。"
+    },
+    {
+      "country_code": "IT",
+      "opportunity_score": 80,
+      "policy_digest": "Superbonus 退坡后转向市场化PPA与工商储。",
+      "competitor_note": "渠道分散，需强化技术服务响应。",
+      "product_fit_note": "户储一体机渠道培训与联合品牌活动素材包。"
+    }
+  ],
+  "sales_briefs": [
+    {
+      "country_code": "PH",
+      "title": "菲律宾市场简报（演示稿）",
+      "body_markdown": "## 概况\n- 微网/离网场景增长，集成商碎片化。\n## 机会\n- 耐高温控制器 + 储能配套。\n## 竞品\n- 头部逆变器品牌渠道下沉，控制器细分仍可差异化。\n## 行动\n- 绑定 2 家头部集成商做联合案例；季度复盘出货与回款。"
+    },
+    {
+      "country_code": "SA",
+      "title": "沙特市场简报（演示稿）",
+      "body_markdown": "## 概况\n- 大项目驱动，决策链长，技术服务权重大。\n## 机会\n- EPC 合作 + 标杆项目。\n## 风险\n- 本地化认证与交付周期。\n## 行动\n- 建立 48h 远程支持 SLA；项目清单制跟进。"
+    }
+  ],
+  "channels": [
+    {
+      "channel_code": "SRNE-SEA-001",
+      "name_cn": "马尼拉光能集成",
+      "name_en": "Manila Solar Integration Co.",
+      "country_code": "PH",
+      "region": "SEA",
+      "lifecycle_stage": "strategic",
+      "abc_class": "A",
+      "clv_score": 482.5,
+      "agreement_expire_date": "2028-12-31",
+      "sam_flag": 1,
+      "status": "ACTIVE",
+      "owner_email": "sam.zhang@srne.demo",
+      "last_contact_date": "2026-04-02",
+      "annual_revenue_usd": 520000,
+      "gross_margin_pct": 28,
+      "ar_overdue_days": 0,
+      "strategic_fit_score": 32,
+      "profit_dim_score": 33,
+      "growth_dim_score": 27,
+      "notes": "A 类战略渠道；季度联合营销，专属应用工程师对接。"
+    },
+    {
+      "channel_code": "SRNE-SEA-002",
+      "name_cn": "胡志明能源科技",
+      "name_en": "HCMC Energy Tech JSC",
+      "country_code": "VN",
+      "region": "SEA",
+      "lifecycle_stage": "growth",
+      "abc_class": "A",
+      "clv_score": 410.2,
+      "agreement_expire_date": "2027-06-30",
+      "sam_flag": 1,
+      "status": "ACTIVE",
+      "owner_email": "sam.zhang@srne.demo",
+      "last_contact_date": "2026-03-28",
+      "annual_revenue_usd": 380000,
+      "gross_margin_pct": 26,
+      "ar_overdue_days": 5,
+      "strategic_fit_score": 30,
+      "profit_dim_score": 31,
+      "growth_dim_score": 28,
+      "notes": "高增长潜力，计划 2026Q4 评估升 SAM 专属条款。"
+    },
+    {
+      "channel_code": "SRNE-SEA-003",
+      "name_cn": "雅加达绿电伙伴",
+      "name_en": "Jakarta Green Power Partner",
+      "country_code": "ID",
+      "region": "SEA",
+      "lifecycle_stage": "active",
+      "abc_class": "B",
+      "clv_score": 198.0,
+      "agreement_expire_date": "2026-09-15",
+      "sam_flag": 0,
+      "status": "ACTIVE",
+      "owner_email": "sam.zhang@srne.demo",
+      "last_contact_date": "2026-02-10",
+      "annual_revenue_usd": 120000,
+      "gross_margin_pct": 22,
+      "ar_overdue_days": 18,
+      "strategic_fit_score": 22,
+      "profit_dim_score": 20,
+      "growth_dim_score": 21,
+      "notes": "培育对象；需加强培训与样机支持。"
+    },
+    {
+      "channel_code": "SRNE-MENA-001",
+      "name_cn": "利雅得沙漠电力工程",
+      "name_en": "Riyadh Desert Power EPC",
+      "country_code": "SA",
+      "region": "MENA",
+      "lifecycle_stage": "growth",
+      "abc_class": "B",
+      "clv_score": 256.4,
+      "agreement_expire_date": "2027-03-01",
+      "sam_flag": 0,
+      "status": "ACTIVE",
+      "owner_email": "li.wei@srne.demo",
+      "last_contact_date": "2026-04-01",
+      "annual_revenue_usd": 210000,
+      "gross_margin_pct": 24,
+      "ar_overdue_days": 12,
+      "strategic_fit_score": 26,
+      "profit_dim_score": 24,
+      "growth_dim_score": 25,
+      "notes": "项目型出货波动大，关注回款与里程碑交付。"
+    },
+    {
+      "channel_code": "SRNE-MENA-002",
+      "name_cn": "迪拜海湾新能源贸易",
+      "name_en": "Dubai Gulf New Energy Trading",
+      "country_code": "AE",
+      "region": "MENA",
+      "lifecycle_stage": "active",
+      "abc_class": "B",
+      "clv_score": 175.8,
+      "agreement_expire_date": "2026-08-20",
+      "sam_flag": 0,
+      "status": "ACTIVE",
+      "owner_email": "li.wei@srne.demo",
+      "last_contact_date": "2026-01-22",
+      "annual_revenue_usd": 95000,
+      "gross_margin_pct": 21,
+      "ar_overdue_days": 0,
+      "strategic_fit_score": 21,
+      "profit_dim_score": 19,
+      "growth_dim_score": 20,
+      "notes": "贸易商属性强，需引导向项目型合作转型。"
+    },
+    {
+      "channel_code": "SRNE-EU-001",
+      "name_cn": "巴塞罗那伊比利亚储能",
+      "name_en": "Iberia Storage Solutions SL",
+      "country_code": "ES",
+      "region": "EU",
+      "lifecycle_stage": "active",
+      "abc_class": "B",
+      "clv_score": 220.1,
+      "agreement_expire_date": "2027-01-10",
+      "sam_flag": 0,
+      "status": "ACTIVE",
+      "owner_email": "li.wei@srne.demo",
+      "last_contact_date": "2026-03-15",
+      "annual_revenue_usd": 165000,
+      "gross_margin_pct": 25,
+      "ar_overdue_days": 8,
+      "strategic_fit_score": 24,
+      "profit_dim_score": 23,
+      "growth_dim_score": 22,
+      "notes": "南欧跳板市场，重点推进认证与品牌联合活动。"
+    },
+    {
+      "channel_code": "SRNE-EU-002",
+      "name_cn": "米兰南欧光储分销",
+      "name_en": "Southern Europe PV Distribuzione Srl",
+      "country_code": "IT",
+      "region": "EU",
+      "lifecycle_stage": "prospect",
+      "abc_class": "C",
+      "clv_score": 68.3,
+      "agreement_expire_date": "2026-05-30",
+      "sam_flag": 0,
+      "status": "ACTIVE",
+      "owner_email": "li.wei@srne.demo",
+      "last_contact_date": "2025-11-02",
+      "annual_revenue_usd": 42000,
+      "gross_margin_pct": 17,
+      "ar_overdue_days": 35,
+      "strategic_fit_score": 12,
+      "profit_dim_score": 11,
+      "growth_dim_score": 14,
+      "notes": "逾期与毛利偏低，触发预警；进入整改观察期。"
+    },
+    {
+      "channel_code": "SRNE-SEA-004",
+      "name_cn": "曼谷渠道测试户（休眠样例）",
+      "name_en": "Bangkok Channel Demo Sleep",
+      "country_code": "TH",
+      "region": "SEA",
+      "lifecycle_stage": "dormant",
+      "abc_class": "C",
+      "clv_score": 45.0,
+      "agreement_expire_date": "2025-12-31",
+      "sam_flag": 0,
+      "status": "SLEEP",
+      "owner_email": "sam.zhang@srne.demo",
+      "last_contact_date": "2025-08-01",
+      "annual_revenue_usd": 15000,
+      "gross_margin_pct": 14,
+      "ar_overdue_days": 0,
+      "strategic_fit_score": 10,
+      "profit_dim_score": 9,
+      "growth_dim_score": 12,
+      "notes": "用于演示休眠与复活流程；数据为虚构。"
+    }
+  ],
+  "alerts": [
+    {
+      "channel_code": "SRNE-EU-002",
+      "alert_type": "ar_overdue",
+      "severity": "critical",
+      "message": "应收账款逾期超过 30 天，且近两月出货低于近 6 月均值的 50%。"
+    },
+    {
+      "channel_code": "SRNE-SEA-003",
+      "alert_type": "performance",
+      "severity": "warn",
+      "message": "连续两个月出货低于滚动均值 50%，建议安排现场回访与库存盘点。"
+    },
+    {
+      "channel_code": "SRNE-MENA-001",
+      "alert_type": "contract",
+      "severity": "info",
+      "message": "合作协议将于 12 个月内到期，可提前启动续签与目标对齐。"
+    }
+  ]
+}
