@@ -13,9 +13,11 @@
 grep -q 'performance/scorecard' collaboration/srne_channel_ops/api/server.mjs && echo OK_scorecard || echo FAIL
 grep -q 'import/batches' collaboration/srne_channel_ops/api/server.mjs && echo OK_batches || echo FAIL
 grep -q 'import/channels/preview' collaboration/srne_channel_ops/api/server.mjs && echo OK_preview || echo FAIL
+grep -q 'scenarios/playbook' collaboration/srne_channel_ops/api/server.mjs && echo OK_playbook || echo FAIL
+grep -q 'value-map-html' collaboration/srne_channel_ops/api/server.mjs && echo OK_value_map || echo FAIL
 ```
 
-三行都打印 `OK_*` 才继续做第 2 步。若出现 `FAIL`，说明拉到的仍是旧 `server.mjs`，**重建多少次都不会出现新接口**。
+五行都打印 `OK_*` 才继续做第 2 步。若出现 `FAIL`，说明拉到的仍是旧 `server.mjs`，**重建多少次都不会出现新接口**。
 
 ### 2. 构建与启动
 
@@ -62,7 +64,7 @@ curl -sS -o /dev/null -w "batches HTTP %{http_code}\n" -H "Authorization: Bearer
 ```
 公网 BASE（示例 http://IP/srne）：________________
 构建用 Git 分支 + tip SHA：________________
-第 1 步三 grep：全 OK / 有 FAIL
+第 1 步五 grep：全 OK / 有 FAIL
 scorecard HTTP 码：____   batches HTTP 码：____
 JWT_SECRET 是否已换生产随机值：是 / 否
 ```
