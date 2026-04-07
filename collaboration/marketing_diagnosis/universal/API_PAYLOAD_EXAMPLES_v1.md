@@ -1,10 +1,18 @@
-# 通用行业营销诊断 API 示例（v1）
+# 通用行业营销诊断 API 示例（v1.1）
 
 > 目的：给小江 / Agent1 快速对齐前后端请求响应字段，不绑定具体后端框架。
 >
 > 契约说明：
 > - 保留现有 H5 的 `type + payload` 嵌套结构。
 > - 后端可将原始请求整体落到 `payloadJson`（数据库字段建议 `payload_json`），降低前端改动成本。
+
+## 0) 字段语义与库字段对照（`payloadJson` / `payload_json`）
+
+| API 字段 | 数据库字段 | 说明 |
+|---|---|---|
+| `payloadJson` | `diag_submission.payload_json` | 原始请求体快照（建议整体原样保存） |
+| `type` + `payload` | `diag_submission.payload_json` | 兼容现有 H5 契约；服务端可按业务拆解后再写入快照 |
+| lead 请求原文 | `diag_lead.payload_json` | 线索请求原样保存，便于审计与回放 |
 
 ## 1) POST `/v1/submissions`
 

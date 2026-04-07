@@ -79,8 +79,15 @@
 
 1. 提交问卷并落库（含版本信息与评分快照）。
 2. 查询单份提交结果。
-3. 记录预约线索。
+3. 记录线索并通过 `lead_kind` 区分两类语义：
+   - `diagnosis_summary`
+   - `expert_opportunity`
 4. 基础统计接口（按行业、时间）。
+
+### 5.3 数据契约补充
+
+1. 允许 H5 `type + payload` 原样透传，服务端以 `diag_submission.payload_json` 持久化原始请求快照。
+2. `diag_lead` 建议同样保留 `payload_json`，便于后续 CRM 映射调试与重放。
 
 ---
 
