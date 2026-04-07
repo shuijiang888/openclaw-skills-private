@@ -335,14 +335,30 @@ var CONFIG = {
     return 5;
   }
 
+  function scoreMcSumCap5(keys, qid) {
+    var q = null;
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      if (QUESTIONS[i].id === qid) { q = QUESTIONS[i]; break; }
+    }
+    if (!q || !q.opts) return 0;
+    var sum = 0;
+    (keys || []).forEach(function (k) {
+      for (var j = 0; j < q.opts.length; j++) {
+        var o = q.opts[j];
+        if (o.k === k && typeof o.s === 'number') { sum += o.s; break; }
+      }
+    });
+    return Math.min(5, sum);
+  }
+
   function computeScores() {
     var r = [0,0,0,0,0,0];
-    r[0] = (state.single.q1||0) + scoreQ2(state.multi.q2||[]) + (state.single.q3||0) + (state.single.q4||0);
+    r[0] = scoreMcSumCap5(state.multi.q1||[], 'q1') + scoreQ2(state.multi.q2||[]) + scoreMcSumCap5(state.multi.q3||[], 'q3') + scoreMcSumCap5(state.multi.q4||[], 'q4');
     r[1] = scoreQ5(state.multi.q5||[]) + (state.single.q6||0) + (state.single.q7||0) + scoreQ8(state.multi.q8||[]);
-    r[2] = (state.single.q9||0) + (state.single.q10||0) + scoreQ11(state.multi.q11||[]) + (state.single.q12||0);
-    r[3] = (state.single.q13||0) + (state.single.q14||0) + scoreQ15(state.multi.q15||[]) + (state.single.q16||0);
-    r[4] = (state.single.q17||0) + (state.single.q18||0) + scoreQ19(state.multi.q19||[]) + (state.single.q20||0);
-    r[5] = (state.single.q21||0) + (state.single.q22||0) + scoreQ23(state.multi.q23||[]) + (state.single.q24||0);
+    r[2] = scoreMcSumCap5(state.multi.q9||[], 'q9') + scoreMcSumCap5(state.multi.q10||[], 'q10') + scoreQ11(state.multi.q11||[]) + scoreMcSumCap5(state.multi.q12||[], 'q12');
+    r[3] = scoreMcSumCap5(state.multi.q13||[], 'q13') + scoreMcSumCap5(state.multi.q14||[], 'q14') + scoreQ15(state.multi.q15||[]) + scoreMcSumCap5(state.multi.q16||[], 'q16');
+    r[4] = scoreMcSumCap5(state.multi.q17||[], 'q17') + scoreMcSumCap5(state.multi.q18||[], 'q18') + scoreQ19(state.multi.q19||[]) + scoreMcSumCap5(state.multi.q20||[], 'q20');
+    r[5] = scoreMcSumCap5(state.multi.q21||[], 'q21') + (state.single.q22||0) + scoreQ23(state.multi.q23||[]) + (state.single.q24||0);
     var w = r.map(function (raw, i) {
       return (raw / 20) * DIMS[i].maxW;
     });
@@ -359,7 +375,7 @@ var CONFIG = {
   }
 
   var QUESTIONS = [
-    { id: 'q1', dim: 0, type: 'sc', title: '贵司的主要目标客户类型是？（医疗器械）', opts: [
+    { id: 'q1', dim: 0, type: 'mc', title: '贵司的主要目标客户类型是？（医疗器械，可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '三级医院（大型三甲）', s: 5 },
         { k: 'b', t: '二级医院（县域中心）', s: 3 },
         { k: 'c', t: '基层医疗机构（社区/乡镇）', s: 2 },
@@ -370,12 +386,12 @@ var CONFIG = {
         { k: 'm1', t: '集采中标与院内放量' }, { k: 'm2', t: '基层医疗市场覆盖' },
         { k: 'm3', t: '器械国产替代与政策窗口' }, { k: 'm4', t: '学术推广与循证/临床数据' }, { k: 'm5', t: '设备更新改造与以旧换新机会' }
     ]},
-    { id: 'q3', dim: 0, type: 'sc', title: '与主要竞品相比，挂网价、适应症表述、推广材料等对外叙事是否一致？', opts: [
+    { id: 'q3', dim: 0, type: 'mc', title: '与主要竞品相比，挂网价、适应症表述、推广材料等对外叙事是否一致？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '挂网价、适应症、DA 等跨团队一致', s: 5 },
         { k: 'b', t: '大体一致，区域或产品线有差异', s: 3 },
         { k: 'c', t: '各区域/代理各说各话', s: 1 }
     ]},
-    { id: 'q4', dim: 0, type: 'sc', title: '品牌与医学市场投入是否有可衡量目标（会议、线索、入院等）？', opts: [
+    { id: 'q4', dim: 0, type: 'mc', title: '品牌与医学市场投入是否有可衡量目标（会议、线索、入院等）？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '有明确 KPI（覆盖医院数、会议、有效线索等）并复盘', s: 5 },
         { k: 'b', t: '有预算但效果难量化', s: 3 },
         { k: 'c', t: '以曝光为主，与销售入院脱节', s: 1 }
@@ -396,46 +412,46 @@ var CONFIG = {
         { k: 'a', t: '挂网/集采信息跟踪滞后、撞单多' }, { k: 'b', t: '假终端、渠道压货虚报' },
         { k: 'c', t: '跟进优先级靠关系而非规则' }, { k: 'd', t: '线上留资质量差或刷量' }
     ]},
-    { id: 'q9', dim: 2, type: 'sc', title: '入院/中标/代理签约等阶段与赢率是否标准化？', opts: [
+    { id: 'q9', dim: 2, type: 'mc', title: '入院/中标/代理签约等阶段与赢率是否标准化？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '阶段、必填字段、退出标准清晰', s: 5 }, { k: 'b', t: '有阶段但执行松散', s: 3 }, { k: 'c', t: '无统一管道语言', s: 1 }
     ]},
-    { id: 'q10', dim: 2, type: 'sc', title: '年度/季度目标到代表/代理商动作的分解与复盘？', opts: [
+    { id: 'q10', dim: 2, type: 'mc', title: '年度/季度目标到代表/代理商动作的分解与复盘？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '工具 + 复盘闭环', s: 5 }, { k: 'b', t: '有分解，落地走样', s: 3 }, { k: 'c', t: '老板拍板或走过场', s: 1 }
     ]},
     { id: 'q11', dim: 2, type: 'mc', title: '丢单/丢标主要原因？（多选，见计分规则）', hint: '产品/关系/协同各 -1；未总结再 -1；价格/竞品不扣分', opts: [
         { k: 'price', t: '价格/商务政策' }, { k: 'mismatch', t: '产品/适应证/循证不足' }, { k: 'relation', t: '关系/决策链失守' },
         { k: 'slow', t: '内部协同慢（医学、注册、交付）' }, { k: 'comp', t: '竞品强力抢标' }, { k: 'nosum', t: '未总结原因' }
     ]},
-    { id: 'q12', dim: 2, type: 'sc', title: '复杂项目（招采、多科室、渠道）协作机制？', opts: [
+    { id: 'q12', dim: 2, type: 'mc', title: '复杂项目（招采、多科室、渠道）协作机制？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '招投标+医学+渠道常态化协同', s: 5 }, { k: 'b', t: '大项目临时组队', s: 3 }, { k: 'c', t: '主要依赖单兵或单经销商', s: 1 }
     ]},
-    { id: 'q13', dim: 3, type: 'sc', title: '设备/耗材入院后使用、不良事件、回款是否可度量？', opts: [
+    { id: 'q13', dim: 3, type: 'mc', title: '设备/耗材入院后使用、不良事件、回款是否可度量？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '有健康度或红黄绿', s: 5 }, { k: 'b', t: '数据分散在 HIS/经销商报表', s: 3 }, { k: 'c', t: '几乎不跟踪', s: 1 }
     ]},
-    { id: 'q14', dim: 3, type: 'sc', title: '维保合同、耗材复购、学术合作是否流程化、可预测？', opts: [
+    { id: 'q14', dim: 3, type: 'mc', title: '维保合同、耗材复购、学术合作是否流程化、可预测？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '有续约清单与节奏（维保/耗材）', s: 5 }, { k: 'b', t: '主要靠客情维护', s: 3 }, { k: 'c', t: '被动响应', s: 1 }
     ]},
     { id: 'q15', dim: 3, type: 'mc', title: '回款与合规风险？（多选，每项扣 1 分，基础 5 分）', opts: [
         { k: 'a', t: '医院/经销商应收账款周期长' }, { k: 'b', t: '合同与发货/验收单据不全' },
         { k: 'c', t: '授信随意' }, { k: 'd', t: '验收或开票拖延导致挂账' }
     ]},
-    { id: 'q16', dim: 3, type: 'sc', title: '售后成本与客户满意是否与销售/渠道考核挂钩？', opts: [
+    { id: 'q16', dim: 3, type: 'mc', title: '售后成本与客户满意是否与销售/渠道考核挂钩？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '有机制', s: 5 }, { k: 'b', t: '部分挂钩', s: 3 }, { k: 'c', t: '不挂钩，售后成短板', s: 1 }
     ]},
-    { id: 'q17', dim: 4, type: 'sc', title: '考核是否含过程质量（入院、会议、合规）不仅是销售额？', opts: [
+    { id: 'q17', dim: 4, type: 'mc', title: '考核是否含过程质量（入院、会议、合规）不仅是销售额？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '多维度且可解释', s: 5 }, { k: 'b', t: '以业绩为主，少量过程项', s: 3 }, { k: 'c', t: '几乎只看回款/出货', s: 1 }
     ]},
-    { id: 'q18', dim: 4, type: 'sc', title: '经销商、一线代表的培养与认证体系？', opts: [
+    { id: 'q18', dim: 4, type: 'mc', title: '经销商、一线代表的培养与认证体系？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '标准化培训（产品+临床+合规）+ 认证', s: 5 }, { k: 'b', t: '有培训效果一般', s: 3 }, { k: 'c', t: '人员流动大、复制难', s: 1 }
     ]},
     { id: 'q19', dim: 4, type: 'mc', title: '团队管理痛点？（多选，每项扣 1 分，基础 5 分）', opts: [
         { k: 'a', t: '老代表/老代理躺平在少数大医院' }, { k: 'b', t: '管理者弱，只会自己跑医院' },
         { k: 'c', t: '激励不公平、渠道冲突多' }, { k: 'd', t: '会议表格多无闭环' }
     ]},
-    { id: 'q20', dim: 4, type: 'sc', title: '跨部门协作（医学、注册、供应链、财务）效率？', opts: [
+    { id: 'q20', dim: 4, type: 'mc', title: '跨部门协作（医学、注册、供应链、财务）效率？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '流程清晰 SLA 明确', s: 5 }, { k: 'b', t: '常需老板拍板', s: 3 }, { k: 'c', t: '内耗严重', s: 1 }
     ]},
-    { id: 'q21', dim: 5, type: 'sc', title: 'CRM / 渠道系统 / 招采信息使用情况？', opts: [
+    { id: 'q21', dim: 5, type: 'mc', title: 'CRM / 渠道系统 / 招采信息使用情况？（可多选）', hint: '所选选项分值相加，合计封顶 5 分', opts: [
         { k: 'a', t: '主数据统一，入院与商机过程必填、报表可信', s: 5 }, { k: 'b', t: '在用但数据质量一般', s: 3 }, { k: 'c', t: '表格/微信为主', s: 1 }
     ]},
     { id: 'q22', dim: 5, type: 'sc', title: '是否有管道、入院转化、人效的可运营看板？', opts: [
@@ -499,6 +515,8 @@ var CONFIG = {
       var arr = state.multi[q.id] || [];
       if (q.id === 'q2' && arr.length < 1) { showErr('请至少选择 1 项战略重点'); return false; }
       if (q.id === 'q5' && arr.length < 1) { showErr('请至少选择一项'); return false; }
+      var allowEmptyMc = (q.id === 'q8' || q.id === 'q11' || q.id === 'q15' || q.id === 'q19' || q.id === 'q23');
+      if (!allowEmptyMc && arr.length < 1) { showErr('请至少选择一项'); return false; }
       return true;
     }
     if (q.type === 'contact') {
