@@ -1,5 +1,7 @@
 # Agent1 闭环单 · 硕日渠道运营原型（无需业务方手工 git）
 
+> **更新（2026-04）：** 含 `performance/scorecard`、`import/batches` 的代码请以 **`b27fdfc`** 起（tip 建议 **`94b44be`**，分支 `feature/srne-channel-ops`）为准。请 **OpenClaw** 先按同目录 **`OPENCLAW_REQUEST_SRNE_SYNC_AND_DEPLOY.md`** 做私库同步，再安排 Agent1 部署。下表 `c74e182` 仅为历史首包，**无**上述 API。
+
 ## 状态
 
 | 项 | 值 |
