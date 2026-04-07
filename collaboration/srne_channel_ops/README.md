@@ -14,6 +14,16 @@
 | 绩效看板 | 按 A/B/C 聚合的演示指标 |
 | 数据导入 | JSON 提交或上传文件；`channel_code` 冲突则更新（管理员/总监） |
 
+## 线上演示（Agent1 已部署 · Cursor 已探测）
+
+| 项 | 值 |
+|----|-----|
+| 入口 | [http://119.45.205.137/srne/](http://119.45.205.137/srne/) |
+| 健康检查 | `GET http://119.45.205.137/srne/v1/health` → `ok: true`，`service: srne-channel-ops` |
+| 说明 | 网关挂在 **`/srne/`** 子路径；前端 `app.js` 内 `apiBase()` 已按此拼接 `/srne/v1/*`。本机根路径部署仍用默认 `""`。 |
+
+> **TLS：** 当前探测 IP 上 `https://` 未成功握手（可能未开 443 或证书）；对外演示若需 HTTPS 请 Agent1 配证书或域名。
+
 ## 本地运行
 
 ```bash
@@ -72,9 +82,15 @@ docker compose up --build
 ## API 摘要
 
 - `POST /v1/auth/login` · `GET /v1/me`
-- `GET /v1/dashboard/summary` · `GET /v1/channels` · `GET/PATCH /v1/channels/:id`
+- `GET /v1/dashboard/summary` · **`GET /v1/analytics/overview`**（驾驶舱图表：区域出货、月度趋势、TOP 渠道、分级毛利等）
+- `GET /v1/channels` · **`POST /v1/channels`**（快捷建渠道，自动生成编码）· `GET/PATCH /v1/channels/:id`
+- **`POST /v1/channels/:id/monthly-metrics`**（补录单月出货 `{ ym, revenue_usd }`）
+- `GET /v1/users`（负责人下拉，管理员/总监）
 - `GET /v1/alerts` · `POST /v1/alerts/:id/ack`
 - `GET /v1/intel/countries` · `GET /v1/intel/:countryCode`
 - `POST /v1/tools/quote`
 - `GET /v1/performance/summary`
+- **`GET /v1/import/template`**（导入 JSON 模板）
 - `POST /v1/import/channels` · `POST /v1/import/channels/upload`
+
+**数据量：** 种子渠道约 **18** 条（含南亚 SCA、更多预警与情报国别）；**首次空库**启动写入 **12 个月**滚动出货曲线。已有旧库不会自动追加种子，需 **导入 JSON** 或 **更换 SQLite 文件** 后重启以体验全量演示。

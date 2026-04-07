@@ -45,7 +45,7 @@
         <button type="button" data-nav="sales">销售赋能</button>
         <button type="button" data-nav="perf">绩效看板</button>
         <button type="button" data-nav="alerts">预警中心</button>
-        <button type="button" data-nav="import" id="navImport">数据导入</button>
+        <button type="button" data-nav="import" id="navImport">数据与录入</button>
       </nav>
     </aside>
     <div class="main">
@@ -65,11 +65,28 @@
           <div class="kpi"><div class="label">SAM 账户</div><div class="value" id="kpiSam">—</div></div>
           <div class="kpi"><div class="label">A/B/C 分布</div><div class="value" id="kpiAbc" style="font-size:1rem">—</div></div>
         </div>
+        <div class="chart-grid">
+          <div class="panel chart-panel">
+            <h2>区域年出货汇总（演示）</h2>
+            <div class="chart-wrap"><canvas id="chartRegionBar" height="220"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h2>渠道 A / B / C 结构</h2>
+            <div class="chart-wrap chart-wrap-donut"><canvas id="chartAbcDoughnut"></canvas></div>
+          </div>
+          <div class="panel chart-panel chart-panel-wide">
+            <h2>滚动月度出货（所辖渠道合计）</h2>
+            <div class="chart-wrap"><canvas id="chartMonthlyLine" height="240"></canvas></div>
+          </div>
+          <div class="panel chart-panel chart-panel-wide">
+            <h2>TOP 渠道年出货</h2>
+            <div class="chart-wrap"><canvas id="chartTopBar" height="260"></canvas></div>
+          </div>
+        </div>
         <div class="panel">
           <h2>演示说明</h2>
           <p class="muted">
-            本原型覆盖设计说明书中的渠道主数据、市场情报、销售赋能（简报 + 规则型报价）、预警与权限分层。
-            生产环境需替换为真实 ERP/CRM 同步、LLM 情报流水线与安全加固。
+            图表数据与列表、详情同源 API；支持快捷录入渠道、补录月度出货与 JSON 导入。新种子需空库首次启动或批量导入后生效。
           </p>
         </div>
       </section>
@@ -83,6 +100,7 @@
               <option value="SEA">东南亚 SEA</option>
               <option value="MENA">中东非 MENA</option>
               <option value="EU">欧洲 EU</option>
+              <option value="SCA">南亚 SCA</option>
             </select>
             <select id="filterAbc">
               <option value="">全部分级</option>
@@ -91,7 +109,10 @@
               <option value="C">C</option>
             </select>
             <button type="button" class="btn secondary" id="btnApplyFilters">筛选</button>
+            <button type="button" class="btn" id="btnOpenQuickAdd">快捷录入</button>
           </div>
+          <p class="muted" id="channelListMeta" style="margin:0 0 10px;font-size:13px"></p>
+          <div class="table-scroll">
           <table id="channelTable">
             <thead>
               <tr>
@@ -100,6 +121,8 @@
                 <th>国家</th>
                 <th>区域</th>
                 <th>分级</th>
+                <th>年出货 USD</th>
+                <th>毛利%</th>
                 <th>CLV</th>
                 <th>SAM</th>
                 <th>状态</th>
@@ -107,6 +130,7 @@
             </thead>
             <tbody></tbody>
           </table>
+          </div>
         </div>
       </section>
 
@@ -117,8 +141,22 @@
         <h2 id="chTitle" style="margin-top:8px">—</h2>
         <div id="chMeta"></div>
         <div class="panel">
-          <h2>近 6 个月出货（演示曲线）</h2>
-          <div class="bar-chart" id="monthlyChart"></div>
+          <h2>月度出货趋势</h2>
+          <div class="chart-wrap"><canvas id="chartChannelMonthly" height="260"></canvas></div>
+        </div>
+        <div class="panel">
+          <h2>三维评分（演示）</h2>
+          <div class="chart-wrap chart-wrap-radar"><canvas id="chartChannelRadar"></canvas></div>
+        </div>
+        <div class="panel" id="panelAddMetric">
+          <h2>补录月度出货</h2>
+          <p class="muted">用于演示现场改数；格式 yyyy-mm</p>
+          <div class="row">
+            <input type="month" id="metricYm" />
+            <input type="number" id="metricRevenue" min="0" step="1000" placeholder="当月出货 USD" style="width:160px" />
+            <button type="button" class="btn" id="btnAddMetric">写入</button>
+            <span class="muted" id="metricHint"></span>
+          </div>
         </div>
         <div class="panel">
           <h2>备注 / 协作记录</h2>
@@ -138,6 +176,10 @@
       </section>
 
       <section data-view="intel" class="hidden">
+        <div class="panel chart-panel-wide">
+          <h2>各国机会指数（可点击下表联动）</h2>
+          <div class="chart-wrap"><canvas id="chartIntelBar" height="280"></canvas></div>
+        </div>
         <div class="panel">
           <h2>各国市场机会指数</h2>
           <table id="intelTable">
@@ -152,6 +194,10 @@
       </section>
 
       <section data-view="sales" class="hidden">
+        <div class="panel chart-panel">
+          <h2>到岸成本结构（单次计算结果）</h2>
+          <div class="chart-wrap chart-wrap-donut"><canvas id="chartQuoteBreakdown"></canvas></div>
+        </div>
         <div class="panel">
           <h2>规则型报价计算器（演示）</h2>
           <p class="muted">含关税、运费与渠道加成假设；非法律或财务承诺。</p>
@@ -181,10 +227,105 @@
       </section>
 
       <section data-view="perf" class="hidden">
-        <div class="panel">
-          <h2>按分级聚合（演示）</h2>
-          <pre id="perfOut" class="muted" style="white-space:pre-wrap;font-size:13px"></pre>
+        <div class="panel perf-hero">
+          <h2>渠道运营平衡计分卡（BSC）· <span id="perfPeriodLabel">—</span></h2>
+          <p class="muted" id="perfHeroHint">与演示目标值对比；权限范围内聚合（销售仅看本人负责渠道）。</p>
+          <div class="bsc-grid" id="perfBscGrid"></div>
         </div>
+        <div class="chart-grid">
+          <div class="panel chart-panel chart-panel-wide">
+            <h2>区域战报 · 达成率 vs 演示季度目标（按区域权重拆分）</h2>
+            <div class="chart-wrap"><canvas id="chartPerfRegion" height="260"></canvas></div>
+          </div>
+          <div class="panel chart-panel chart-panel-wide">
+            <h2>滚动月度出货（所辖活跃渠道）</h2>
+            <div class="chart-wrap"><canvas id="chartPerfMom" height="240"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h2>分级平均毛利率</h2>
+            <div class="chart-wrap"><canvas id="chartPerfMargin" height="240"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h2>分级年出货占比</h2>
+            <div class="chart-wrap chart-wrap-donut"><canvas id="chartPerfRev"></canvas></div>
+          </div>
+        </div>
+        <div class="two-col-panels">
+          <div class="panel">
+            <h2>生命周期漏斗（活跃渠道）</h2>
+            <div id="perfLifecycleMount" class="funnel-mount"></div>
+          </div>
+          <div class="panel">
+            <h2>流程 · 未关闭预警 &amp; 应收账龄桶</h2>
+            <div id="perfProcessMount" class="funnel-mount"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>区域明细表</h2>
+          <div class="table-scroll">
+            <table class="data-table" id="perfRegionDetailTable">
+              <thead>
+                <tr>
+                  <th>区域</th>
+                  <th>渠道数</th>
+                  <th>年出货 roll</th>
+                  <th>演示季目标</th>
+                  <th>达成%</th>
+                  <th>灯</th>
+                  <th>均毛利%</th>
+                  <th>A 家数</th>
+                  <th>AR&gt;30d</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>关注清单（逾期 × 分级 × CLV）</h2>
+          <div class="table-scroll">
+            <table class="data-table" id="perfWatchTable">
+              <thead>
+                <tr>
+                  <th>编码</th>
+                  <th>名称</th>
+                  <th>分级</th>
+                  <th>逾期天</th>
+                  <th>年出货</th>
+                  <th>CLV</th>
+                  <th>最近联系</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>负责人战报（复盘用）</h2>
+          <div class="table-scroll">
+            <table class="data-table" id="perfOwnerTable">
+              <thead>
+                <tr>
+                  <th>负责人</th>
+                  <th>邮箱</th>
+                  <th>渠道数</th>
+                  <th>年出货汇总</th>
+                  <th>均毛利%</th>
+                  <th>AR&gt;15d 渠道数</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel perf-narrative">
+          <h2>如何用于实战会议</h2>
+          <ul id="perfNarrativeList" class="muted narrative-list"></ul>
+        </div>
+        <details class="panel">
+          <summary style="cursor:pointer;font-weight:600">调试：计分卡原始 JSON</summary>
+          <pre id="perfOut" class="muted" style="margin-top:12px;white-space:pre-wrap;font-size:12px;max-height:240px;overflow:auto"></pre>
+        </details>
       </section>
 
       <section data-view="alerts" class="hidden">
@@ -199,20 +340,122 @@
 
       <section data-view="import" class="hidden">
         <div class="panel">
-          <h2>导入渠道 JSON</h2>
-          <p class="muted">请求体格式：<code>{"channels":[{...}]}</code>，与种子文件中单条结构一致；<code>channel_code</code> 唯一，重复则更新。</p>
-          <textarea id="importJson" placeholder='{"channels":[]}'></textarea>
-          <div class="row">
-            <button type="button" class="btn" id="btnImportJson">提交 JSON</button>
-            <input type="file" id="importFile" accept=".json,application/json" />
-            <button type="button" class="btn secondary" id="btnImportFile">上传文件</button>
+          <h2>批量导入工作台</h2>
+          <p class="muted">
+            实战流程：<strong>准备数据 → 校验预览（不落库）→ 确认写入</strong>。写入后生成批次号便于审计。
+            支持 <code>owner_email</code> 自动匹配系统用户；区域须为 SEA / MENA / EU / SCA。
+          </p>
+          <div class="import-steps-bar">
+            <span class="import-step" id="importStepBadge1">① 准备</span>
+            <span class="import-step" id="importStepBadge2">② 校验</span>
+            <span class="import-step" id="importStepBadge3">③ 写入 / 审计</span>
           </div>
-          <pre id="importResult" class="muted" style="margin-top:12px;white-space:pre-wrap;font-size:13px"></pre>
+        </div>
+
+        <div class="panel">
+          <h2>① 准备数据</h2>
+          <div class="row flex-wrap">
+            <button type="button" class="btn secondary" id="btnLoadTemplate">拉取服务端模板（含字段说明）</button>
+            <button type="button" class="btn secondary" id="btnFillSample">填入示例 JSON</button>
+            <button type="button" class="btn" id="btnOpenQuickAdd2">单条快捷录入</button>
+          </div>
+          <p class="muted" style="margin-top:12px">
+            <strong>CSV（简易）</strong>：首行为英文表头，字段示例：
+            <code>channel_code,name_en,name_cn,country_code,region,abc_class,annual_revenue_usd,gross_margin_pct,ar_overdue_days,owner_email</code>
+            — 勿在单元格内使用英文逗号。
+          </p>
+          <div class="row flex-wrap">
+            <input type="file" id="importCsvFile" accept=".csv,text/csv" />
+            <button type="button" class="btn secondary" id="btnCsvToJson">CSV 解析到下方 JSON</button>
+            <input type="file" id="importFile" accept=".json,application/json" />
+            <button type="button" class="btn secondary" id="btnImportFile">整包 JSON 上传</button>
+          </div>
+          <label class="muted" style="display:block;margin-top:14px">JSON 正文 <code>{"channels":[...]}</code></label>
+          <textarea id="importJson" class="import-textarea" placeholder='{"channels":[]}'></textarea>
+          <div class="row flex-wrap import-actions">
+            <button type="button" class="btn secondary" id="btnImportPreview">② 校验预览（推荐）</button>
+            <button type="button" class="btn" id="btnImportCommit" disabled>③ 确认写入数据库</button>
+            <button type="button" class="btn secondary" id="btnImportJson">跳过预览直接写入（不推荐）</button>
+          </div>
+          <p class="muted" id="importPreviewHint" style="margin-top:8px"></p>
+        </div>
+
+        <div class="panel">
+          <h2>校验结果</h2>
+          <div class="table-scroll">
+            <table class="data-table" id="importPreviewTable">
+              <thead>
+                <tr>
+                  <th>行</th>
+                  <th>状态</th>
+                  <th>编码 / 摘要</th>
+                  <th>问题说明</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <pre id="importResult" class="muted import-result-pre"></pre>
+        </div>
+
+        <div class="panel">
+          <h2>最近导入批次（审计）</h2>
+          <p class="muted">每次写入落一条记录；失败行详情见 JSON 响应或联系管理员查库。</p>
+          <div class="table-scroll">
+            <table class="data-table" id="importBatchesTable">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>批次号</th>
+                  <th>动作</th>
+                  <th>总行</th>
+                  <th>成功</th>
+                  <th>失败</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn secondary" id="btnRefreshBatches">刷新批次列表</button>
         </div>
       </section>
     </div>
   </div>
 
+  <div id="modalQuickAdd" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal-card">
+      <h2>快捷录入渠道</h2>
+      <p class="muted">自动生成 SRNE-区域-序号；仅管理员/总监</p>
+      <div class="form-grid">
+        <label>英文名称 <input id="qaNameEn" type="text" placeholder="Company Ltd" /></label>
+        <label>中文名称 <input id="qaNameCn" type="text" placeholder="可选" /></label>
+        <label>国家代码 <input id="qaCountry" type="text" maxlength="5" placeholder="MY" /></label>
+        <label>区域
+          <select id="qaRegion">
+            <option value="SEA">SEA</option>
+            <option value="MENA">MENA</option>
+            <option value="EU">EU</option>
+            <option value="SCA">SCA</option>
+          </select>
+        </label>
+        <label>分级
+          <select id="qaAbc"><option>A</option><option selected>B</option><option>C</option></select>
+        </label>
+        <label>年出货 USD <input id="qaRevenue" type="number" min="0" value="120000" /></label>
+        <label>毛利率% <input id="qaMargin" type="number" min="0" max="60" value="22" /></label>
+        <label>负责人
+          <select id="qaOwner"><option value="">—</option></select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button type="button" class="btn" id="qaSubmit">创建</button>
+        <button type="button" class="btn secondary" id="qaCancel">取消</button>
+        <span class="muted" id="qaHint"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
