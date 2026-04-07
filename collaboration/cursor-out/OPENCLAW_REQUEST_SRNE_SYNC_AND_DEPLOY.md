@@ -26,7 +26,7 @@
 |----|-----|
 | **仓库** | `openclaw-cursor-playground`（或业务方等价 open 远端） |
 | **分支** | `feature/srne-channel-ops` |
-| **建议对齐 tip** | **`94b44be`** 起（含功能 + Agent1 清单 + `STATUS`）；若需连同本诉求文件一并存在私库，请含 **`48da2e8`**（`cursor-out/OPENCLAW_REQUEST_SRNE_SYNC_AND_DEPLOY.md`） |
+| **建议对齐 tip** | 至少 **`94b44be`**（含 `b27fdfc` 功能 + 清单 + `STATUS`）；并建议 **`feature/srne-channel-ops` 当前 tip**（含 `cursor-out/OPENCLAW_REQUEST_SRNE_SYNC_AND_DEPLOY.md` 本文件） |
 | **功能提交（最小不可再拆）** | **`b27fdfc`** — `feat(srne): performance scorecard API, import preview/batches, import_batch table, web panels` |
 | **其后文档提交** | `eba5bdc`（清单与 `033aeb9` 结论对齐）、`94b44be`（协作状态） |
 
