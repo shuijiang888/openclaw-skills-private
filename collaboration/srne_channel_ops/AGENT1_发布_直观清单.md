@@ -99,6 +99,69 @@
 
 ---
 
+## 业务方已回传记录（2026-04-08）
+
+- 业务方反馈：`/v1/performance/scorecard` 与 `/v1/import/batches` 在“最新 server.mjs”应已实现。
+- 要求 Agent1 复核线上容器内 `server.mjs`，若仍无匹配则判定镜像未更新，需 `build --no-cache` 后重新 `up`。
+
+---
+
+## 给 Agent1 的纠偏（已执行）
+
+### 1) 线上容器内代码核验（已做）
+
+在 8790 对应容器内执行 grep（已实机执行）：
+
+```bash
+cid=$(docker ps --format '{{.ID}} {{.Names}}' | awk '/srne/{print $1; exit}')
+docker exec "$cid" sh -lc \
+  "grep -nE 'performance/scorecard|import/batches|import_batch|import/preview|performance/summary|import/channels' /app/api/server.mjs"
+```
+
+结果（当前线上容器）仅包含：
+
+- `GET /v1/performance/summary`
+- `POST /v1/import/channels`
+- `POST /v1/import/channels/upload`
+
+不包含：
+
+- `GET /v1/performance/scorecard`
+- `GET /v1/import/batches`
+
+### 2) 按要求 no-cache 重建（已做）
+
+已在 `collaboration/srne_channel_ops/` 下执行：
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d --force-recreate
+docker compose ps
+```
+
+重建后新镜像 ID：`d3ebbdfed7cf`（此前 `ed187b2f8386`）  
+新容器 ID：`4cd46ad28db9`
+
+### 3) 网关命中与接口复测（已做）
+
+- `/srne/v1/performance/scorecard` -> **404**
+- `/srne/v1/import/batches` -> **404**
+- `/srne/v1/performance/summary` -> **200**
+- `/srne/v1/import/channels` -> **200**
+
+结论：
+
+- 不是“旧镜像未重建”或“网关打错容器”问题；
+- 当前构建源中的 `server.mjs` 本身不含 `scorecard/batches` 路由实现。
+
+### 4) 下一步建议
+
+请业务方/营销侧提供“包含 `scorecard` 与 `batches` 路由”的**明确代码来源**（分支 / commit / 文件包）。
+拿到后按同流程重建即可完成闭环。
+
+---
+
 ## 备注
 
 - 本文为“按 1~5 步执行并回填模板”的落地记录，可直接转发。
