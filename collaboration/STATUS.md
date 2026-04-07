@@ -22,4 +22,6 @@ collab-010 已交付：`marketing_diagnosis/medical_device/`（问卷文案、Be
 
 **第二轮体验（绩效 + 导入）：** 仓库内已增强 `GET /v1/performance/scorecard`（BSC、区域战报、关注清单、负责人榜、生命周期、预警聚合、月度趋势）与导入链路（`POST /v1/import/channels/preview`、`GET /v1/import/batches`、`import_batch` 审计表）；前端「绩效看板」「数据导入」多面板与校验预览→确认写入→批次列表。线上需重新发布 `api` + `web` 静态后方能体现。
 
-**Agent1 发布回传：** `e5ba48d` / `033aeb9` 上容器内 `server.mjs` **确实无** `scorecard`/`batches`——**根因是此前增强未进入 Git**（`c74e182` 起即无这两路由），非网关错误。已在 open 仓库 **`b27fdfc`**（实现）+ **`eba5bdc`**（清单文档与结论对齐）提交完整 `api/server.mjs`、`web/*`、`seed` 等；部署侧需 **pull/合并至 ≥`eba5bdc`**（或至少 **`b27fdfc`**）后再构建。说明见 `collaboration/srne_channel_ops/AGENT1_发布_直观清单.md` 文首与「业务方已回传记录」。
+**Agent1 发布回传：** `e5ba48d` / `033aeb9` 上容器内 `server.mjs` **确实无** `scorecard`/`batches`——**根因是此前增强未进入 Git**（`c74e182` 起即无这两路由），非网关错误。已在 open 仓库 **`b27fdfc`**（实现）+ **`eba5bdc`**（清单文档与结论对齐）提交完整 `api/server.mjs`、`web/*`、`seed` 等；说明见 `collaboration/srne_channel_ops/AGENT1_发布_直观清单.md` 文首与「业务方已回传记录」。
+
+**OpenClaw 同步 + Agent1 部署（业务方确认）：** 已通过 OpenClaw 完成私库/部署源与 open 分支对齐并更新上线；`performance/scorecard`、`import/batches` 等与第二轮设计一致的功能现可在目标环境验证。
