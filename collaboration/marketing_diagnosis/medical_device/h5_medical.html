@@ -833,6 +833,58 @@ var CONFIG = {
     document.getElementById('lead-co').value = state.text.q25.company || state.basic.name || '';
   }
 
+  function rasterizeRadarForPdf(rootEl, done) {
+    var svg = rootEl.querySelector('#radar-chart');
+    if (!svg || String(svg.tagName).toLowerCase() !== 'svg') {
+      done();
+      return;
+    }
+    try {
+      var xml = new XMLSerializer().serializeToString(svg);
+      var blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      var finished = false;
+      function finish() {
+        if (finished) return;
+        finished = true;
+        try { URL.revokeObjectURL(url); } catch (e1) {}
+        done();
+      }
+      img.onload = function () {
+        try {
+          var w = parseInt(svg.getAttribute('width'), 10) || 300;
+          var h = parseInt(svg.getAttribute('height'), 10) || 300;
+          var canvas = document.createElement('canvas');
+          var dpr = 2;
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#f4f7fb';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          var dataUrl = canvas.toDataURL('image/png');
+          var rep = document.createElement('img');
+          rep.src = dataUrl;
+          rep.setAttribute('width', String(w));
+          rep.setAttribute('height', String(h));
+          rep.style.display = 'block';
+          rep.style.margin = '0 auto';
+          rep.style.maxWidth = '100%';
+          if (svg.parentNode) {
+            svg.parentNode.insertBefore(rep, svg);
+            svg.parentNode.removeChild(svg);
+          }
+        } catch (e2) {}
+        finish();
+      };
+      img.onerror = function () { finish(); };
+      img.src = url;
+    } catch (e) {
+      done();
+    }
+  }
+
   function exportReportToPdf(btn, filename) {
     if (typeof html2pdf === 'undefined') {
       alert('PDF 组件未加载，请检查网络后重试（需加载 html2pdf.js CDN）。');
@@ -848,49 +900,65 @@ var CONFIG = {
     clone.removeAttribute('id');
     clone.classList.add('pdf-export-clone');
     clone.setAttribute('aria-hidden', 'true');
-    clone.style.cssText = [
-      'position:fixed', 'left:0', 'top:0', 'z-index:2147483646', 'width:640px', 'max-width:640px',
-      'margin:0', 'box-shadow:none', 'pointer-events:none', 'opacity:1', 'visibility:visible', 'display:block'
-    ].join(';');
-    document.body.appendChild(clone);
+    clone.style.cssText = 'display:block;width:100%;max-width:740px;margin:0;padding:24px 20px;box-sizing:border-box;background:#ffffff;color:#1a1a2e;font-size:15px;line-height:1.5;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Hiragino Sans GB\",\"Microsoft YaHei\",sans-serif;box-shadow:none;position:relative;';
 
-    var opt = {
-      margin: [10, 10, 10, 10],
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.92 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        scrollY: 0,
-        windowWidth: clone.scrollWidth,
-        windowHeight: Math.max(clone.scrollHeight, 800)
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
-    };
+    var host = document.createElement('div');
+    host.className = 'pdf-export-host';
+    host.setAttribute('aria-hidden', 'true');
+    host.style.cssText = 'position:absolute;left:-12000px;top:0;width:760px;background:#ffffff;overflow:visible;';
+    host.appendChild(clone);
+    document.body.appendChild(host);
+    void host.offsetHeight;
+    void clone.offsetHeight;
+
     btn.classList.add('loading');
     btn.textContent = '正在生成…';
+
     var cleanup = function () {
-      if (clone.parentNode) clone.parentNode.removeChild(clone);
+      if (host.parentNode) host.parentNode.removeChild(host);
       btn.classList.remove('loading');
       btn.textContent = '导出 PDF 报告';
     };
+
+    var runHtml2Pdf = function () {
+      void host.offsetHeight;
+      var opt = {
+        margin: [8, 8, 8, 8],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          foreignObjectRendering: false,
+          scrollX: 0,
+          scrollY: -window.scrollY
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+      var p = html2pdf().set(opt).from(clone).save();
+      if (p && typeof p.then === 'function') {
+        p.then(cleanup).catch(function () {
+          cleanup();
+          alert('PDF 生成失败，请重试或换浏览器。');
+        });
+      } else {
+        setTimeout(cleanup, 3500);
+      }
+    };
+
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         setTimeout(function () {
-          var worker = html2pdf().set(opt).from(clone);
-          var p = worker.save();
-          if (p && typeof p.then === 'function') {
-            p.then(cleanup).catch(function () {
-              cleanup();
-              alert('PDF 生成失败，请重试或换浏览器。');
+          rasterizeRadarForPdf(clone, function () {
+            requestAnimationFrame(function () {
+              setTimeout(runHtml2Pdf, 150);
             });
-          } else {
-            setTimeout(cleanup, 2800);
-          }
-        }, 400);
+          });
+        }, 200);
       });
     });
   }
