@@ -91,7 +91,10 @@
     hotline: "400-000-0000",
     reportTitle: "智能制造营销能力诊断报告",
     industryEdition: "smart_manufacturing",
-    industryEditionLabel: "智能制造行业"
+    industryEditionLabel: "智能制造行业",
+    questionnaireVersion: "smart_mfg_v1",
+    scoringModelVersion: "score_v1_9",
+    apiBaseUrl: "/api/diag"
   };
 
   (function () {
@@ -154,6 +157,7 @@
     var bar = document.getElementById("bar");
     var btnResume = document.getElementById("btnResume");
     var moduleStrip = document.getElementById("moduleStrip");
+    var currentSubmissionId = "";
 
     function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     function clearSaved() { localStorage.removeItem(STORAGE_KEY); }
@@ -340,6 +344,20 @@
       for (var j = 0; j < q.options.length; j++) if (ans.indexOf(q.options[j].k) >= 0) sum += q.options[j].s;
       return Math.min(5, sum);
     }
+    function postJson(url, data) {
+      return fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(data)
+      }).then(function (res) {
+        return res.json().then(function (json) {
+          if (!res.ok || !json || json.code !== 0) {
+            throw new Error((json && json.message) || ("HTTP " + res.status));
+          }
+          return json.data;
+        });
+      });
+    }
     function computeScores() {
       var raw = [];
       var maxRaw = [];
@@ -375,6 +393,25 @@
     function gotoReport() {
       var res = computeScores();
       var lv = level(res.total);
+      var submissionPayload = {
+        industryEdition: CONFIG.industryEdition,
+        questionnaireVersion: CONFIG.questionnaireVersion,
+        scoringModelVersion: CONFIG.scoringModelVersion,
+        sourcePage: "/diag/h5_manufacturing.html",
+        type: "questionnaire_submission",
+        payload: {
+          stepMeta: { totalSteps: TOTAL_STEPS, liteLimit: LITE_LIMIT, resumeFromQIndex: FULL_RESUME_QI },
+          rawAnswers: state.answers
+        },
+        qbPayload: {
+          q_b1_companyName: state.basic.companyName || "",
+          q_b2_segments: state.basic.q_b2 || [],
+          q_b3_scale: state.basic.scale || "",
+          q_b4_years: state.basic.years || ""
+        },
+        answersPayload: state.answers || {},
+        clientScorePayload: res
+      };
       document.getElementById("reportTitle").textContent = CONFIG.reportTitle;
       document.getElementById("finalScore").textContent = res.total + " / 100";
       document.getElementById("levelText").textContent = "等级：" + lv;
@@ -385,6 +422,11 @@
       state.phase = "report";
       state.generated = true;
       clearSaved();
+      postJson(CONFIG.apiBaseUrl + "/submissions", submissionPayload)
+        .then(function (data) {
+          currentSubmissionId = data && data.submissionId ? data.submissionId : "";
+        })
+        .catch(function () {});
     }
 
     document.getElementById("btnStart").addEventListener("click", function () {
@@ -415,7 +457,24 @@
       renderQuestion();
     });
     document.getElementById("btnBook").addEventListener("click", function () {
-      if (confirm("将打开预约落地页，是否继续？")) window.open(CONFIG.bookingUrl, "_blank", "noopener");
+      if (!confirm("将打开预约落地页，是否继续？")) return;
+      if (currentSubmissionId) {
+        postJson(CONFIG.apiBaseUrl + "/leads", {
+          submissionId: currentSubmissionId,
+          leadKind: "expert_opportunity",
+          name: state.text.contactName || "未填写",
+          phone: state.text.contactPhone || "未填写",
+          company: state.basic.companyName || "未填写",
+          role: state.text.contactRole || "",
+          bookingIntent: true,
+          type: "expert_booking",
+          payload: {
+            sourcePage: "/diag/h5_manufacturing.html",
+            note: state.text.open || ""
+          }
+        }).catch(function () {});
+      }
+      window.open(CONFIG.bookingUrl, "_blank", "noopener");
     });
     document.getElementById("btnPdf").addEventListener("click", function () {
       var btn = this;

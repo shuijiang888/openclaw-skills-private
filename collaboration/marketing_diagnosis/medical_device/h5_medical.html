@@ -163,7 +163,10 @@
     hotline: "400-000-0000",
     reportTitle: "医疗器械营销能力诊断报告",
     industryEdition: "medical_device",
-    industryEditionLabel: "医疗器械行业"
+    industryEditionLabel: "医疗器械行业",
+    apiBaseUrl: "/api/diag",
+    questionnaireVersion: "medical_v2",
+    scoringModelVersion: "score_v1_9"
   };
 
   (function () {
@@ -246,6 +249,64 @@
       answers: {},
       generated: false
     };
+
+    function detectApiBaseUrl() {
+      var raw = (CONFIG.apiBaseUrl || "").trim();
+      if (!raw) return "";
+      if (/^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, "");
+      return raw.replace(/\/+$/, "");
+    }
+
+    async function postJson(url, payload) {
+      var res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      var json = await res.json().catch(function () { return null; });
+      if (!res.ok) {
+        var msg = (json && json.error) || ("request_failed_" + res.status);
+        throw new Error(msg);
+      }
+      return json;
+    }
+
+    async function submitDiagData(reportData) {
+      var apiBase = detectApiBaseUrl();
+      if (!apiBase) return null;
+      var submissionPayload = {
+        industryEdition: CONFIG.industryEdition || "medical_device",
+        questionnaireVersion: CONFIG.questionnaireVersion || "medical_v2",
+        scoringModelVersion: CONFIG.scoringModelVersion || "score_v1_9",
+        sourcePage: location.pathname || "/diag/h5_medical.html",
+        type: "questionnaire_submission",
+        payload: {
+          qIndex: state.qIndex,
+          unlockedFull: state.unlockedFull,
+          phase: state.phase
+        },
+        qbPayload: state.basic,
+        answersPayload: state.answers,
+        clientScorePayload: reportData
+      };
+      var created = await postJson(apiBase + "/submissions", submissionPayload);
+      var submissionId = created && created.data && created.data.submissionId ? created.data.submissionId : null;
+      var leadKind = state.phase === "report" ? "diagnosis_summary" : "expert_opportunity";
+      if (submissionId) {
+        await postJson(apiBase + "/leads", {
+          submissionId: submissionId,
+          leadKind: leadKind,
+          name: state.basic.companyName || "匿名用户",
+          phone: "H5-N/A",
+          company: state.basic.companyName || "未填写",
+          role: "访客",
+          bookingIntent: false,
+          type: "lead_capture",
+          payload: { source: "h5_medical" }
+        }).catch(function () {});
+      }
+      return submissionId;
+    }
 
     function setVisible(name) {
       welcome.classList.add("hide");
@@ -559,6 +620,14 @@
         item.innerHTML = "<strong>" + DIMS[idx].name + "</strong>（" + res.weighted[idx] + "）：" + DIMS[idx].issue;
         top3.appendChild(item);
       }
+
+      submitDiagData({
+        weighted: res.weighted,
+        total: res.total,
+        level: lv
+      }).catch(function (e) {
+        console.warn("diag submit skipped:", e && e.message ? e.message : e);
+      });
 
       setVisible("report");
       state.phase = "report";

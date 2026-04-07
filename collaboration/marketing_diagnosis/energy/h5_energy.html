@@ -153,10 +153,35 @@
     hotline: "400-000-0000",
     reportTitle: "能源电力行业营销诊断报告",
     industryEdition: "energy",
-    industryEditionLabel: "能源电力行业"
+    industryEditionLabel: "能源电力行业",
+    apiBaseUrl: "/api/diag",
+    questionnaireVersion: "energy_v1",
+    scoringModelVersion: "score_v1_9"
   };
 
   (function () {
+    function postJson(url, payload) {
+      return fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        return res.json().then(function (json) {
+          if (!res.ok || !json || json.code !== 0) {
+            throw new Error((json && (json.message || json.error)) || ("HTTP " + res.status));
+          }
+          return json.data || null;
+        });
+      });
+    }
+
+    function detectApiBaseUrl() {
+      var raw = (CONFIG.apiBaseUrl || "").trim();
+      if (!raw) return "";
+      if (/^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, "");
+      return raw.replace(/\/+$/, "");
+    }
+
     var STORAGE_KEY = "diag_energy_v1";
     var STORAGE_VERSION = 2;
     var LIGHT_TAIL_QI = 9;
@@ -219,6 +244,7 @@
     var bar = document.getElementById("bar");
     var btnResume = document.getElementById("btn-resume");
     var moduleStrip = document.getElementById("module-strip");
+    var currentSubmissionId = "";
 
     var state = {
       v: STORAGE_VERSION,
@@ -529,6 +555,40 @@
       document.getElementById("rep-segments").textContent = segText();
       drawRadar(res.weighted);
 
+      var submissionPayload = {
+        industryEdition: CONFIG.industryEdition,
+        questionnaireVersion: CONFIG.questionnaireVersion,
+        scoringModelVersion: CONFIG.scoringModelVersion,
+        sourcePage: "/diag/h5_energy.html",
+        type: "questionnaire_submission",
+        payload: {
+          stepMeta: { totalSteps: TOTAL_STEPS, liteLimit: LITE_LIMIT, resumeFromQIndex: FULL_RESUME_QI },
+          rawAnswers: state.answers
+        },
+        qbPayload: {
+          q_b1_companyName: state.basic.companyName || "",
+          q_b2_segments: state.basic.q_b2 || [],
+          q_b3_scale: state.basic.scale || "",
+          q_b4_years: state.basic.years || ""
+        },
+        answersPayload: state.answers || {},
+        clientScorePayload: res
+      };
+
+      postJson(CONFIG.apiBaseUrl + "/submissions", submissionPayload)
+        .then(function (data) {
+          currentSubmissionId = data && data.submissionId ? data.submissionId : "";
+          if (!currentSubmissionId) return;
+          return postJson(CONFIG.apiBaseUrl + "/summary-lead", {
+            submissionId: currentSubmissionId,
+            company: state.basic.companyName || "未填写",
+            leadKind: "diagnosis_summary",
+            industryEdition: CONFIG.industryEdition,
+            sourcePage: "/diag/h5_energy.html"
+          }).catch(function () {});
+        })
+        .catch(function () {});
+
       var legend = document.getElementById("radar-legend");
       legend.innerHTML = "";
       for (var i = 0; i < DIMS.length; i++) {
@@ -607,6 +667,19 @@
     });
     document.getElementById("btn-book").addEventListener("click", function () {
       if (confirm("将打开预约落地页，是否继续？")) {
+        if (currentSubmissionId) {
+          postJson(CONFIG.apiBaseUrl + "/leads", {
+            submissionId: currentSubmissionId,
+            leadKind: "expert_opportunity",
+            name: state.contact.name || "未填写",
+            phone: state.contact.phone || "未填写",
+            company: state.contact.company || state.basic.companyName || "未填写",
+            role: "",
+            bookingIntent: true,
+            type: "expert_booking",
+            payload: { sourcePage: "/diag/h5_energy.html", note: state.openText || "" }
+          }).catch(function () {});
+        }
         window.open(CONFIG.bookingUrl, "_blank", "noopener");
       }
     });
