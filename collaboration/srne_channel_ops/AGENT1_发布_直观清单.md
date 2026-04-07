@@ -1,5 +1,10 @@
 # Agent1：硕日系统发布 — 直观版（按顺序做）
 
+> **根因（已核实）：** `scorecard` / `import/batches` / `import/channels/preview` 曾**只存在于 Cursor 工作区**，**未进入 Git**。历史提交 `c74e182` 的 `server.mjs` 里本来就没有这些路由，因此你在 **`033aeb9` 上 no-cache 重建**后容器内 `grep` 仍没有它们——**结论正确，不是网关或缓存问题**。  
+> **现已在 open 仓库提交：** `b27fdfc`（分支 `feature/srne-channel-ops`）。请 **pull/合并到该提交或更新** 后再 `docker compose build --no-cache`，第一步 `grep` 应能在**宿主机** `collaboration/srne_channel_ops/api/server.mjs` 看到 `performance/scorecard`。
+
+---
+
 ## 这一单要你做什么？（一句话）
 
 把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。
@@ -28,7 +33,7 @@ test -f collaboration/srne_channel_ops/web/app.js && echo "OK web"
 grep -q performance/scorecard collaboration/srne_channel_ops/api/server.mjs && echo "OK 含 scorecard 接口"
 ```
 
-若 `grep` 没有输出，说明代码还是旧的，需要先 **pull / 解压 tar** 拿到最新 `srne_channel_ops`。
+若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。
 
 ---
 
@@ -108,36 +113,38 @@ JWT_SECRET 已更换：是 / 否
 
 ### 业务方已回传记录（便于 Agent1 对账）
 
-| 项 | 结果 |
-|----|------|
-| **Git 提交** | `e5ba48d`（以你方部署仓库为准） |
-| **已验证可用** | `/srne/`、`/srne/v1/health`、登录、`dashboard`、`performance/summary`、`import/channels`、重启后持久化 |
-| **仍为 404** | `GET /v1/performance/scorecard`、`GET /v1/import/batches` |
+| 轮次 | Git 提交（你方部署仓库） | 已验证可用 | 仍为 404 / 说明 |
+|------|-------------------------|------------|-----------------|
+| 1 | `e5ba48d` | `/srne/`、`/srne/v1/health`、登录、`dashboard`、`performance/summary`、`import/channels`、持久化 | `performance/scorecard`、`import/batches` |
+| 2 | `033aeb9` | 容器内 `grep`：仅有 `performance/summary`、`import/channels`、`import/channels/upload`；已 `down` + `build --no-cache` + `up --force-recreate`；网关复测同上 | `scorecard`、`batches` 仍 404 — **构建源 `server.mjs` 本身无这两段路由** |
 
 ---
 
-## 给 Agent1 的纠偏（404 ≠ 功能未做）
+## 给 Agent1 的说明（与上一轮纠偏的关系）
 
-业务侧曾判断「代码里还没这两个路由」——**在 Cursor 维护的源码树里，这两条路已经存在**，与 `performance/summary`、`import/channels` 同属 `server.mjs`。若公网 404，说明 **当前对外提供流量的进程里加载的 `server.mjs` 仍是旧文件**（镜像未重建、指错容器、或构建时用的不是含以下内容的目录）。
+上一轮写「404 = 镜像没更新」在**真源已进 Git**的前提下成立。本轮实机证明：**你们当时拉取的 Git 里根本没有这两段路由**（与历史 `c74e182` 一致），no-cache 也只能打出「忠实于旧文件」的镜像——**你们判断正确**。
 
-**在本仓库中可核对（路径相对仓库根）：**
+**当前对策：**
 
-- `app.get("/v1/performance/scorecard", …)` — 见 `collaboration/srne_channel_ops/api/server.mjs`
-- `app.get("/v1/import/batches", …)` — 同上
-- 同一文件内还有：`POST /v1/import/channels/preview`（若 scorecard 404，preview 往往也 404）
+1. 在**宿主机**（构建前）执行：  
+   `grep -n "performance/scorecard" collaboration/srne_channel_ops/api/server.mjs`  
+   无输出 → **禁止**指望 Docker 自愈，必须先 **同步代码**。
+2. open 仓库已提交含完整路由的版本：**`b27fdfc`**（`feature/srne-channel-ops`）。请 merge / cherry-pick / 由 OpenClaw 同步后再构建。
+3. 同步后再做容器内 `grep`（应与宿主机一致），然后对外 curl。
 
-**请在「实际跑 8790 的容器」里验证（避免只看宿主机 git）：**
+**可选：不依赖 pull 时**，用 `git show b27fdfc:collaboration/srne_channel_ops/api/server.mjs` 对比你方文件是否出现 `app.get("/v1/performance/scorecard"`。
+
+**容器内验证（同步代码并重建后）：**
 
 ```bash
-# 将 CONTAINER 换成你们 srne 容器名或 ID
 docker exec CONTAINER grep -n "performance/scorecard" /app/api/server.mjs
 docker exec CONTAINER grep -n "import/batches" /app/api/server.mjs
 ```
 
-- **有输出**：路由在镜像里，却仍 404 → 查网关是否把 `/srne/v1/performance` 错配到别的服务，或路径被 strip。
-- **无输出**：镜像仍是旧代码 → 在 **`collaboration/srne_channel_ops/`** 下 **`docker compose build --no-cache`** 再 `up -d`，并确认负载均衡只指向新容器。
+- **仍无输出**：构建 context 或 COPY 路径仍不对，或打的不是新镜像。
+- **有输出** 但网关 404：再查反代路径、是否打到别服务。
 
-**合并后对外再验（与管理台同 BASE）：**
+**对外复测：**
 
 ```bash
 BASE="http://<IP>/srne"
