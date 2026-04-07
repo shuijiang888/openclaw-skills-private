@@ -1,8 +1,19 @@
-/* global fetch, localStorage, document, window */
+/* global fetch, localStorage, document, window, Chart */
 
 const TOKEN_KEY = "srne_ops_token";
 const USER_KEY = "srne_ops_user";
 
+const chartColors = {
+  primary: "rgba(61, 158, 239, 0.85)",
+  primaryDim: "rgba(61, 158, 239, 0.2)",
+  grid: "rgba(255, 255, 255, 0.08)",
+  text: "#8b9aab",
+  ok: "rgba(127, 217, 154, 0.8)",
+  warn: "rgba(255, 204, 102, 0.85)",
+  danger: "rgba(240, 113, 120, 0.75)",
+};
+
+/** 与网关子路径部署一致 */
 function apiBase() {
   const p = window.location.pathname || "";
   if (p === "/srne" || p.startsWith("/srne/")) return "/srne";
@@ -38,7 +49,28 @@ function $(sel) {
   return document.querySelector(sel);
 }
 
+const __charts = [];
+function destroyCharts() {
+  while (__charts.length) {
+    const c = __charts.pop();
+    try {
+      c.destroy();
+    } catch (_) {}
+  }
+}
+function regChart(ch) {
+  if (ch) __charts.push(ch);
+}
+
+function applyChartDefaults() {
+  if (typeof Chart === "undefined") return;
+  Chart.defaults.color = chartColors.text;
+  Chart.defaults.borderColor = chartColors.grid;
+  Chart.defaults.font.family = '"DM Sans", system-ui, sans-serif';
+}
+
 function showView(name) {
+  destroyCharts();
   document.querySelectorAll("[data-view]").forEach((el) => {
     el.classList.toggle("hidden", el.getAttribute("data-view") !== name);
   });
@@ -54,7 +86,7 @@ function showView(name) {
       sales: "销售赋能",
       perf: "绩效看板",
       alerts: "预警中心",
-      import: "数据导入",
+      import: "数据与录入",
     }[name] || "";
 }
 
@@ -82,12 +114,24 @@ function updateShell() {
   if (user) {
     $("#userLabel").innerHTML = `<strong>${user.name}</strong> · ${user.role} · ${user.email}`;
   }
-  const imp = $("#navImport");
-  if (imp) imp.classList.toggle("hidden", user && user.role === "sales");
+  const sales = !!(user && user.role === "sales");
+  $("#navImport").classList.toggle("hidden", sales);
+  const qa = $("#btnOpenQuickAdd");
+  const qa2 = $("#btnOpenQuickAdd2");
+  if (qa) qa.classList.toggle("hidden", sales);
+  if (qa2) qa2.classList.toggle("hidden", sales);
+}
+
+function fmtUsd(n) {
+  if (n == null || Number.isNaN(n)) return "—";
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
+  if (n >= 1e3) return Math.round(n / 1e3) + "k";
+  return String(Math.round(n));
 }
 
 async function loadDashboard() {
-  const s = await api("/v1/dashboard/summary");
+  const d = await api("/v1/analytics/overview");
+  const s = d.summary;
   $("#kpiChannels").textContent = s.channelCount;
   $("#kpiRevenue").textContent =
     s.activeRevenueUsd >= 1e6
@@ -96,6 +140,98 @@ async function loadDashboard() {
   $("#kpiAlerts").textContent = s.openAlerts;
   $("#kpiSam").textContent = s.samAccounts;
   $("#kpiAbc").textContent = `A ${s.abc.A || 0} · B ${s.abc.B || 0} · C ${s.abc.C || 0}`;
+
+  destroyCharts();
+  if (typeof Chart === "undefined") return;
+  applyChartDefaults();
+
+  regChart(
+    new Chart($("#chartRegionBar"), {
+      type: "bar",
+      data: {
+        labels: d.revenueByRegion.map((x) => x.region),
+        datasets: [
+          {
+            label: "年出货 USD",
+            data: d.revenueByRegion.map((x) => x.revenue),
+            backgroundColor: chartColors.primary,
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+      },
+    })
+  );
+
+  regChart(
+    new Chart($("#chartAbcDoughnut"), {
+      type: "doughnut",
+      data: {
+        labels: ["A 战略", "B 成长", "C 标准"],
+        datasets: [
+          {
+            data: [s.abc.A || 0, s.abc.B || 0, s.abc.C || 0],
+            backgroundColor: [chartColors.ok, chartColors.warn, chartColors.danger],
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
+    })
+  );
+
+  regChart(
+    new Chart($("#chartMonthlyLine"), {
+      type: "line",
+      data: {
+        labels: d.monthlyTrend.map((x) => x.ym),
+        datasets: [
+          {
+            label: "月度出货合计",
+            data: d.monthlyTrend.map((x) => x.total),
+            borderColor: chartColors.primary,
+            backgroundColor: chartColors.primaryDim,
+            fill: true,
+            tension: 0.3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+      },
+    })
+  );
+
+  regChart(
+    new Chart($("#chartTopBar"), {
+      type: "bar",
+      data: {
+        labels: d.topChannels.map((x) => x.channel_code),
+        datasets: [
+          {
+            label: "年出货",
+            data: d.topChannels.map((x) => x.annual_revenue_usd || 0),
+            backgroundColor: "rgba(61, 158, 239, 0.65)",
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+      },
+    })
+  );
 }
 
 async function loadChannels() {
@@ -106,7 +242,9 @@ async function loadChannels() {
   if (region) params.set("region", region);
   if (abc) params.set("abc", abc);
   if (q) params.set("q", q);
+  params.set("limit", "100");
   const res = await api("/v1/channels?" + params.toString());
+  $("#channelListMeta").textContent = `共 ${res.total} 条渠道（演示数据），当前最多展示 ${res.items.length} 条`;
   const tb = $("#channelTable tbody");
   tb.innerHTML = "";
   for (const c of res.items) {
@@ -117,6 +255,8 @@ async function loadChannels() {
       <td>${c.country_code}</td>
       <td>${c.region}</td>
       <td><span class="badge ${c.abc_class}">${c.abc_class}</span></td>
+      <td>${fmtUsd(c.annual_revenue_usd)}</td>
+      <td>${c.gross_margin_pct != null ? Number(c.gross_margin_pct).toFixed(1) + "%" : "—"}</td>
       <td>${c.clv_score != null ? Number(c.clv_score).toFixed(1) : "—"}</td>
       <td>${c.sam_flag ? '<span class="badge sam">SAM</span>' : "—"}</td>
       <td>${c.status}</td>
@@ -140,10 +280,22 @@ function escapeHtml(s) {
 }
 
 let currentChannelId = null;
+let channelMonthlyChart = null;
+let channelRadarChart = null;
+
+function destroyChannelCharts() {
+  [channelMonthlyChart, channelRadarChart].forEach((c) => {
+    try {
+      c && c.destroy();
+    } catch (_) {}
+  });
+  channelMonthlyChart = channelRadarChart = null;
+}
 
 async function openChannel(id) {
   currentChannelId = id;
   showView("channelDetail");
+  destroyChannelCharts();
   const res = await api("/v1/channels/" + id);
   const c = res.channel;
   $("#chTitle").textContent = `${c.channel_code} · ${c.name_en}`;
@@ -151,21 +303,65 @@ async function openChannel(id) {
     <div class="row"><span class="muted">国家</span> ${c.country_code} &nbsp;|&nbsp; <span class="muted">区域</span> ${c.region}
     &nbsp;|&nbsp; <span class="muted">分级</span> <span class="badge ${c.abc_class}">${c.abc_class}</span>
     &nbsp;|&nbsp; <span class="muted">CLV(演示)</span> ${Number(c.clv_score).toFixed(1)}
+    &nbsp;|&nbsp; <span class="muted">年出货</span> ${fmtUsd(c.annual_revenue_usd)} USD
     &nbsp;|&nbsp; <span class="muted">状态</span> ${c.status}</div>
     <p class="muted">负责人：${escapeHtml(c.owner_name || "—")} ${c.owner_email ? `(${escapeHtml(c.owner_email)})` : ""}</p>
   `;
   $("#chNotes").value = c.notes || "";
-  const maxR = Math.max(...res.monthly.map((m) => m.revenue_usd), 1);
-  const chart = $("#monthlyChart");
-  chart.innerHTML = "";
-  res.monthly.forEach((m) => {
-    const h = Math.round((m.revenue_usd / maxR) * 100);
-    const d = document.createElement("div");
-    d.className = "bar";
-    d.style.height = h + "%";
-    d.innerHTML = `<span>${m.ym.slice(5)}</span>`;
-    chart.appendChild(d);
-  });
+
+  if (typeof Chart !== "undefined") {
+    applyChartDefaults();
+    const labels = res.monthly.map((m) => m.ym);
+    const vals = res.monthly.map((m) => m.revenue_usd);
+    channelMonthlyChart = new Chart($("#chartChannelMonthly"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "月出货 USD",
+            data: vals,
+            borderColor: chartColors.primary,
+            backgroundColor: chartColors.primaryDim,
+            fill: true,
+            tension: 0.35,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: "index" },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+      },
+    });
+
+    const s1 = Number(c.strategic_fit_score) || 0;
+    const s2 = Number(c.profit_dim_score) || 0;
+    const s3 = Number(c.growth_dim_score) || 0;
+    channelRadarChart = new Chart($("#chartChannelRadar"), {
+      type: "radar",
+      data: {
+        labels: ["战略契合(35%)", "盈利能力(35%)", "成长潜力(30%)"],
+        datasets: [
+          {
+            label: "演示得分",
+            data: [s1, s2, s3],
+            fill: true,
+            backgroundColor: "rgba(61, 158, 239, 0.25)",
+            borderColor: chartColors.primary,
+            pointBackgroundColor: chartColors.primary,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { r: { beginAtZero: true, suggestedMax: 35, ticks: { stepSize: 10 } } },
+      },
+    });
+  }
+
   const altb = $("#chAlerts tbody");
   altb.innerHTML = "";
   for (const a of res.alerts) {
@@ -183,6 +379,12 @@ async function openChannel(id) {
       openChannel(currentChannelId);
     });
   });
+
+  const ymInput = $("#metricYm");
+  if (ymInput) {
+    const t = new Date();
+    ymInput.value = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`;
+  }
 }
 
 async function saveChannelNotes() {
@@ -196,6 +398,30 @@ async function saveChannelNotes() {
     $("#chSaveHint").textContent = "";
   }, 2500);
 }
+
+async function addMonthlyMetric() {
+  if (!currentChannelId) return;
+  const ymRaw = $("#metricYm").value;
+  const ym = ymRaw && ymRaw.length >= 7 ? ymRaw.slice(0, 7) : "";
+  const revenue = Number($("#metricRevenue").value);
+  if (!/^\d{4}-\d{2}$/.test(ym)) {
+    $("#metricHint").textContent = "请选择有效月份";
+    return;
+  }
+  if (Number.isNaN(revenue) || revenue < 0) {
+    $("#metricHint").textContent = "请输入出货金额";
+    return;
+  }
+  await api("/v1/channels/" + currentChannelId + "/monthly-metrics", {
+    method: "POST",
+    body: { ym, revenue_usd: revenue },
+  });
+  $("#metricHint").textContent = "已写入 " + ym;
+  $("#metricRevenue").value = "";
+  openChannel(currentChannelId);
+}
+
+let intelBarChart = null;
 
 async function loadIntelList() {
   const res = await api("/v1/intel/countries");
@@ -217,6 +443,40 @@ async function loadIntelList() {
       openIntel(a.getAttribute("data-cc"));
     });
   });
+
+  if (typeof Chart !== "undefined") {
+    applyChartDefaults();
+    try {
+      intelBarChart && intelBarChart.destroy();
+    } catch (_) {}
+    const items = [...res.items].sort((a, b) => a.opportunity_score - b.opportunity_score);
+    intelBarChart = new Chart($("#chartIntelBar"), {
+      type: "bar",
+      data: {
+        labels: items.map((x) => x.country_code),
+        datasets: [
+          {
+            label: "机会指数",
+            data: items.map((x) => x.opportunity_score),
+            backgroundColor: items.map((x) =>
+              x.opportunity_score >= 82 ? chartColors.ok : x.opportunity_score >= 75 ? chartColors.warn : chartColors.danger
+            ),
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { min: 0, max: 100 } },
+        onClick: (_, els) => {
+          if (els.length && items[els[0].index]) openIntel(items[els[0].index].country_code);
+        },
+      },
+    });
+  }
 }
 
 async function openIntel(cc) {
@@ -237,6 +497,8 @@ async function openIntel(cc) {
   $("#intelBody").innerHTML = html || "暂无详情";
 }
 
+let quoteDoughnut = null;
+
 async function runQuote() {
   const body = {
     countryCode: $("#quoteCountry").value,
@@ -246,6 +508,51 @@ async function runQuote() {
   };
   const r = await api("/v1/tools/quote", { method: "POST", body });
   $("#quoteOut").textContent = JSON.stringify(r, null, 2);
+
+  if (typeof Chart !== "undefined") {
+    applyChartDefaults();
+    const q = body.qty;
+    const pu = r.perUnitUsd;
+    const fobT = pu.fob * q;
+    const tarT = pu.tariff * q;
+    const freT = pu.freight * q;
+    try {
+      quoteDoughnut && quoteDoughnut.destroy();
+    } catch (_) {}
+    quoteDoughnut = new Chart($("#chartQuoteBreakdown"), {
+      type: "doughnut",
+      data: {
+        labels: ["FOB", "关税", "运费估算"],
+        datasets: [
+          {
+            data: [fobT, tarT, freT],
+            backgroundColor: [
+              "rgba(61, 158, 239, 0.85)",
+              "rgba(255, 204, 102, 0.85)",
+              "rgba(127, 217, 154, 0.75)",
+            ],
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const v = ctx.raw;
+                const sum = fobT + tarT + freT || 1;
+                return `${ctx.label}: $${v.toFixed(0)} (${((v / sum) * 100).toFixed(1)}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }
 
 async function loadAlerts() {
@@ -270,12 +577,310 @@ async function loadAlerts() {
   });
 }
 
-async function loadPerf() {
-  const res = await api("/v1/performance/summary");
-  $("#perfOut").textContent = JSON.stringify(res.byClass, null, 2);
+function trafficDot(t) {
+  const cls = t === "green" ? "tl-green" : t === "yellow" ? "tl-yellow" : "tl-red";
+  return `<span class="traffic-dot ${cls}" title="${t}"></span>`;
 }
 
-async function doImportJson() {
+function renderPerfBsc(sc) {
+  $("#perfPeriodLabel").textContent = sc.targets.fiscal_period_label;
+  const f = sc.bsc.financial;
+  const c = sc.bsc.customer;
+  const p = sc.bsc.process;
+  const l = sc.bsc.learning;
+  $("#perfBscGrid").innerHTML = `
+    <div class="bsc-card">
+      <h3>财务</h3>
+      <p>年出货 roll <strong>${fmtUsd(f.annual_revenue_roll_usd)}</strong> USD</p>
+      <p>演示达成指数 <strong>${f.proxy_quarter_attainment_pct}%</strong> ${trafficDot(f.traffic_revenue)}</p>
+      <p>A 类出货占比 <strong>${f.a_class_revenue_share_pct}%</strong> / 目标 ${f.target_a_share_pct}% ${trafficDot(f.traffic_a_share)}</p>
+      <p>均毛利 <strong>${f.avg_gross_margin_pct}%</strong> / 目标 ${f.target_margin_pct}% ${trafficDot(f.traffic_margin)}</p>
+    </div>
+    <div class="bsc-card">
+      <h3>客户</h3>
+      <p>活跃渠道 <strong>${c.active_channels}</strong></p>
+      <p>SAM <strong>${c.sam_accounts}</strong>（${c.sam_ratio_pct}%）</p>
+      <p>A 类收入占比 <strong>${c.a_share_pct}%</strong></p>
+    </div>
+    <div class="bsc-card">
+      <h3>流程</h3>
+      <p>未关预警 <strong>${JSON.stringify(p.open_alerts_by_severity)}</strong></p>
+      <p>均逾期天数 <strong>${p.avg_ar_days}</strong> / 目标 ≤${p.target_max_ar_days} ${trafficDot(p.traffic_ar)}</p>
+      <p class="muted small">账龄桶：0天 ${p.ar_buckets?.b0 ?? 0} · 1–15 ${p.ar_buckets?.b1 ?? 0} · 16–30 ${p.ar_buckets?.b2 ?? 0} · &gt;30 ${p.ar_buckets?.b3 ?? 0}</p>
+    </div>
+    <div class="bsc-card">
+      <h3>学习成长</h3>
+      <p class="muted small">${l.note}</p>
+      <p>近30天导入批次 <strong>${l.import_batches_30d}</strong></p>
+      <p>CRM 采用率（演示） <strong>${l.placeholder_crm_adoption_pct}%</strong></p>
+    </div>
+  `;
+}
+
+function renderPerfTables(sc) {
+  const rt = $("#perfRegionDetailTable tbody");
+  rt.innerHTML = "";
+  for (const r of sc.region_scorecard || []) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.region}</td>
+      <td>${r.channels}</td>
+      <td>${fmtUsd(r.revenue_usd)}</td>
+      <td>${fmtUsd(r.target_quarter_usd)}</td>
+      <td>${r.attainment_pct}%</td>
+      <td>${trafficDot(r.traffic)}</td>
+      <td>${r.avg_margin_pct}%</td>
+      <td>${r.a_count}</td>
+      <td>${r.ar_over_30}</td>
+    `;
+    rt.appendChild(tr);
+  }
+
+  const wt = $("#perfWatchTable tbody");
+  wt.innerHTML = "";
+  for (const w of sc.watchlist || []) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(w.channel_code)}</td>
+      <td>${escapeHtml(w.name_en)}</td>
+      <td><span class="badge ${w.abc_class}">${w.abc_class}</span></td>
+      <td>${w.ar_overdue_days}</td>
+      <td>${fmtUsd(w.annual_revenue_usd)}</td>
+      <td>${w.clv_score != null ? Number(w.clv_score).toFixed(1) : "—"}</td>
+      <td>${w.last_contact_date || "—"}</td>
+    `;
+    wt.appendChild(tr);
+  }
+
+  const ot = $("#perfOwnerTable tbody");
+  ot.innerHTML = "";
+  for (const o of sc.owner_leaderboard || []) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(o.name)}</td>
+      <td>${escapeHtml(o.email)}</td>
+      <td>${o.channel_cnt}</td>
+      <td>${fmtUsd(o.revenue_usd)}</td>
+      <td>${o.avg_margin != null ? Math.round(o.avg_margin * 10) / 10 : "—"}</td>
+      <td>${o.ar_watch}</td>
+    `;
+    ot.appendChild(tr);
+  }
+
+  const lc = $("#perfLifecycleMount");
+  lc.innerHTML = (sc.lifecycle_funnel || [])
+    .map((x) => `<div class="funnel-row"><span>${x.stage}</span><strong>${x.n}</strong></div>`)
+    .join("");
+
+  const pm = $("#perfProcessMount");
+  const sev = sc.bsc.process.open_alerts_by_severity || {};
+  pm.innerHTML = `
+    <p>Critical: <strong>${sev.critical ?? 0}</strong> · Warn: <strong>${sev.warn ?? 0}</strong> · Info: <strong>${sev.info ?? 0}</strong></p>
+    <p class="muted small">结合「预警中心」可做日清闭环。</p>
+  `;
+
+  const ul = $("#perfNarrativeList");
+  ul.innerHTML = (sc.operational?.narrative || []).map((t) => `<li>${escapeHtml(t)}</li>`).join("");
+}
+
+async function loadPerf() {
+  const sc = await api("/v1/performance/scorecard");
+  $("#perfOut").textContent = JSON.stringify(sc, null, 2);
+  renderPerfBsc(sc);
+  renderPerfTables(sc);
+
+  const d = await api("/v1/analytics/overview");
+
+  if (typeof Chart === "undefined") return;
+  applyChartDefaults();
+  destroyCharts();
+
+  const regions = sc.region_scorecard || [];
+  regChart(
+    new Chart($("#chartPerfRegion"), {
+      type: "bar",
+      data: {
+        labels: regions.map((x) => x.region),
+        datasets: [
+          {
+            label: "达成率 %",
+            data: regions.map((x) => Math.min(x.attainment_pct, 150)),
+            backgroundColor: regions.map((x) =>
+              x.traffic === "green" ? chartColors.ok : x.traffic === "yellow" ? chartColors.warn : chartColors.danger
+            ),
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { max: 150, beginAtZero: true } },
+      },
+    })
+  );
+
+  const mom = sc.monthly_trend_rev || [];
+  regChart(
+    new Chart($("#chartPerfMom"), {
+      type: "line",
+      data: {
+        labels: mom.map((x) => x.ym),
+        datasets: [
+          {
+            label: "月度出货",
+            data: mom.map((x) => x.total),
+            borderColor: chartColors.primary,
+            backgroundColor: chartColors.primaryDim,
+            fill: true,
+            tension: 0.3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+      },
+    })
+  );
+
+  const mb = d.marginByClass || [];
+  const labels = mb.map((x) => x.abc_class + " 级");
+  regChart(
+    new Chart($("#chartPerfMargin"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "平均毛利率 %",
+            data: mb.map((x) => Number(x.avg_margin) || 0),
+            backgroundColor: chartColors.primary,
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, max: 40 } },
+      },
+    })
+  );
+  regChart(
+    new Chart($("#chartPerfRev"), {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: mb.map((x) => Number(x.revenue_sum) || 0),
+            backgroundColor: [chartColors.ok, chartColors.warn, chartColors.danger],
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
+    })
+  );
+}
+
+function getChannelsFromImportTextarea() {
+  const t = $("#importJson").value.trim();
+  if (!t) throw new Error("请粘贴或生成 JSON");
+  const data = JSON.parse(t);
+  if (!Array.isArray(data.channels)) throw new Error('JSON 须包含数组字段 "channels"');
+  return data.channels;
+}
+
+function parseCsvToChannels(text) {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length < 2) throw new Error("CSV 至少包含表头与一行数据");
+  const headers = lines[0].split(",").map((h) => h.trim());
+  const numFields = new Set([
+    "annual_revenue_usd",
+    "gross_margin_pct",
+    "ar_overdue_days",
+    "clv_score",
+    "owner_user_id",
+    "strategic_fit_score",
+    "profit_dim_score",
+    "growth_dim_score",
+  ]);
+  const channels = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(",").map((c) => c.trim());
+    const o = {};
+    headers.forEach((h, j) => {
+      let v = cells[j];
+      if (v === undefined || v === "") return;
+      if (numFields.has(h)) o[h] = Number(v);
+      else if (h === "sam_flag") o[h] = v === "1" || v.toLowerCase() === "true";
+      else o[h] = v;
+    });
+    channels.push(o);
+  }
+  return channels;
+}
+
+async function runImportPreview() {
+  $("#importPreviewHint").textContent = "";
+  $("#btnImportCommit").disabled = true;
+  let channels;
+  try {
+    channels = getChannelsFromImportTextarea();
+  } catch (e) {
+    $("#importPreviewHint").textContent = e.message;
+    return;
+  }
+  const r = await api("/v1/import/channels/preview", { method: "POST", body: { channels } });
+  const tb = $("#importPreviewTable tbody");
+  tb.innerHTML = "";
+  for (const row of r.rows) {
+    const tr = document.createElement("tr");
+    if (row.status === "ok") {
+      tr.innerHTML = `
+        <td>${row.row}</td>
+        <td><span class="import-ok">通过</span></td>
+        <td>${escapeHtml(row.channel_code)} · ${escapeHtml(row.name_en)}<div class="muted small">${escapeHtml(row.snapshot)}</div></td>
+        <td>—</td>`;
+    } else {
+      tr.innerHTML = `
+        <td>${row.row}</td>
+        <td><span class="import-err">失败</span></td>
+        <td>${escapeHtml(row.channel_code)}</td>
+        <td>${(row.issues || []).map((x) => escapeHtml(x)).join("；")}</td>`;
+    }
+    tb.appendChild(tr);
+  }
+  $("#importPreviewHint").textContent = `共 ${r.row_total} 行：可写入 ${r.row_ok}，失败 ${r.row_err}。失败行修正前无法写入。`;
+  $("#btnImportCommit").disabled = r.row_err > 0 || r.row_ok === 0;
+  $("#importStepBadge2").classList.add("import-step-done");
+}
+
+async function runImportCommit() {
+  let channels;
+  try {
+    channels = getChannelsFromImportTextarea();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+  const r = await api("/v1/import/channels", { method: "POST", body: { channels } });
+  $("#importResult").textContent = JSON.stringify(r, null, 2);
+  $("#importStepBadge3").classList.add("import-step-done");
+  $("#btnImportCommit").disabled = true;
+  await loadImportBatches();
+}
+
+async function doImportJsonDirect() {
+  if (!window.confirm("跳过校验预览将直接写入数据库，生产环境不推荐。确定？")) return;
   let data;
   try {
     data = JSON.parse($("#importJson").value);
@@ -285,6 +890,7 @@ async function doImportJson() {
   }
   const r = await api("/v1/import/channels", { method: "POST", body: data });
   $("#importResult").textContent = JSON.stringify(r, null, 2);
+  await loadImportBatches();
 }
 
 async function doImportFile() {
@@ -303,6 +909,136 @@ async function doImportFile() {
   });
   const text = await res.text();
   $("#importResult").textContent = text;
+  await loadImportBatches();
+}
+
+async function loadImportTemplate() {
+  const t = await api("/v1/import/template");
+  $("#importJson").value = JSON.stringify({ channels: t.channels }, null, 2);
+  $("#importResult").textContent =
+    "字段规范：\n" + JSON.stringify(t.field_spec || {}, null, 2) + "\n\n可修改 channel_code 后先做「校验预览」。";
+  $("#importStepBadge1").classList.add("import-step-done");
+}
+
+async function loadImportBatches() {
+  try {
+    const r = await api("/v1/import/batches");
+    const tb = $("#importBatchesTable tbody");
+    tb.innerHTML = "";
+    for (const b of r.items) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(b.created_at)}</td>
+        <td><code class="batch-id">${escapeHtml(b.public_id)}</code></td>
+        <td>${escapeHtml(b.action)}</td>
+        <td>${b.row_total}</td>
+        <td>${b.row_ok}</td>
+        <td>${b.row_err}</td>`;
+      tb.appendChild(tr);
+    }
+  } catch (_) {
+    /* 销售无权限 */
+  }
+}
+
+function onCsvToJson() {
+  const f = $("#importCsvFile").files[0];
+  if (!f) {
+    alert("请选择 CSV 文件");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const channels = parseCsvToChannels(String(reader.result));
+      $("#importJson").value = JSON.stringify({ channels }, null, 2);
+      $("#importPreviewHint").textContent = `已从 CSV 解析 ${channels.length} 条，请继续「校验预览」。`;
+      $("#importStepBadge1").classList.add("import-step-done");
+      $("#btnImportCommit").disabled = true;
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+  reader.readAsText(f, "UTF-8");
+}
+
+function fillSampleImport() {
+  $("#importJson").value = JSON.stringify(
+    {
+      channels: [
+        {
+          channel_code: "SRNE-SEA-098",
+          name_en: "Sample Import Co",
+          name_cn: "演示导入公司",
+          country_code: "SG",
+          region: "SEA",
+          lifecycle_stage: "active",
+          abc_class: "B",
+          clv_score: 110,
+          status: "ACTIVE",
+          annual_revenue_usd: 77000,
+          gross_margin_pct: 20,
+          ar_overdue_days: 0,
+        },
+      ],
+    },
+    null,
+    2
+  );
+  $("#importResult").textContent = "已填入示例；提交前请改编码避免与现网冲突。";
+}
+
+async function openQuickAddModal() {
+  const user = parseUser();
+  if (!user || user.role === "sales") return;
+  $("#modalQuickAdd").classList.remove("hidden");
+  $("#qaHint").textContent = "";
+  const sel = $("#qaOwner");
+  sel.innerHTML = '<option value="">—</option>';
+  try {
+    const u = await api("/v1/users");
+    for (const row of u.items) {
+      const o = document.createElement("option");
+      o.value = String(row.id);
+      o.textContent = `${row.name} (${row.email})`;
+      sel.appendChild(o);
+    }
+  } catch (_) {}
+}
+
+function closeQuickAddModal() {
+  $("#modalQuickAdd").classList.add("hidden");
+}
+
+async function submitQuickAdd() {
+  const name_en = $("#qaNameEn").value.trim();
+  const country = $("#qaCountry").value.trim().toUpperCase();
+  if (!name_en || !country) {
+    $("#qaHint").textContent = "请填写英文名称与国家代码";
+    return;
+  }
+  try {
+    const body = {
+      name_en,
+      name_cn: $("#qaNameCn").value.trim() || null,
+      country_code: country,
+      region: $("#qaRegion").value,
+      abc_class: $("#qaAbc").value,
+      annual_revenue_usd: Number($("#qaRevenue").value) || 80000,
+      gross_margin_pct: Number($("#qaMargin").value) || 22,
+    };
+    const oid = $("#qaOwner").value;
+    if (oid) body.owner_user_id = Number(oid);
+    const r = await api("/v1/channels", { method: "POST", body });
+    $("#qaHint").textContent = "已创建 " + r.channel.channel_code;
+    setTimeout(() => {
+      closeQuickAddModal();
+      showView("channels");
+      loadChannels();
+    }, 600);
+  } catch (e) {
+    $("#qaHint").textContent = e.data?.error || e.message;
+  }
 }
 
 function bindNav() {
@@ -310,25 +1046,41 @@ function bindNav() {
     btn.addEventListener("click", () => {
       const v = btn.getAttribute("data-nav");
       showView(v);
-      if (v === "dashboard") loadDashboard();
-      if (v === "channels") loadChannels();
+      if (v === "dashboard") loadDashboard().catch((e) => console.error(e));
+      if (v === "channels") loadChannels().catch((e) => console.error(e));
       if (v === "intel") {
-        loadIntelList();
         $("#intelDetail").classList.add("hidden");
+        loadIntelList().catch((e) => console.error(e));
       }
-      if (v === "alerts") loadAlerts();
-      if (v === "perf") loadPerf();
+      if (v === "alerts") loadAlerts().catch((e) => console.error(e));
+      if (v === "perf") loadPerf().catch((e) => console.error(e));
+      if (v === "import") loadImportBatches().catch(() => {});
     });
   });
   $("#btnBackChannels").addEventListener("click", () => {
+    destroyChannelCharts();
     showView("channels");
     loadChannels();
   });
   $("#btnSaveNotes").addEventListener("click", () => saveChannelNotes());
   $("#btnApplyFilters").addEventListener("click", () => loadChannels());
   $("#btnRunQuote").addEventListener("click", () => runQuote().catch((e) => alert(e.message)));
-  $("#btnImportJson").addEventListener("click", () => doImportJson().catch((e) => alert(e.message)));
+  $("#btnImportPreview").addEventListener("click", () => runImportPreview().catch((e) => alert(e.message)));
+  $("#btnImportCommit").addEventListener("click", () => runImportCommit().catch((e) => alert(e.message)));
+  $("#btnImportJson").addEventListener("click", () => doImportJsonDirect().catch((e) => alert(e.message)));
   $("#btnImportFile").addEventListener("click", () => doImportFile().catch((e) => alert(e.message)));
+  $("#btnCsvToJson").addEventListener("click", () => onCsvToJson());
+  $("#btnRefreshBatches").addEventListener("click", () => loadImportBatches().catch((e) => alert(e.message)));
+  $("#btnLoadTemplate").addEventListener("click", () => loadImportTemplate().catch((e) => alert(e.message)));
+  $("#btnFillSample").addEventListener("click", fillSampleImport);
+  $("#btnOpenQuickAdd").addEventListener("click", () => openQuickAddModal());
+  $("#btnOpenQuickAdd2").addEventListener("click", () => openQuickAddModal());
+  $("#qaCancel").addEventListener("click", closeQuickAddModal);
+  $("#qaSubmit").addEventListener("click", () => submitQuickAdd());
+  $("#btnAddMetric").addEventListener("click", () => addMonthlyMetric().catch((e) => alert(e.message)));
+  $("#modalQuickAdd").addEventListener("click", (e) => {
+    if (e.target.id === "modalQuickAdd") closeQuickAddModal();
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {

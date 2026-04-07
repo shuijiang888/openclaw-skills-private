@@ -312,3 +312,257 @@ tr:hover td {
 .hidden {
   display: none !important;
 }
+
+.row.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.chart-panel-wide {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 900px) {
+  .chart-panel-wide {
+    grid-column: span 2;
+  }
+}
+
+.chart-wrap {
+  position: relative;
+  height: 240px;
+  margin-top: 8px;
+}
+
+.chart-wrap-donut {
+  height: 220px;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chart-wrap-radar {
+  height: 280px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 -4px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 12, 0.72);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+@media (max-width: 520px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.form-grid input,
+.form-grid select {
+  width: 100%;
+}
+
+input[type="month"] {
+  color-scheme: dark;
+}
+
+.perf-hero .bsc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.bsc-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+}
+
+.bsc-card h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.bsc-card p {
+  margin: 6px 0;
+  line-height: 1.45;
+}
+
+.traffic-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.traffic-dot.tl-green {
+  background: var(--ok);
+  box-shadow: 0 0 8px rgba(127, 217, 154, 0.5);
+}
+
+.traffic-dot.tl-yellow {
+  background: var(--warn);
+}
+
+.traffic-dot.tl-red {
+  background: var(--danger);
+}
+
+.two-col-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.funnel-mount .funnel-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.data-table th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.narrative-list {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.import-steps-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.import-step {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.import-step.import-step-done {
+  border-color: rgba(127, 217, 154, 0.45);
+  color: var(--ok);
+}
+
+.import-textarea {
+  width: 100%;
+  min-height: 200px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.import-actions {
+  margin-top: 12px;
+}
+
+.import-ok {
+  color: var(--ok);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.import-err {
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.import-result-pre {
+  margin-top: 12px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+code.batch-id {
+  font-size: 11px;
+  word-break: break-all;
+}
