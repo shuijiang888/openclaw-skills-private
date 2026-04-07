@@ -133,6 +133,18 @@
     .btn-export.loading { pointer-events: none; opacity: 0.75; }
     .lead-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e0e6ed; }
     .hotline-note { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+    /* 仅用于 PDF：克隆到 body 后 html2canvas 可稳定取色（避免离屏 var() 偶发空白） */
+    .pdf-export-clone {
+      --primary: #0a2540;
+      --primary-mid: #123a5c;
+      --accent: #2e8bc0;
+      --text: #1a1a2e;
+      --muted: #5c6b7a;
+      --shadow: none;
+      background: #fff !important;
+      color: #1a1a2e !important;
+    }
+    .pdf-export-clone .btn-book { color: #fff !important; }
   </style>
 </head>
 <body>
@@ -778,6 +790,69 @@ var CONFIG = {
     document.getElementById('lead-co').value = state.text.q25.company || state.basic.name || '';
   }
 
+  /** PDF：克隆报告节点到 body 固定层再导出，避免父级 overflow/层叠导致 html2canvas 截到空白 */
+  function exportReportToPdf(btn, filename) {
+    if (typeof html2pdf === 'undefined') {
+      alert('PDF 组件未加载，请检查网络后重试（需加载 html2pdf.js CDN）。');
+      return;
+    }
+    var source = document.getElementById('report-page');
+    if (!source || source.offsetHeight < 48) {
+      alert('报告内容未就绪，请稍候再试。');
+      return;
+    }
+    window.scrollTo(0, 0);
+    var clone = source.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.classList.add('pdf-export-clone');
+    clone.setAttribute('aria-hidden', 'true');
+    clone.style.cssText = [
+      'position:fixed', 'left:0', 'top:0', 'z-index:2147483646', 'width:640px', 'max-width:640px',
+      'margin:0', 'box-shadow:none', 'pointer-events:none', 'opacity:1', 'visibility:visible', 'display:block'
+    ].join(';');
+    document.body.appendChild(clone);
+
+    var opt = {
+      margin: [10, 10, 10, 10],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.92 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        scrollY: 0,
+        windowWidth: clone.scrollWidth,
+        windowHeight: Math.max(clone.scrollHeight, 800)
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+    btn.classList.add('loading');
+    btn.textContent = '正在生成…';
+    var cleanup = function () {
+      if (clone.parentNode) clone.parentNode.removeChild(clone);
+      btn.classList.remove('loading');
+      btn.textContent = '导出 PDF 报告';
+    };
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          var worker = html2pdf().set(opt).from(clone);
+          var p = worker.save();
+          if (p && typeof p.then === 'function') {
+            p.then(cleanup).catch(function () {
+              cleanup();
+              alert('PDF 生成失败，请重试或换浏览器。');
+            });
+          } else {
+            setTimeout(cleanup, 2800);
+          }
+        }, 400);
+      });
+    });
+  }
+
   function formatDate(d) {
     var y = d.getFullYear();
     var m = ('0' + (d.getMonth() + 1)).slice(-2);
@@ -828,35 +903,8 @@ var CONFIG = {
 
   document.getElementById('btn-export-pdf').addEventListener('click', function () {
     var btn = document.getElementById('btn-export-pdf');
-    if (typeof html2pdf === 'undefined') {
-      alert('PDF 组件未加载，请检查网络后重试（需加载 html2pdf.js CDN）。');
-      return;
-    }
-    var el = document.getElementById('report-page');
     var safeName = (state.basic.name || '企业').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 40);
-    var opt = {
-      margin: 10,
-      filename: '企业营销诊断报告_' + safeName + '.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-    btn.classList.add('loading');
-    btn.textContent = '正在生成…';
-    var done = function () {
-      btn.classList.remove('loading');
-      btn.textContent = '导出 PDF 报告';
-    };
-    var p = html2pdf().set(opt).from(el).save();
-    if (p && typeof p.then === 'function') {
-      p.then(done).catch(function () {
-        done();
-        alert('PDF 生成失败，请重试或换浏览器。');
-      });
-    } else {
-      setTimeout(done, 2500);
-    }
+    exportReportToPdf(btn, '企业营销诊断报告_' + safeName + '.pdf');
   });
 
   document.getElementById('lead-save').addEventListener('click', function () {
