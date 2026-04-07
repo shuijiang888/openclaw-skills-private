@@ -4,6 +4,8 @@ const TOKEN_KEY = "srne_ops_token";
 const USER_KEY = "srne_ops_user";
 
 function apiBase() {
+  const p = window.location.pathname || "";
+  if (p === "/srne" || p.startsWith("/srne/")) return "/srne";
   return "";
 }
 

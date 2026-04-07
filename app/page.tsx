@@ -37,6 +37,13 @@ const portalCards: PortalCard[] = [
     href: "/profit/crm",
     cta: "即将上线",
   },
+  {
+    title: "硕日能源系统",
+    subtitle: "SRNE Channel Ops",
+    description: "海外渠道拓展运营管理演示系统，覆盖渠道总览、市场情报、销售赋能与预警协同。",
+    href: "/srne/",
+    cta: "进入硕日能源系统",
+  },
 ];
 
 type SharedToolCard = {
