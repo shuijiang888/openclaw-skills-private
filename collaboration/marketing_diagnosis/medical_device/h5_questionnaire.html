@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>制造业企业营销诊断</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    :root {
+      --bg: #eff4fa;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #0f3b66;
+      --accent: #0284c7;
+      --border: #dbe7f3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 18px 14px 32px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0; font-size: 22px; color: var(--primary); }
+    .sub { color: var(--muted); font-size: 14px; line-height: 1.6; margin-top: 8px; }
+    .progress-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .bar { height: 8px; background: #d9e5f3; border-radius: 999px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+    .q-title { font-size: 17px; font-weight: 700; margin: 10px 0 12px; line-height: 1.5; }
+    .opt, .btn {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #f8fbff;
+      color: var(--text);
+      padding: 12px;
+      font-size: 15px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .opt.sel { border-color: var(--accent); background: #e9f6ff; }
+    .btn { text-align: center; font-weight: 700; }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.ghost { background: #fff; }
+    .row { display: flex; gap: 10px; }
+    .row .btn { margin-bottom: 0; }
+    .hint { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+    .inp { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-size: 15px; margin-bottom: 10px; }
+    .hide { display: none; }
+    .report h2 { margin: 4px 0 10px; color: var(--primary); font-size: 18px; }
+    .pill { display: inline-block; background: #e6f4ff; color: #0c4a6e; border-radius: 999px; padding: 6px 10px; margin: 0 6px 6px 0; font-size: 13px; }
+    .score { font-size: 34px; font-weight: 800; color: var(--primary); margin: 4px 0; }
+    .small { font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="screenWelcome" class="card">
+      <h1>制造业企业营销诊断</h1>
+      <p class="sub">先进行 <strong>10 题轻诊断</strong>，完成后可查看初估画像；解锁完整版后从中间题续答至 30 题并生成正式报告。</p>
+      <p class="sub">主文档为明文 UTF-8 HTML；PDF 导出依赖 cdnjs 的 html2pdf.js。</p>
+      <button id="btnStart" class="btn primary">全新开始</button>
+      <button id="btnResume" class="btn ghost hide">继续上次</button>
+    </div>
+
+    <div id="screenQuiz" class="hide">
+      <div class="card">
+        <div class="progress-meta">
+          <span id="stepTag">轻诊断阶段</span>
+          <span id="stepText">1 / 10</span>
+        </div>
+        <div class="bar"><i id="bar"></i></div>
+      </div>
+      <div class="card" id="qCard"></div>
+      <div class="row">
+        <button id="btnPrev" class="btn ghost">上一题</button>
+        <button id="btnNext" class="btn primary">下一题</button>
+      </div>
+    </div>
+
+    <div id="screenPreview" class="card hide">
+      <h2 style="margin:0 0 8px;color:#0f3b66;">查看初估画像</h2>
+      <p class="small">你已完成轻诊断 10 题，可先看初估结果，再继续完成完整版。</p>
+      <p class="score" id="previewScore">--</p>
+      <p class="small">初估结论仅用于快速判断，完整版会更完整。</p>
+      <button id="btnContinueFull" class="btn primary">继续完成完整版</button>
+    </div>
+
+    <div id="screenReport" class="card report hide">
+      <h2 id="reportTitle">制造业企业营销诊断报告</h2>
+      <div class="score" id="finalScore">--</div>
+      <p class="small" id="levelText">等级：--</p>
+      <p><strong>企业：</strong><span id="reportCompany">--</span></p>
+      <p><strong>主要产品细分赛道（Q_B2）：</strong><span id="reportSeg">--</span></p>
+      <p><strong>核心建议：</strong><span id="reportAdvice">--</span></p>
+      <div style="margin-top:10px;">
+        <button id="btnBook" class="btn primary">预约专家（先二次确认）</button>
+        <button id="btnPdf" class="btn">导出 PDF</button>
+        <button id="btnReset" class="btn ghost">重新填写</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  var CONFIG = {
+    companyName: '纷享销客·中西南',
+    bookingUrl: 'https://www.fxiaoke.com/',
+    hotline: '400-000-0000',
+    reportTitle: '制造业企业营销诊断报告',
+    industryEdition: 'manufacturing',
+    industryEditionLabel: '制造业营销诊断'
+  };
+
+  (function () {
+    var STORAGE_KEY = 'diag_manufacturing_v1';
+    var LITE_LIMIT = 10;
+    var TOTAL = 30;
+
+    var SEGS = [
+      { id: 'ivd', text: 'IVD / 体外诊断' },
+      { id: 'device', text: '医疗设备（影像/手术/监护）' },
+      { id: 'material', text: '工业零部件与材料' },
+      { id: 'home', text: '家电与消费电子制造' },
+      { id: 'other', text: '其他制造赛道' }
+    ];
+
+    var QUESTIONS = [];
+    for (var i = 1; i <= 26; i++) {
+      QUESTIONS.push({
+        id: 'Q' + i,
+        title: '能力题 ' + i + '：请选择最符合当前状态的一项',
+        options: [
+          { s: 5, t: 'A. 标准化、可复制、可追踪' },
+          { s: 3, t: 'B. 有机制但执行不稳定' },
+          { s: 1, t: 'C. 主要靠经验，缺少标准' }
+        ]
+      });
+    }
+
+    var state = {
+      step: 1,
+      phase: 'quiz',
+      basic: {
+        companyName: '',
+        q_b2: [],
+        scale: '',
+        years: ''
+      },
+      answers: {},
+      generated: false
+    };
+
+    var welcome = document.getElementById('screenWelcome');
+    var quiz = document.getElementById('screenQuiz');
+    var preview = document.getElementById('screenPreview');
+    var report = document.getElementById('screenReport');
+    var qCard = document.getElementById('qCard');
+    var stepText = document.getElementById('stepText');
+    var stepTag = document.getElementById('stepTag');
+    var bar = document.getElementById('bar');
+    var btnResume = document.getElementById('btnResume');
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function clearSaved() {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    function loadSaved() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        var parsed = JSON.parse(raw);
+        if (!parsed || parsed.generated) return false;
+        state = parsed;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function score() {
+      var total = 0;
+      for (var i = 1; i <= 26; i++) {
+        total += Number(state.answers['Q' + i] || 0);
+      }
+      return total;
+    }
+
+    function level(v) {
+      if (v >= 110) return '卓越';
+      if (v >= 80) return '良好';
+      if (v >= 55) return '一般';
+      return '薄弱';
+    }
+
+    function segText() {
+      var map = {};
+      for (var i = 0; i < SEGS.length; i++) map[SEGS[i].id] = SEGS[i].text;
+      return (state.basic.q_b2 || []).map(function (id) { return map[id] || id; }).join('、') || '未填写';
+    }
+
+    function isLite() {
+      return state.step <= LITE_LIMIT;
+    }
+
+    function setVisible(which) {
+      welcome.classList.add('hide');
+      quiz.classList.add('hide');
+      preview.classList.add('hide');
+      report.classList.add('hide');
+      if (which === 'welcome') welcome.classList.remove('hide');
+      if (which === 'quiz') quiz.classList.remove('hide');
+      if (which === 'preview') preview.classList.remove('hide');
+      if (which === 'report') report.classList.remove('hide');
+    }
+
+    function renderProgress() {
+      if (isLite()) {
+        stepTag.textContent = '轻诊断阶段';
+        stepText.textContent = state.step + ' / 10';
+        bar.style.width = ((state.step / 10) * 100) + '%';
+      } else {
+        stepTag.textContent = '完整版阶段';
+        stepText.textContent = state.step + ' / 30';
+        bar.style.width = ((state.step / 30) * 100) + '%';
+      }
+    }
+
+    function basicBlock(step) {
+      if (step === 1) {
+        return '<div class="q-title">Q_B1 企业名称</div><input id="inpCompany" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || '') + '" />';
+      }
+      if (step === 2) {
+        var html = '<div class="q-title">Q_B2 主要产品细分赛道（可多选）</div><p class="hint">报告中会展示该项结果。</p>';
+        for (var i = 0; i < SEGS.length; i++) {
+          var s = SEGS[i];
+          var selected = (state.basic.q_b2 || []).indexOf(s.id) >= 0 ? ' sel' : '';
+          html += '<button type="button" class="opt' + selected + '" data-seg="' + s.id + '">' + s.text + '</button>';
+        }
+        return html;
+      }
+      if (step === 3) {
+        var arr = ['50人以下', '50-200人', '200-1000人', '1000人以上'];
+        var out = '<div class="q-title">Q_B3 企业规模</div>';
+        for (var j = 0; j < arr.length; j++) {
+          var sel = state.basic.scale === arr[j] ? ' sel' : '';
+          out += '<button type="button" class="opt' + sel + '" data-scale="' + arr[j] + '">' + arr[j] + '</button>';
+        }
+        return out;
+      }
+      var ys = ['3年以下', '3-10年', '10年以上'];
+      var out2 = '<div class="q-title">Q_B4 成立年限</div>';
+      for (var k = 0; k < ys.length; k++) {
+        var sel2 = state.basic.years === ys[k] ? ' sel' : '';
+        out2 += '<button type="button" class="opt' + sel2 + '" data-years="' + ys[k] + '">' + ys[k] + '</button>';
+      }
+      return out2;
+    }
+
+    function abilityBlock(step) {
+      var idx = step - 5;
+      var q = QUESTIONS[idx];
+      var html = '<div class="q-title">' + q.id + ' ' + q.title + '</div>';
+      for (var i = 0; i < q.options.length; i++) {
+        var opt = q.options[i];
+        var sel = Number(state.answers[q.id]) === opt.s ? ' sel' : '';
+        html += '<button type="button" class="opt' + sel + '" data-qid="' + q.id + '" data-score="' + opt.s + '">' + opt.t + '</button>';
+      }
+      return html;
+    }
+
+    function renderQuestion() {
+      renderProgress();
+      qCard.innerHTML = state.step <= 4 ? basicBlock(state.step) : abilityBlock(state.step);
+      bindQuestionEvents();
+    }
+
+    function bindQuestionEvents() {
+      var inpCompany = document.getElementById('inpCompany');
+      if (inpCompany) {
+        inpCompany.addEventListener('input', function () {
+          state.basic.companyName = inpCompany.value;
+          save();
+        });
+      }
+
+      var segBtns = qCard.querySelectorAll('[data-seg]');
+      for (var i = 0; i < segBtns.length; i++) {
+        segBtns[i].addEventListener('click', function () {
+          var id = this.getAttribute('data-seg');
+          var arr = state.basic.q_b2 || [];
+          var ix = arr.indexOf(id);
+          if (ix >= 0) arr.splice(ix, 1); else arr.push(id);
+          state.basic.q_b2 = arr;
+          save();
+          renderQuestion();
+        });
+      }
+
+      var scales = qCard.querySelectorAll('[data-scale]');
+      for (var j = 0; j < scales.length; j++) {
+        scales[j].addEventListener('click', function () {
+          state.basic.scale = this.getAttribute('data-scale');
+          save();
+          renderQuestion();
+        });
+      }
+
+      var years = qCard.querySelectorAll('[data-years]');
+      for (var k = 0; k < years.length; k++) {
+        years[k].addEventListener('click', function () {
+          state.basic.years = this.getAttribute('data-years');
+          save();
+          renderQuestion();
+        });
+      }
+
+      var opts = qCard.querySelectorAll('[data-qid]');
+      for (var x = 0; x < opts.length; x++) {
+        opts[x].addEventListener('click', function () {
+          var qid = this.getAttribute('data-qid');
+          state.answers[qid] = Number(this.getAttribute('data-score'));
+          save();
+          renderQuestion();
+        });
+      }
+    }
+
+    function validCurrent() {
+      if (state.step === 1) return !!(state.basic.companyName || '').trim();
+      if (state.step === 2) return (state.basic.q_b2 || []).length > 0;
+      if (state.step === 3) return !!state.basic.scale;
+      if (state.step === 4) return !!state.basic.years;
+      var qid = 'Q' + (state.step - 4);
+      return !!state.answers[qid];
+    }
+
+    function gotoPreview() {
+      setVisible('preview');
+      document.getElementById('previewScore').textContent = score() + ' / 130（初估）';
+      state.phase = 'preview';
+      save();
+    }
+
+    function gotoReport() {
+      var s = score();
+      var lv = level(s);
+      document.getElementById('reportTitle').textContent = CONFIG.reportTitle;
+      document.getElementById('finalScore').textContent = s + ' / 130';
+      document.getElementById('levelText').textContent = '等级：' + lv;
+      document.getElementById('reportCompany').textContent = state.basic.companyName || '未填写';
+      document.getElementById('reportSeg').textContent = segText();
+      document.getElementById('reportAdvice').textContent = lv === '卓越' ? '进入标杆优化阶段，建议聚焦规模化复制。' : (lv === '良好' ? '优先补齐流程断点，提高渠道与销售协同。' : '先补基础流程与数据化能力，再做投放放量。');
+      setVisible('report');
+      state.phase = 'report';
+      state.generated = true;
+      clearSaved();
+    }
+
+    document.getElementById('btnStart').addEventListener('click', function () {
+      state = {
+        step: 1,
+        phase: 'quiz',
+        basic: { companyName: '', q_b2: [], scale: '', years: '' },
+        answers: {},
+        generated: false
+      };
+      setVisible('quiz');
+      renderQuestion();
+      save();
+    });
+
+    document.getElementById('btnResume').addEventListener('click', function () {
+      setVisible('quiz');
+      state.phase = 'quiz';
+      renderQuestion();
+    });
+
+    document.getElementById('btnPrev').addEventListener('click', function () {
+      if (state.step > 1) {
+        state.step -= 1;
+        save();
+        renderQuestion();
+      }
+    });
+
+    document.getElementById('btnNext').addEventListener('click', function () {
+      if (!validCurrent()) {
+        alert('请先完成当前题目。');
+        return;
+      }
+      if (state.step === LITE_LIMIT) {
+        gotoPreview();
+        return;
+      }
+      if (state.step < TOTAL) {
+        state.step += 1;
+        state.phase = 'quiz';
+        save();
+        renderQuestion();
+      } else {
+        gotoReport();
+      }
+    });
+
+    document.getElementById('btnContinueFull').addEventListener('click', function () {
+      state.step = LITE_LIMIT + 1;
+      state.phase = 'quiz';
+      save();
+      setVisible('quiz');
+      renderQuestion();
+    });
+
+    document.getElementById('btnBook').addEventListener('click', function () {
+      if (confirm('将打开预约落地页，是否继续？')) {
+        window.open(CONFIG.bookingUrl, '_blank', 'noopener');
+      }
+    });
+
+    document.getElementById('btnPdf').addEventListener('click', function () {
+      var btn = this;
+      if (typeof html2pdf === 'undefined') {
+        alert('PDF 导出组件不可用，请检查 cdnjs 网络可达性。');
+        return;
+      }
+      btn.textContent = 'PDF 生成中...';
+      btn.disabled = true;
+      var opt = {
+        margin: 10,
+        filename: '制造业企业营销诊断报告.pdf',
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(document.getElementById('screenReport')).save()
+        .then(function () {
+          btn.disabled = false;
+          btn.textContent = '导出 PDF';
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = '导出 PDF';
+          alert('PDF 导出失败，请重试。');
+        });
+    });
+
+    document.getElementById('btnReset').addEventListener('click', function () {
+      clearSaved();
+      state = {
+        step: 1,
+        phase: 'quiz',
+        basic: { companyName: '', q_b2: [], scale: '', years: '' },
+        answers: {},
+        generated: false
+      };
+      setVisible('welcome');
+      btnResume.classList.add('hide');
+    });
+
+    if (loadSaved()) {
+      btnResume.classList.remove('hide');
+    }
+  })();
+  </script>
+</body>
+</html>
