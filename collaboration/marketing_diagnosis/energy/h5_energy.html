@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no" />
-  <title>医疗器械营销能力诊断</title>
+  <title>能源电力行业营销诊断</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     :root {
@@ -39,12 +39,7 @@
     .progress-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
     .bar { height: 8px; border-radius: 999px; overflow: hidden; background: #dbe8f5; }
     .bar > i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); }
-    .module-strip {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-      margin-top: 10px;
-    }
+    .module-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
     .module-chip {
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -57,12 +52,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .module-chip.active {
-      border-color: var(--accent);
-      color: #035277;
-      background: #e8f6ff;
-      font-weight: 700;
-    }
+    .module-chip.active { border-color: var(--accent); color: #035277; background: #e8f6ff; font-weight: 700; }
     .q-title { margin: 4px 0 12px; font-size: 17px; font-weight: 700; line-height: 1.5; }
     .hint { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
     .opt, .btn {
@@ -98,60 +88,60 @@
     .small { font-size: 13px; color: var(--muted); }
     .pill { display: inline-block; padding: 5px 9px; margin: 0 6px 6px 0; border-radius: 999px; background: #e6f4ff; color: #0f5070; font-size: 12px; }
     #radar { display: block; margin: 0 auto; width: 300px; max-width: 100%; height: auto; }
-    #radarLegend li, #top3 li { margin: 6px 0; line-height: 1.5; color: #2c405a; }
+    #radar-legend li, #top3 li { margin: 6px 0; line-height: 1.5; color: #2c405a; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div id="screenWelcome" class="card">
-      <h1>医疗器械营销能力诊断</h1>
-      <p class="sub">问卷采用 <strong>QB 基础信息 + 模块一~四</strong> 结构。先完成 <strong>10 步轻诊断</strong> 查看初估画像，再解锁完整版（30 步）生成正式报告。</p>
+    <div id="screen-welcome" class="card">
+      <h1>能源电力行业营销诊断</h1>
+      <p class="sub">采用 <strong>QB + 模块一至模块四</strong> 问卷框架。先完成 <strong>10 步轻诊断</strong> 查看初估，再继续完整版（总计 22 步）。</p>
       <ul class="welcome-list">
-        <li>QB：Q_B1 企业名称、Q_B2 细分赛道（多选）、Q_B3 企业规模、Q_B4 成立年限</li>
-        <li>模块一：行业认知探测；模块二：核心痛点识别；模块三：组织协同与执行质量；模块四：工具应用与转型意向</li>
-        <li>结果含雷达图、TOP3 改进方向，支持导出 PDF 与预约专家（二次确认）</li>
+        <li>QB：公司、细分赛道（Q_B2 多选）、规模、年限</li>
+        <li>模块一至四：认知、痛点、数字化、合作模式意向（共 16 题）</li>
+        <li>报告会写入 Q_B2 多选结果，并支持导出 PDF 与专家预约</li>
       </ul>
-      <button id="btnStart" class="btn primary">全新开始</button>
-      <button id="btnResume" class="btn ghost hide">继续上次</button>
+      <button id="btn-start" class="btn primary">全新开始</button>
+      <button id="btn-resume" class="btn ghost hide">继续上次</button>
     </div>
 
-    <div id="screenQuiz" class="hide">
+    <div id="screen-quiz" class="hide">
       <div class="card">
         <div class="progress-meta">
-          <span id="stepTag">轻诊断阶段</span>
-          <span id="stepText">1 / 10</span>
+          <span id="step-tag">轻诊断阶段</span>
+          <span id="step-text">1 / 10</span>
         </div>
         <div class="bar"><i id="bar"></i></div>
-        <div id="moduleStrip" class="module-strip"></div>
+        <div id="module-strip" class="module-strip"></div>
       </div>
-      <div class="card" id="qCard"></div>
+      <div class="card" id="q-card"></div>
       <div class="row">
-        <button id="btnPrev" class="btn ghost">上一题</button>
-        <button id="btnNext" class="btn primary">下一题</button>
+        <button id="btn-prev" class="btn ghost">上一题</button>
+        <button id="btn-next" class="btn primary">下一题</button>
       </div>
     </div>
 
-    <div id="screenPreview" class="card hide">
+    <div id="screen-preview" class="card hide">
       <h2 style="margin:0 0 8px;color:#0f3d6f;">查看初估画像</h2>
-      <p class="small">你已完成轻诊断 10 步，当前为 6 题能力初估分。可继续解锁完整版。</p>
-      <p class="score" id="previewScore">--</p>
-      <button id="btnContinueFull" class="btn primary">继续完成完整版</button>
+      <p class="small">你已完成轻诊断 10 步，当前分数按前 6 题能力项计算（满分 30）用于示意。</p>
+      <p class="score" id="preview-score">--</p>
+      <button id="btn-continue-full" class="btn primary">继续完成完整版</button>
     </div>
 
-    <div id="screenReport" class="card hide">
-      <h2 id="reportTitle" style="margin:0 0 8px;color:#0f3d6f;">医疗器械营销能力诊断报告</h2>
-      <p class="score" id="finalScore">--</p>
-      <p class="small" id="levelText">等级：--</p>
-      <p><strong>企业：</strong><span id="repCompany">--</span></p>
-      <p><strong>主要产品细分赛道（Q_B2）：</strong><span id="repSegments">--</span></p>
+    <div id="screen-report" class="card hide">
+      <h2 id="report-title" style="margin:0 0 8px;color:#0f3d6f;">能源电力行业营销诊断报告</h2>
+      <p class="score" id="final-score">--</p>
+      <p class="small" id="level-text">等级：--</p>
+      <p><strong>企业：</strong><span id="rep-company">--</span></p>
+      <p><strong>主要细分赛道（Q_B2）：</strong><span id="rep-segments">--</span></p>
       <svg id="radar" width="300" height="300" viewBox="0 0 300 300" aria-label="能力雷达图"></svg>
-      <ul id="radarLegend"></ul>
+      <ul id="radar-legend"></ul>
       <h3 style="margin:12px 0 8px;color:#0f3d6f;">核心问题 TOP3</h3>
       <ol id="top3"></ol>
       <div style="margin-top:10px;">
-        <button id="btnBook" class="btn primary">预约专家（先二次确认）</button>
-        <button id="btnPdf" class="btn">导出 PDF</button>
-        <button id="btnReset" class="btn ghost">重新填写</button>
+        <button id="btn-book" class="btn primary">预约专家（先二次确认）</button>
+        <button id="btn-pdf" class="btn">导出 PDF</button>
+        <button id="btn-reset" class="btn ghost">重新填写</button>
       </div>
     </div>
   </div>
@@ -161,81 +151,74 @@
     companyName: "纷享销客·中西南",
     bookingUrl: "https://www.fxiaoke.com/",
     hotline: "400-000-0000",
-    reportTitle: "医疗器械营销能力诊断报告",
-    industryEdition: "medical_device",
-    industryEditionLabel: "医疗器械行业"
+    reportTitle: "能源电力行业营销诊断报告",
+    industryEdition: "energy",
+    industryEditionLabel: "能源电力行业"
   };
 
   (function () {
-    var STORAGE_KEY = "diag_medical_v1";
+    var STORAGE_KEY = "diag_energy_v1";
     var STORAGE_VERSION = 2;
-    var LITE_LIMIT = 10;
     var LIGHT_TAIL_QI = 9;
     var FULL_RESUME_QI = 5;
+    var LITE_LIMIT = 10;
     var MODULES = [
       "模块一 · 行业认知探测",
-      "模块二 · 核心痛点识别",
-      "模块三 · 组织协同与执行质量",
-      "模块四 · 工具应用与转型意向"
+      "模块二 · 核心痛点",
+      "模块三 · 数字化现状",
+      "模块四 · 合作模式意向"
     ];
     var DIMS = [
-      { name: "市场定位", maxW: 20, issue: "目标客群与价值主张还需更清晰、可复制。" },
-      { name: "获客渠道", maxW: 20, issue: "渠道组合与线索治理存在不稳定环节。" },
-      { name: "销售推进", maxW: 20, issue: "商机推进标准与复盘机制有待加强。" },
-      { name: "客户成功", maxW: 15, issue: "交付、复购与满意度联动不足。" },
-      { name: "组织协同", maxW: 15, issue: "跨团队协同和执行节奏仍有断点。" },
-      { name: "数字化应用", maxW: 10, issue: "工具使用深度与数据闭环能力待提升。" }
+      { name: "市场与认知", maxW: 25, issue: "行业认知与项目策略需进一步清晰化。" },
+      { name: "经营与痛点治理", maxW: 25, issue: "核心痛点治理机制仍有断点。" },
+      { name: "数字化能力", maxW: 25, issue: "数据联通与工具深度应用有提升空间。" },
+      { name: "转型与合作意向", maxW: 25, issue: "合作模式与转型路径有待明确优先级。" }
     ];
     var SEGS = [
-      { id: "ivd", text: "IVD / 体外诊断" },
-      { id: "device", text: "医疗设备（影像/手术/监护）" },
-      { id: "material", text: "高值耗材（骨科/心血管等）" },
-      { id: "home", text: "家用医疗器械" },
-      { id: "other", text: "其他医疗器械" }
+      { id: "grid", text: "电网" },
+      { id: "generation", text: "发电" },
+      { id: "storage", text: "储能" },
+      { id: "pv_wind", text: "光伏/风电" },
+      { id: "retail", text: "售电" },
+      { id: "epc", text: "EPC 总包" },
+      { id: "other", text: "其他" }
     ];
     var QUESTIONS = [
-      { id: "M1_Q1", module: 0, dim: 0, type: "mc", title: "你们对细分赛道政策与采购机制的理解程度？", options: [{k:"a",t:"有固定情报机制并形成月度更新",s:3},{k:"b",t:"靠项目临时关注",s:2},{k:"c",t:"大多凭经验判断",s:1}] },
-      { id: "M1_Q2", module: 0, dim: 0, type: "mc", title: "目标客户画像是否能覆盖科室、采购角色与预算路径？", options: [{k:"a",t:"画像结构化且用于销售动作",s:3},{k:"b",t:"有画像但更新慢",s:2},{k:"c",t:"缺乏统一画像",s:1}] },
-      { id: "M1_Q3", module: 0, dim: 1, type: "mc", title: "学术推广与商机获取之间的转化闭环如何？", options: [{k:"a",t:"会后线索可追踪并进入 CRM",s:3},{k:"b",t:"会后有跟进但无统一看板",s:2},{k:"c",t:"会议与销售脱节",s:1}] },
-      { id: "M1_Q4", module: 0, dim: 2, type: "mc", title: "入院/中标关键阶段是否形成标准动作包？", options: [{k:"a",t:"标准动作和责任人都清晰",s:3},{k:"b",t:"有模板但执行不稳定",s:2},{k:"c",t:"主要依赖个人能力",s:1}] },
-      { id: "M1_Q5", module: 0, dim: 4, type: "sc", title: "跨部门（销售/医学/注册）协作效率如何？", options: [{k:"a",t:"高效协作",s:5},{k:"b",t:"一般",s:3},{k:"c",t:"经常卡点",s:1}] },
-      { id: "M1_Q6", module: 0, dim: 5, type: "mc", title: "是否使用数字化工具追踪线索来源与转化？", options: [{k:"a",t:"全流程追踪",s:3},{k:"b",t:"部分追踪",s:2},{k:"c",t:"基本没有",s:1}] },
-      { id: "M1_Q7", module: 0, dim: 1, type: "mc", title: "经销渠道协同与信息同步机制是否成熟？", options: [{k:"a",t:"规则清晰、数据同步及时",s:3},{k:"b",t:"关键项目才同步",s:2},{k:"c",t:"协同较弱",s:1}] },
+      { id: "M1_Q1", module: 0, dim: 0, type: "mc", title: "你们对细分赛道竞争格局的认知深度？", options: [{k:"a",t:"有季度级竞争情报地图",s:3},{k:"b",t:"有年度梳理",s:2},{k:"c",t:"主要靠经验",s:1}] },
+      { id: "M1_Q2", module: 0, dim: 0, type: "mc", title: "项目型销售机制是否标准化？", options: [{k:"a",t:"标准流程与角色明确",s:3},{k:"b",t:"部分项目有标准",s:2},{k:"c",t:"高度依赖个人",s:1}] },
+      { id: "M1_Q3", module: 0, dim: 0, type: "mc", title: "对能源转型政策的响应速度如何？", options: [{k:"a",t:"提前布局",s:3},{k:"b",t:"跟随响应",s:2},{k:"c",t:"被动应对",s:1}] },
+      { id: "M1_Q4", module: 0, dim: 0, type: "sc", title: "对电力市场化机制理解程度？", options: [{k:"a",t:"深度理解并用于经营",s:5},{k:"b",t:"理解一般",s:3},{k:"c",t:"理解较弱",s:1}] },
 
-      { id: "M2_Q1", module: 1, dim: 2, type: "mc", title: "当前最大的商机推进阻塞点（可多选）", options: [{k:"a",t:"决策链复杂",s:2},{k:"b",t:"方案同质化",s:2},{k:"c",t:"缺乏统一复盘",s:1}] },
-      { id: "M2_Q2", module: 1, dim: 1, type: "mc", title: "线索质量问题主要集中在哪些方面？", options: [{k:"a",t:"无效线索比例高",s:2},{k:"b",t:"来源重复冲突",s:2},{k:"c",t:"分发策略不清晰",s:1}] },
-      { id: "M2_Q3", module: 1, dim: 3, type: "mc", title: "项目交付后复购/续约推进是否顺畅？", options: [{k:"a",t:"有明确复购节奏",s:3},{k:"b",t:"偶发推进",s:2},{k:"c",t:"几乎无计划",s:1}] },
-      { id: "M2_Q4", module: 1, dim: 3, type: "sc", title: "客户满意与投诉是否形成闭环管理？", options: [{k:"a",t:"闭环完整",s:5},{k:"b",t:"部分闭环",s:3},{k:"c",t:"响应滞后",s:1}] },
-      { id: "M2_Q5", module: 1, dim: 4, type: "mc", title: "团队执行中的核心短板（可多选）", options: [{k:"a",t:"目标拆解不清",s:2},{k:"b",t:"协同节奏混乱",s:2},{k:"c",t:"缺少过程复盘",s:1}] },
-      { id: "M2_Q6", module: 1, dim: 0, type: "mc", title: "产品差异化表达是否贴合不同医院层级？", options: [{k:"a",t:"表达分层且有效",s:3},{k:"b",t:"有尝试但不稳定",s:2},{k:"c",t:"表达单一",s:1}] },
-      { id: "M2_Q7", module: 1, dim: 5, type: "mc", title: "关键流程（审批/报备/知识库）在线化程度？", options: [{k:"a",t:"主流程在线化",s:3},{k:"b",t:"局部在线",s:2},{k:"c",t:"线下为主",s:1}] },
+      { id: "M2_Q1", module: 1, dim: 1, type: "mc", title: "项目周期长的主要原因（可多选）", options: [{k:"a",t:"前期调研不足",s:2},{k:"b",t:"多方审批慢",s:2},{k:"c",t:"资源协调不足",s:1}] },
+      { id: "M2_Q2", module: 1, dim: 1, type: "mc", title: "政企关系维护机制是否体系化？", options: [{k:"a",t:"常态化机制",s:3},{k:"b",t:"项目驱动为主",s:2},{k:"c",t:"缺乏体系",s:1}] },
+      { id: "M2_Q3", module: 1, dim: 1, type: "mc", title: "投标竞争优势是否可复用？", options: [{k:"a",t:"模板化且复盘",s:3},{k:"b",t:"部分复用",s:2},{k:"c",t:"临场发挥",s:1}] },
+      { id: "M2_Q4", module: 1, dim: 1, type: "sc", title: "客户数据分散问题是否可控？", options: [{k:"a",t:"已实现主数据统一",s:5},{k:"b",t:"部分统一",s:3},{k:"c",t:"分散严重",s:1}] },
 
-      { id: "M3_Q1", module: 2, dim: 4, type: "mc", title: "销售、市场、医学团队是否使用同一目标语言？", options: [{k:"a",t:"完全一致",s:3},{k:"b",t:"基本一致",s:2},{k:"c",t:"存在明显偏差",s:1}] },
-      { id: "M3_Q2", module: 2, dim: 2, type: "mc", title: "商机阶段定义和退出标准是否统一？", options: [{k:"a",t:"统一且可审计",s:3},{k:"b",t:"定义存在但执行不稳",s:2},{k:"c",t:"缺少统一标准",s:1}] },
-      { id: "M3_Q3", module: 2, dim: 2, type: "sc", title: "重要项目是否固定进行输赢复盘？", options: [{k:"a",t:"固定复盘",s:5},{k:"b",t:"不定期复盘",s:3},{k:"c",t:"很少复盘",s:1}] },
-      { id: "M3_Q4", module: 2, dim: 3, type: "mc", title: "售后、维保、复购信息是否反哺前端销售？", options: [{k:"a",t:"反哺机制成熟",s:3},{k:"b",t:"部分反哺",s:2},{k:"c",t:"基本脱节",s:1}] },
-      { id: "M3_Q5", module: 2, dim: 4, type: "mc", title: "团队激励是否覆盖过程质量与协同贡献？", options: [{k:"a",t:"覆盖完整",s:3},{k:"b",t:"只覆盖部分角色",s:2},{k:"c",t:"几乎只看结果",s:1}] },
-      { id: "M3_Q6", module: 2, dim: 1, type: "mc", title: "渠道冲突与客户归属争议处理机制如何？", options: [{k:"a",t:"规则清晰并可执行",s:3},{k:"b",t:"有规则但执行弱",s:2},{k:"c",t:"主要靠协调",s:1}] },
+      { id: "M3_Q1", module: 2, dim: 2, type: "mc", title: "CRM 使用深度如何？", options: [{k:"a",t:"全流程使用",s:3},{k:"b",t:"核心环节使用",s:2},{k:"c",t:"录入为主",s:1}] },
+      { id: "M3_Q2", module: 2, dim: 2, type: "mc", title: "数据孤岛影响程度？", options: [{k:"a",t:"影响小",s:3},{k:"b",t:"中等影响",s:2},{k:"c",t:"影响显著",s:1}] },
+      { id: "M3_Q3", module: 2, dim: 2, type: "mc", title: "AI 在销售经营中的应用情况？", options: [{k:"a",t:"已规模化应用",s:3},{k:"b",t:"试点中",s:2},{k:"c",t:"未应用",s:1}] },
+      { id: "M3_Q4", module: 2, dim: 2, type: "sc", title: "IoT 数据是否进入经营决策？", options: [{k:"a",t:"决策强依赖",s:5},{k:"b",t:"辅助参考",s:3},{k:"c",t:"基本未使用",s:1}] },
 
-      { id: "M4_Q1", module: 3, dim: 5, type: "mc", title: "CRM 使用深度（商机、活动、客户全链路）如何？", options: [{k:"a",t:"全链路使用",s:3},{k:"b",t:"核心环节使用",s:2},{k:"c",t:"基础录入为主",s:1}] },
-      { id: "M4_Q2", module: 3, dim: 5, type: "sc", title: "AI 辅助（纪要/优先级/建议）应用程度？", options: [{k:"a",t:"已规模使用",s:5},{k:"b",t:"小范围试用",s:3},{k:"c",t:"尚未使用",s:1}] },
-      { id: "M4_Q3", module: 3, dim: 0, type: "mc", title: "对行业转型趋势（政策、国产替代、渠道变动）响应速度如何？", options: [{k:"a",t:"提前布局",s:3},{k:"b",t:"跟随响应",s:2},{k:"c",t:"被动响应",s:1}] },
-      { id: "M4_Q4", module: 3, dim: 3, type: "mc", title: "客户成功数据（满意度/复购）是否驱动策略调整？", options: [{k:"a",t:"持续驱动",s:3},{k:"b",t:"偶尔驱动",s:2},{k:"c",t:"难以驱动",s:1}] },
-      { id: "M4_Q5", module: 3, dim: 2, type: "mc", title: "从线索到成交的漏斗看板是否支撑日常经营？", options: [{k:"a",t:"看板实时可用",s:3},{k:"b",t:"周度更新",s:2},{k:"c",t:"临时统计",s:1}] },
-      { id: "M4_Q6", module: 3, dim: 4, type: "sc", title: "是否具备跨区域复制的标准化作战机制？", options: [{k:"a",t:"可复制",s:5},{k:"b",t:"局部可复制",s:3},{k:"c",t:"依赖个体",s:1}] }
+      { id: "M4_Q1", module: 3, dim: 3, type: "mc", title: "更偏好的合作服务模式（可多选）", options: [{k:"a",t:"咨询+系统共建",s:2},{k:"b",t:"专项项目制",s:2},{k:"c",t:"长期运营陪跑",s:1}] },
+      { id: "M4_Q2", module: 3, dim: 3, type: "mc", title: "预算规划清晰程度如何？", options: [{k:"a",t:"年度预算清晰",s:3},{k:"b",t:"季度滚动预算",s:2},{k:"c",t:"临时决策",s:1}] },
+      { id: "M4_Q3", module: 3, dim: 3, type: "mc", title: "是否愿意参与标杆案例共建？", options: [{k:"a",t:"强意愿",s:3},{k:"b",t:"有条件参与",s:2},{k:"c",t:"意愿较低",s:1}] },
+      { id: "M4_Q4", module: 3, dim: 3, type: "sc", title: "生态伙伴协同开放度如何？", options: [{k:"a",t:"开放协同",s:5},{k:"b",t:"部分开放",s:3},{k:"c",t:"较封闭",s:1}] },
+
+      { id: "CONTACT", module: 3, dim: -1, type: "contact", title: "联系方式（用于顾问回访）" },
+      { id: "OPEN", module: 3, dim: -1, type: "open", title: "你当前最希望优先解决的问题（选填）" }
     ];
 
     var TOTAL_STEPS = 4 + QUESTIONS.length;
-    var welcome = document.getElementById("screenWelcome");
-    var quiz = document.getElementById("screenQuiz");
-    var preview = document.getElementById("screenPreview");
-    var report = document.getElementById("screenReport");
-    var qCard = document.getElementById("qCard");
-    var stepTag = document.getElementById("stepTag");
-    var stepText = document.getElementById("stepText");
+    var welcome = document.getElementById("screen-welcome");
+    var quiz = document.getElementById("screen-quiz");
+    var preview = document.getElementById("screen-preview");
+    var report = document.getElementById("screen-report");
+    var qCard = document.getElementById("q-card");
+    var stepTag = document.getElementById("step-tag");
+    var stepText = document.getElementById("step-text");
     var bar = document.getElementById("bar");
-    var btnResume = document.getElementById("btnResume");
-    var moduleStrip = document.getElementById("moduleStrip");
+    var btnResume = document.getElementById("btn-resume");
+    var moduleStrip = document.getElementById("module-strip");
 
     var state = {
       v: STORAGE_VERSION,
@@ -244,6 +227,8 @@
       unlockedFull: false,
       basic: { companyName: "", q_b2: [], scale: "", years: "" },
       answers: {},
+      contact: { name: "", phone: "", company: "" },
+      openText: "",
       generated: false
     };
 
@@ -306,10 +291,10 @@
     function renderBasic() {
       var step = state.qIndex + 1;
       if (step === 1) {
-        return '<div class="q-title">Q_B1 企业名称</div><input id="inpCompany" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || "") + '" />';
+        return '<div class="q-title">Q_B1 公司名称</div><input id="inp-company" class="inp" placeholder="请输入公司名称" value="' + (state.basic.companyName || "") + '" />';
       }
       if (step === 2) {
-        var html = '<div class="q-title">Q_B2 主要产品细分赛道（可多选）</div><p class="hint">报告将展示该字段。</p>';
+        var html = '<div class="q-title">Q_B2 细分赛道（可多选）</div><p class="hint">将写入报告 #rep-segments。</p>';
         for (var i = 0; i < SEGS.length; i++) {
           var seg = SEGS[i];
           var sel = (state.basic.q_b2 || []).indexOf(seg.id) >= 0 ? " sel" : "";
@@ -318,7 +303,7 @@
         return html;
       }
       if (step === 3) {
-        var scales = ["50人以下", "50-200人", "200-1000人", "1000人以上"];
+        var scales = ["100人以下", "100-500人", "500-2000人", "2000人以上"];
         var html2 = '<div class="q-title">Q_B3 企业规模</div>';
         for (var j = 0; j < scales.length; j++) {
           var s = scales[j];
@@ -327,7 +312,7 @@
         }
         return html2;
       }
-      var years = ["3年以下", "3-10年", "10年以上"];
+      var years = ["3年以下", "3-10年", "10-20年", "20年以上"];
       var html3 = '<div class="q-title">Q_B4 成立年限</div>';
       for (var k = 0; k < years.length; k++) {
         var y = years[k];
@@ -337,6 +322,15 @@
       return html3;
     }
     function renderAbility(q) {
+      if (q.type === "contact") {
+        return '<div class="q-title">' + q.title + '</div>'
+          + '<input id="contact-name" class="inp" placeholder="姓名（必填）" value="' + (state.contact.name || "") + '" />'
+          + '<input id="contact-phone" class="inp" placeholder="手机（必填）" value="' + (state.contact.phone || "") + '" />'
+          + '<input id="contact-company" class="inp" placeholder="公司（必填）" value="' + (state.contact.company || state.basic.companyName || "") + '" />';
+      }
+      if (q.type === "open") {
+        return '<div class="q-title">' + q.title + '</div><textarea id="open-text" class="inp" placeholder="选填">' + (state.openText || "") + "</textarea>";
+      }
       var html = '<div class="q-title">' + q.title + "</div>";
       if (q.type === "mc") html += '<p class="hint">多选计分，分值封顶 5 分。</p>';
       var ans = state.answers[q.id];
@@ -356,12 +350,9 @@
       bindQuestionEvents();
     }
     function bindQuestionEvents() {
-      var inpCompany = document.getElementById("inpCompany");
+      var inpCompany = document.getElementById("inp-company");
       if (inpCompany) {
-        inpCompany.addEventListener("input", function () {
-          state.basic.companyName = inpCompany.value;
-          save();
-        });
+        inpCompany.addEventListener("input", function () { state.basic.companyName = inpCompany.value; save(); });
       }
       var segBtns = qCard.querySelectorAll("[data-seg]");
       for (var i = 0; i < segBtns.length; i++) {
@@ -410,6 +401,14 @@
           renderQuestion();
         });
       }
+      var contactName = document.getElementById("contact-name");
+      var contactPhone = document.getElementById("contact-phone");
+      var contactCompany = document.getElementById("contact-company");
+      if (contactName) contactName.addEventListener("input", function () { state.contact.name = this.value; save(); });
+      if (contactPhone) contactPhone.addEventListener("input", function () { state.contact.phone = this.value; save(); });
+      if (contactCompany) contactCompany.addEventListener("input", function () { state.contact.company = this.value; save(); });
+      var openText = document.getElementById("open-text");
+      if (openText) openText.addEventListener("input", function () { state.openText = this.value; save(); });
     }
     function validCurrent() {
       if (state.qIndex === 0) return !!(state.basic.companyName || "").trim();
@@ -418,6 +417,8 @@
       if (state.qIndex === 3) return !!state.basic.years;
       var q = getAbilityQuestion();
       if (!q) return true;
+      if (q.type === "contact") return !!state.contact.name && !!state.contact.phone && !!state.contact.company;
+      if (q.type === "open") return true;
       if (q.type === "mc") return (state.answers[q.id] || []).length > 0;
       return !!state.answers[q.id];
     }
@@ -440,6 +441,7 @@
       for (var i = 0; i < DIMS.length; i++) { raw.push(0); maxRaw.push(0); }
       for (var x = 0; x < QUESTIONS.length; x++) {
         var q = QUESTIONS[x];
+        if (q.dim < 0) continue;
         raw[q.dim] += scoreQuestion(q);
         maxRaw[q.dim] += 5;
       }
@@ -449,7 +451,7 @@
         weighted.push(Math.round(ratio * DIMS[d].maxW * 10) / 10);
       }
       var total = weighted.reduce(function (acc, n) { return acc + n; }, 0);
-      return { raw: raw, weighted: weighted, total: Math.round(total * 10) / 10 };
+      return { weighted: weighted, total: Math.round(total * 10) / 10 };
     }
     function computePreview() {
       var ids = QUESTIONS.slice(0, 6);
@@ -510,37 +512,24 @@
       poly.setAttribute("stroke", "#0f3d6f");
       poly.setAttribute("stroke-width", "2");
       svg.appendChild(poly);
-      for (var c = 0; c < n; c++) {
-        var ratio2 = DIMS[c].maxW ? weighted[c] / DIMS[c].maxW : 0;
-        var dot = pt(angles[c], Math.max(0, Math.min(1, ratio2)) * radius);
-        var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", String(dot.x));
-        circle.setAttribute("cy", String(dot.y));
-        circle.setAttribute("r", "4");
-        circle.setAttribute("fill", "#0891b2");
-        circle.setAttribute("stroke", "#fff");
-        circle.setAttribute("stroke-width", "1.2");
-        svg.appendChild(circle);
-      }
     }
     function gotoPreview() {
       var pv = computePreview();
-      document.getElementById("previewScore").textContent = pv.score + " / " + pv.max + "（初估）";
+      document.getElementById("preview-score").textContent = pv.score + " / " + pv.max + "（初估）";
       state.phase = "preview";
       save();
       setVisible("preview");
     }
     function gotoReport() {
       var res = computeScores();
-      var lv = level(res.total);
-      document.getElementById("reportTitle").textContent = CONFIG.reportTitle;
-      document.getElementById("finalScore").textContent = res.total + " / 100";
-      document.getElementById("levelText").textContent = "等级：" + lv;
-      document.getElementById("repCompany").textContent = state.basic.companyName || "未填写";
-      document.getElementById("repSegments").textContent = segText();
+      document.getElementById("report-title").textContent = CONFIG.reportTitle;
+      document.getElementById("final-score").textContent = res.total + " / 100";
+      document.getElementById("level-text").textContent = "等级：" + level(res.total);
+      document.getElementById("rep-company").textContent = state.basic.companyName || "未填写";
+      document.getElementById("rep-segments").textContent = segText();
       drawRadar(res.weighted);
 
-      var legend = document.getElementById("radarLegend");
+      var legend = document.getElementById("radar-legend");
       legend.innerHTML = "";
       for (var i = 0; i < DIMS.length; i++) {
         var li = document.createElement("li");
@@ -559,14 +548,13 @@
         item.innerHTML = "<strong>" + DIMS[idx].name + "</strong>（" + res.weighted[idx] + "）：" + DIMS[idx].issue;
         top3.appendChild(item);
       }
-
       setVisible("report");
       state.phase = "report";
       state.generated = true;
       clearSaved();
     }
 
-    document.getElementById("btnStart").addEventListener("click", function () {
+    document.getElementById("btn-start").addEventListener("click", function () {
       state = {
         v: STORAGE_VERSION,
         qIndex: 0,
@@ -574,22 +562,19 @@
         unlockedFull: false,
         basic: { companyName: "", q_b2: [], scale: "", years: "" },
         answers: {},
+        contact: { name: "", phone: "", company: "" },
+        openText: "",
         generated: false
       };
       setVisible("quiz");
       renderQuestion();
       save();
     });
-    document.getElementById("btnResume").addEventListener("click", function () {
-      if (state.phase === "preview") {
-        setVisible("preview");
-      } else {
-        state.phase = "quiz";
-        setVisible("quiz");
-        renderQuestion();
-      }
+    document.getElementById("btn-resume").addEventListener("click", function () {
+      if (state.phase === "preview") setVisible("preview");
+      else { state.phase = "quiz"; setVisible("quiz"); renderQuestion(); }
     });
-    document.getElementById("btnPrev").addEventListener("click", function () {
+    document.getElementById("btn-prev").addEventListener("click", function () {
       if (state.qIndex > 0) {
         state.qIndex -= 1;
         state.phase = "quiz";
@@ -597,11 +582,8 @@
         renderQuestion();
       }
     });
-    document.getElementById("btnNext").addEventListener("click", function () {
-      if (!validCurrent()) {
-        alert("请先完成当前题目。");
-        return;
-      }
+    document.getElementById("btn-next").addEventListener("click", function () {
+      if (!validCurrent()) { alert("请先完成当前题目。"); return; }
       if (!state.unlockedFull && state.qIndex === LIGHT_TAIL_QI) {
         gotoPreview();
         return;
@@ -615,7 +597,7 @@
         gotoReport();
       }
     });
-    document.getElementById("btnContinueFull").addEventListener("click", function () {
+    document.getElementById("btn-continue-full").addEventListener("click", function () {
       state.unlockedFull = true;
       state.phase = "quiz";
       state.qIndex = FULL_RESUME_QI;
@@ -623,12 +605,12 @@
       setVisible("quiz");
       renderQuestion();
     });
-    document.getElementById("btnBook").addEventListener("click", function () {
+    document.getElementById("btn-book").addEventListener("click", function () {
       if (confirm("将打开预约落地页，是否继续？")) {
         window.open(CONFIG.bookingUrl, "_blank", "noopener");
       }
     });
-    document.getElementById("btnPdf").addEventListener("click", function () {
+    document.getElementById("btn-pdf").addEventListener("click", function () {
       if (typeof html2pdf === "undefined") {
         alert("PDF 导出组件不可用，请检查 cdnjs 网络可达性。");
         return;
@@ -638,12 +620,12 @@
       btn.textContent = "PDF 生成中...";
       var opt = {
         margin: 10,
-        filename: "医疗器械营销能力诊断报告.pdf",
+        filename: "能源电力行业营销诊断报告.pdf",
         image: { type: "jpeg", quality: 0.95 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
       };
-      html2pdf().set(opt).from(document.getElementById("screenReport")).save()
+      html2pdf().set(opt).from(document.getElementById("screen-report")).save()
         .then(function () {
           btn.disabled = false;
           btn.textContent = "导出 PDF";
@@ -654,7 +636,7 @@
           alert("PDF 导出失败，请重试。");
         });
     });
-    document.getElementById("btnReset").addEventListener("click", function () {
+    document.getElementById("btn-reset").addEventListener("click", function () {
       clearSaved();
       state = {
         v: STORAGE_VERSION,
@@ -663,6 +645,8 @@
         unlockedFull: false,
         basic: { companyName: "", q_b2: [], scale: "", years: "" },
         answers: {},
+        contact: { name: "", phone: "", company: "" },
+        openText: "",
         generated: false
       };
       btnResume.classList.add("hide");

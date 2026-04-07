@@ -50,19 +50,11 @@ type SharedToolCard = {
 
 const sharedToolCards: SharedToolCard[] = [
   {
-    eyebrow: "SHARED CAPABILITY",
-    title: "健康检查",
-    description: "统一检查系统接口、服务状态与关键依赖，建议在发布前与回归后各执行一次。",
-    href: "/health-check",
-    cta: "打开健康检查",
-    tone: "cyan",
-  },
-  {
     eyebrow: "MARKETING DIAG H5",
-    title: "制造业企业营销诊断",
-    description: "面向制造业企业的一页式营销诊断问卷，支持快速评估增长瓶颈与优先改进方向。",
-    href: "/diag/h5_questionnaire.html",
-    cta: "打开制造业诊断",
+    title: "能源电力行业营销诊断",
+    description: "面向能源电力企业的在线诊断入口，覆盖赛道认知、项目痛点、数字化现状与合作意向。",
+    href: "/diag/h5_energy.html",
+    cta: "打开能源电力诊断",
     tone: "amber",
   },
   {
@@ -72,6 +64,14 @@ const sharedToolCards: SharedToolCard[] = [
     href: "/diag/h5_medical.html",
     cta: "打开医疗器械诊断",
     tone: "violet",
+  },
+  {
+    eyebrow: "MARKETING DIAG H5",
+    title: "智能制造行业营销诊断",
+    description: "面向智能制造企业的诊断入口，围绕智造认知、核心痛点、系统数据与合作模式进行评估。",
+    href: "/diag/h5_manufacturing.html",
+    cta: "打开智能制造诊断",
+    tone: "amber",
   },
 ];
 

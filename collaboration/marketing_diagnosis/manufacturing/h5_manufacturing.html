@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>智能制造营销能力诊断</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    :root { --bg:#eff4fa; --card:#fff; --text:#0f172a; --muted:#475569; --primary:#0f3b66; --accent:#0284c7; --border:#dbe7f3; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 18px 14px 32px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:0 6px 20px rgba(15,23,42,.06); padding:16px; margin-bottom:14px; }
+    h1 { margin:0; font-size:22px; color:var(--primary); }
+    .sub { color:var(--muted); font-size:14px; line-height:1.6; margin-top:8px; }
+    .progress-meta { display:flex; justify-content:space-between; color:var(--muted); font-size:13px; margin-bottom:8px; }
+    .bar { height:8px; background:#d9e5f3; border-radius:999px; overflow:hidden; }
+    .bar > i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--primary),var(--accent)); }
+    .module-strip { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:10px; }
+    .module-chip { border:1px solid var(--border); border-radius:999px; background:#f8fbff; color:var(--muted); text-align:center; padding:5px 8px; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .module-chip.active { border-color:var(--accent); color:#075985; background:#e9f6ff; font-weight:700; }
+    .q-title { font-size:17px; font-weight:700; margin:10px 0 12px; line-height:1.5; }
+    .hint { color:var(--muted); font-size:13px; margin:0 0 10px; }
+    .opt, .btn { display:block; width:100%; border:1px solid var(--border); border-radius:10px; background:#f8fbff; color:var(--text); padding:12px; font-size:15px; margin-bottom:8px; cursor:pointer; text-align:left; }
+    .opt.sel { border-color:var(--accent); background:#e9f6ff; }
+    .btn { text-align:center; font-weight:700; }
+    .btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .btn.ghost { background:#fff; }
+    .row { display:flex; gap:10px; }
+    .row .btn { margin-bottom:0; }
+    .inp, textarea.inp { width:100%; border:1px solid var(--border); border-radius:10px; padding:12px; font-size:15px; margin-bottom:10px; }
+    textarea.inp { min-height:84px; resize:vertical; }
+    .hide { display:none; }
+    .score { font-size:34px; font-weight:800; color:var(--primary); margin:4px 0; }
+    .small { font-size:13px; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="screenWelcome" class="card">
+      <h1>智能制造营销能力诊断</h1>
+      <p class="sub">问卷采用 QB + 模块一~四（22 步）。先完成 10 步轻诊断，查看初估，再从第 6 步续答完整版。</p>
+      <p class="sub">QB：Q_B1 企业名称、Q_B2 细分赛道（多选）、Q_B3 规模、Q_B4 年限。</p>
+      <button id="btnStart" class="btn primary">全新开始</button>
+      <button id="btnResume" class="btn ghost hide">继续上次</button>
+    </div>
+
+    <div id="screenQuiz" class="hide">
+      <div class="card">
+        <div class="progress-meta">
+          <span id="stepTag">轻诊断阶段</span>
+          <span id="stepText">1 / 10</span>
+        </div>
+        <div class="bar"><i id="bar"></i></div>
+        <div id="moduleStrip" class="module-strip"></div>
+      </div>
+      <div class="card" id="qCard"></div>
+      <div class="row">
+        <button id="btnPrev" class="btn ghost">上一题</button>
+        <button id="btnNext" class="btn primary">下一题</button>
+      </div>
+    </div>
+
+    <div id="screenPreview" class="card hide">
+      <h2 style="margin:0 0 8px;color:#0f3b66;">查看初估画像</h2>
+      <p class="small">你已完成轻诊断 10 步，可先看初估结果，再继续完整版。</p>
+      <p class="score" id="previewScore">--</p>
+      <button id="btnContinueFull" class="btn primary">继续完成完整版</button>
+    </div>
+
+    <div id="screenReport" class="card hide">
+      <h2 id="reportTitle" style="margin:0 0 8px;color:#0f3b66;">智能制造营销能力诊断报告</h2>
+      <div class="score" id="finalScore">--</div>
+      <p class="small" id="levelText">等级：--</p>
+      <p><strong>企业：</strong><span id="reportCompany">--</span></p>
+      <p><strong>细分赛道（Q_B2）：</strong><span id="reportSeg">--</span></p>
+      <p><strong>核心建议：</strong><span id="reportAdvice">--</span></p>
+      <div style="margin-top:10px;">
+        <button id="btnBook" class="btn primary">预约专家（先二次确认）</button>
+        <button id="btnPdf" class="btn">导出 PDF</button>
+        <button id="btnReset" class="btn ghost">重新填写</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  var CONFIG = {
+    companyName: "纷享销客·中西南",
+    bookingUrl: "https://www.fxiaoke.com/",
+    hotline: "400-000-0000",
+    reportTitle: "智能制造营销能力诊断报告",
+    industryEdition: "smart_manufacturing",
+    industryEditionLabel: "智能制造行业"
+  };
+
+  (function () {
+    var STORAGE_KEY = "diag_smart_mfg_v1";
+    var STORAGE_VERSION = 1;
+    var LITE_LIMIT = 10;
+    var LIGHT_TAIL_QI = 9;
+    var FULL_RESUME_QI = 5;
+    var MODULES = ["模块一 · 智造认知", "模块二 · 核心痛点", "模块三 · ERP/MES/CRM/数据/AI", "模块四 · 合作意向"];
+    var DIMS = [
+      { name: "市场定位", maxW: 20 }, { name: "获客渠道", maxW: 20 }, { name: "销售推进", maxW: 20 },
+      { name: "客户成功", maxW: 15 }, { name: "组织协同", maxW: 15 }, { name: "数字化应用", maxW: 10 }
+    ];
+    var SEGS = [
+      { id: "discrete", text: "离散制造" }, { id: "process", text: "流程制造" }, { id: "assembly", text: "装配制造" },
+      { id: "defense", text: "军工制造" }, { id: "auto", text: "汽零制造" }, { id: "robot", text: "机器人产业" }, { id: "other", text: "其他" }
+    ];
+    var QUESTIONS = [
+      { id:"M1_Q1", module:0, dim:0, type:"mc", title:"你们对智造细分赛道趋势与客户诉求的理解程度？", options:[{k:"a",t:"理解深入并形成策略",s:3},{k:"b",t:"有认知但不系统",s:2},{k:"c",t:"较为薄弱",s:1}] },
+      { id:"M1_Q2", module:0, dim:0, type:"mc", title:"对生产模式（离散/流程/项目制）差异化打法是否明确？", options:[{k:"a",t:"打法清晰且可执行",s:3},{k:"b",t:"部分明确",s:2},{k:"c",t:"基本不明确",s:1}] },
+      { id:"M1_Q3", module:0, dim:1, type:"mc", title:"渠道分销与直销协同机制是否成熟？", options:[{k:"a",t:"协同机制成熟",s:3},{k:"b",t:"机制存在但不稳定",s:2},{k:"c",t:"协同较弱",s:1}] },
+      { id:"M1_Q4", module:0, dim:2, type:"mc", title:"项目型销售识别与推进流程是否标准化？", options:[{k:"a",t:"标准化完整",s:3},{k:"b",t:"部分标准化",s:2},{k:"c",t:"依赖个人经验",s:1}] },
+
+      { id:"M2_Q1", module:1, dim:1, type:"mc", title:"当前主要痛点（可多选）", options:[{k:"a",t:"渠道冲突",s:2},{k:"b",t:"经销赋能难",s:2},{k:"c",t:"服务化转型压力",s:1}] },
+      { id:"M2_Q2", module:1, dim:2, type:"mc", title:"项目执行管理痛点（可多选）", options:[{k:"a",t:"阶段失控",s:2},{k:"b",t:"资源冲突",s:2},{k:"c",t:"复盘不足",s:1}] },
+      { id:"M2_Q3", module:1, dim:3, type:"mc", title:"交付周期与客户满意的稳定性如何？", options:[{k:"a",t:"稳定可控",s:3},{k:"b",t:"偶发波动",s:2},{k:"c",t:"波动较大",s:1}] },
+      { id:"M2_Q4", module:1, dim:4, type:"sc", title:"跨部门（销售/交付/产品）协作效率如何？", options:[{k:"a",t:"高效协同",s:5},{k:"b",t:"一般",s:3},{k:"c",t:"经常卡点",s:1}] },
+
+      { id:"M3_Q1", module:2, dim:5, type:"mc", title:"ERP/MES/CRM 数据打通程度？", options:[{k:"a",t:"关键数据已贯通",s:3},{k:"b",t:"部分打通",s:2},{k:"c",t:"孤岛明显",s:1}] },
+      { id:"M3_Q2", module:2, dim:5, type:"mc", title:"CRM 在销售过程中的使用深度如何？", options:[{k:"a",t:"全流程使用",s:3},{k:"b",t:"核心环节使用",s:2},{k:"c",t:"录入为主",s:1}] },
+      { id:"M3_Q3", module:2, dim:5, type:"mc", title:"数据驱动经营（看板/预测/预警）能力如何？", options:[{k:"a",t:"日常驱动决策",s:3},{k:"b",t:"部分驱动",s:2},{k:"c",t:"很弱",s:1}] },
+      { id:"M3_Q4", module:2, dim:5, type:"sc", title:"AI 应用于纪要、分析、建议生成的程度？", options:[{k:"a",t:"已规模化",s:5},{k:"b",t:"小范围试点",s:3},{k:"c",t:"尚未开始",s:1}] },
+
+      { id:"M4_Q1", module:3, dim:4, type:"mc", title:"偏好的合作模式（可多选）", options:[{k:"a",t:"咨询+陪跑",s:2},{k:"b",t:"系统+实施",s:2},{k:"c",t:"联合运营",s:1}] },
+      { id:"M4_Q2", module:3, dim:4, type:"mc", title:"预算投入意向（可多选）", options:[{k:"a",t:"已有专项预算",s:2},{k:"b",t:"分阶段投入",s:2},{k:"c",t:"仍在评估",s:1}] },
+      { id:"M4_Q3", module:3, dim:3, type:"mc", title:"标杆共建意愿（可多选）", options:[{k:"a",t:"愿意共建行业样板",s:2},{k:"b",t:"愿意试点验证",s:2},{k:"c",t:"先观察",s:1}] },
+      { id:"M4_Q4", module:3, dim:2, type:"sc", title:"生态协同（渠道/伙伴/上下游）成熟度如何？", options:[{k:"a",t:"生态协同成熟",s:5},{k:"b",t:"基础协同",s:3},{k:"c",t:"协同薄弱",s:1}] },
+      { id:"CONTACT", module:3, dim:-1, type:"contact", title:"方便回访的联系人信息（不计分）" },
+      { id:"OPEN", module:3, dim:-1, type:"open", title:"你当前最想优先解决的一个问题（选填）" }
+    ];
+
+    var TOTAL_STEPS = 4 + QUESTIONS.length;
+    var state = {
+      v: STORAGE_VERSION,
+      qIndex: 0,
+      phase: "welcome",
+      unlockedFull: false,
+      basic: { companyName: "", q_b2: [], scale: "", years: "" },
+      answers: {},
+      text: { contactName: "", contactPhone: "", contactRole: "", open: "" },
+      generated: false
+    };
+    var welcome = document.getElementById("screenWelcome");
+    var quiz = document.getElementById("screenQuiz");
+    var preview = document.getElementById("screenPreview");
+    var report = document.getElementById("screenReport");
+    var qCard = document.getElementById("qCard");
+    var stepTag = document.getElementById("stepTag");
+    var stepText = document.getElementById("stepText");
+    var bar = document.getElementById("bar");
+    var btnResume = document.getElementById("btnResume");
+    var moduleStrip = document.getElementById("moduleStrip");
+
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function clearSaved() { localStorage.removeItem(STORAGE_KEY); }
+    function loadSaved() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        var parsed = JSON.parse(raw);
+        if (!parsed || parsed.v !== STORAGE_VERSION || parsed.generated) return false;
+        state = parsed;
+        return true;
+      } catch (e) { return false; }
+    }
+    function setVisible(which) {
+      welcome.classList.add("hide"); quiz.classList.add("hide"); preview.classList.add("hide"); report.classList.add("hide");
+      if (which === "welcome") welcome.classList.remove("hide");
+      if (which === "quiz") quiz.classList.remove("hide");
+      if (which === "preview") preview.classList.remove("hide");
+      if (which === "report") report.classList.remove("hide");
+    }
+    function getAbilityQuestion() {
+      var idx = state.qIndex - 4;
+      if (idx < 0 || idx >= QUESTIONS.length) return null;
+      return QUESTIONS[idx];
+    }
+    function renderModuleStrip() {
+      var q = getAbilityQuestion();
+      var active = q ? q.module : -1;
+      var html = "";
+      for (var i = 0; i < MODULES.length; i++) {
+        html += '<span class="module-chip' + (active === i ? " active" : "") + '">' + MODULES[i] + "</span>";
+      }
+      moduleStrip.innerHTML = html;
+    }
+    function renderProgress() {
+      var isLite = !state.unlockedFull && state.qIndex <= LIGHT_TAIL_QI;
+      if (isLite) {
+        stepTag.textContent = "轻诊断阶段";
+        stepText.textContent = (state.qIndex + 1) + " / " + LITE_LIMIT;
+        bar.style.width = (((state.qIndex + 1) / LITE_LIMIT) * 100) + "%";
+      } else {
+        stepTag.textContent = "完整版阶段";
+        stepText.textContent = (state.qIndex + 1) + " / " + TOTAL_STEPS;
+        bar.style.width = (((state.qIndex + 1) / TOTAL_STEPS) * 100) + "%";
+      }
+      renderModuleStrip();
+    }
+    function segText() {
+      var m = {};
+      for (var i = 0; i < SEGS.length; i++) m[SEGS[i].id] = SEGS[i].text;
+      var arr = state.basic.q_b2 || [];
+      if (!arr.length) return "未填写";
+      return arr.map(function (id) { return m[id] || id; }).join("、");
+    }
+    function renderBasic(step) {
+      if (step === 1) {
+        return '<div class="q-title">Q_B1 企业名称</div><input id="inpCompany" class="inp" placeholder="请输入企业名称" value="' + (state.basic.companyName || "") + '" />';
+      }
+      if (step === 2) {
+        var html = '<div class="q-title">Q_B2 细分赛道（可多选）</div><p class="hint">离散/流程/装配/军工/汽零/机器人/其他</p>';
+        for (var i = 0; i < SEGS.length; i++) {
+          var seg = SEGS[i];
+          var sel = (state.basic.q_b2 || []).indexOf(seg.id) >= 0 ? " sel" : "";
+          html += '<button type="button" class="opt' + sel + '" data-seg="' + seg.id + '">' + seg.text + "</button>";
+        }
+        return html;
+      }
+      if (step === 3) {
+        var scales = ["50人以下", "50-200人", "200-1000人", "1000人以上"];
+        var out = '<div class="q-title">Q_B3 企业规模</div>';
+        for (var j = 0; j < scales.length; j++) {
+          var sel2 = state.basic.scale === scales[j] ? " sel" : "";
+          out += '<button type="button" class="opt' + sel2 + '" data-scale="' + scales[j] + '">' + scales[j] + "</button>";
+        }
+        return out;
+      }
+      var years = ["3年以下", "3-10年", "10年以上"];
+      var out2 = '<div class="q-title">Q_B4 成立年限</div>';
+      for (var k = 0; k < years.length; k++) {
+        var sel3 = state.basic.years === years[k] ? " sel" : "";
+        out2 += '<button type="button" class="opt' + sel3 + '" data-years="' + years[k] + '">' + years[k] + "</button>";
+      }
+      return out2;
+    }
+    function renderAbility(q) {
+      if (q.type === "contact") {
+        return '<div class="q-title">' + q.title + '</div>' +
+          '<input id="inpName" class="inp" placeholder="联系人姓名（必填）" value="' + (state.text.contactName || "") + '" />' +
+          '<input id="inpPhone" class="inp" placeholder="手机号（必填）" value="' + (state.text.contactPhone || "") + '" />' +
+          '<input id="inpRole" class="inp" placeholder="岗位（选填）" value="' + (state.text.contactRole || "") + '" />';
+      }
+      if (q.type === "open") {
+        return '<div class="q-title">' + q.title + '</div>' +
+          '<textarea id="inpOpen" class="inp" placeholder="可选填写">' + (state.text.open || "") + "</textarea>";
+      }
+      var html = '<div class="q-title">' + q.title + "</div>";
+      if (q.type === "mc") html += '<p class="hint">多选计分，分值封顶 5 分。</p>';
+      var ans = state.answers[q.id];
+      for (var i = 0; i < q.options.length; i++) {
+        var opt = q.options[i];
+        var selected = q.type === "mc" ? ((ans || []).indexOf(opt.k) >= 0) : ans === opt.k;
+        html += '<button type="button" class="opt' + (selected ? " sel" : "") + '" data-qid="' + q.id + '" data-key="' + opt.k + '">' + opt.t + "</button>";
+      }
+      return html;
+    }
+    function renderQuestion() {
+      renderProgress();
+      var q = getAbilityQuestion();
+      qCard.innerHTML = q ? renderAbility(q) : renderBasic(state.qIndex + 1);
+      bindEvents();
+    }
+    function bindEvents() {
+      var inpCompany = document.getElementById("inpCompany");
+      if (inpCompany) inpCompany.addEventListener("input", function () { state.basic.companyName = inpCompany.value; save(); });
+      var segBtns = qCard.querySelectorAll("[data-seg]");
+      for (var i = 0; i < segBtns.length; i++) {
+        segBtns[i].addEventListener("click", function () {
+          var id = this.getAttribute("data-seg");
+          var arr = state.basic.q_b2 || [];
+          var ix = arr.indexOf(id);
+          if (ix >= 0) arr.splice(ix, 1); else arr.push(id);
+          state.basic.q_b2 = arr;
+          save();
+          renderQuestion();
+        });
+      }
+      var scales = qCard.querySelectorAll("[data-scale]");
+      for (var j = 0; j < scales.length; j++) {
+        scales[j].addEventListener("click", function () { state.basic.scale = this.getAttribute("data-scale"); save(); renderQuestion(); });
+      }
+      var years = qCard.querySelectorAll("[data-years]");
+      for (var k = 0; k < years.length; k++) {
+        years[k].addEventListener("click", function () { state.basic.years = this.getAttribute("data-years"); save(); renderQuestion(); });
+      }
+      var opts = qCard.querySelectorAll("[data-qid]");
+      for (var x = 0; x < opts.length; x++) {
+        opts[x].addEventListener("click", function () {
+          var qid = this.getAttribute("data-qid");
+          var key = this.getAttribute("data-key");
+          var q = getAbilityQuestion();
+          if (!q || q.id !== qid) return;
+          if (q.type === "mc") {
+            var arr = state.answers[qid] || [];
+            var idx = arr.indexOf(key);
+            if (idx >= 0) arr.splice(idx, 1); else arr.push(key);
+            state.answers[qid] = arr;
+          } else {
+            state.answers[qid] = key;
+          }
+          save();
+          renderQuestion();
+        });
+      }
+      var inpName = document.getElementById("inpName");
+      var inpPhone = document.getElementById("inpPhone");
+      var inpRole = document.getElementById("inpRole");
+      var inpOpen = document.getElementById("inpOpen");
+      if (inpName) inpName.addEventListener("input", function () { state.text.contactName = inpName.value; save(); });
+      if (inpPhone) inpPhone.addEventListener("input", function () { state.text.contactPhone = inpPhone.value; save(); });
+      if (inpRole) inpRole.addEventListener("input", function () { state.text.contactRole = inpRole.value; save(); });
+      if (inpOpen) inpOpen.addEventListener("input", function () { state.text.open = inpOpen.value; save(); });
+    }
+    function validCurrent() {
+      if (state.qIndex === 0) return !!(state.basic.companyName || "").trim();
+      if (state.qIndex === 1) return (state.basic.q_b2 || []).length > 0;
+      if (state.qIndex === 2) return !!state.basic.scale;
+      if (state.qIndex === 3) return !!state.basic.years;
+      var q = getAbilityQuestion();
+      if (!q) return true;
+      if (q.type === "contact") return !!(state.text.contactName || "").trim() && !!(state.text.contactPhone || "").trim();
+      if (q.type === "open") return true;
+      if (q.type === "mc") return (state.answers[q.id] || []).length > 0;
+      return !!state.answers[q.id];
+    }
+    function scoreQuestion(q) {
+      if (q.type === "contact" || q.type === "open") return 0;
+      var ans = state.answers[q.id];
+      if (!ans) return 0;
+      if (q.type === "sc") {
+        for (var i = 0; i < q.options.length; i++) if (q.options[i].k === ans) return q.options[i].s;
+        return 0;
+      }
+      var sum = 0;
+      for (var j = 0; j < q.options.length; j++) if (ans.indexOf(q.options[j].k) >= 0) sum += q.options[j].s;
+      return Math.min(5, sum);
+    }
+    function computeScores() {
+      var raw = [];
+      var maxRaw = [];
+      for (var i = 0; i < DIMS.length; i++) { raw.push(0); maxRaw.push(0); }
+      for (var x = 0; x < QUESTIONS.length; x++) {
+        var q = QUESTIONS[x];
+        if (q.dim < 0) continue;
+        raw[q.dim] += scoreQuestion(q);
+        maxRaw[q.dim] += 5;
+      }
+      var weighted = [];
+      for (var d = 0; d < DIMS.length; d++) {
+        var ratio = maxRaw[d] ? raw[d] / maxRaw[d] : 0;
+        weighted.push(Math.round(ratio * DIMS[d].maxW * 10) / 10);
+      }
+      var total = weighted.reduce(function (acc, n) { return acc + n; }, 0);
+      return { weighted: weighted, total: Math.round(total * 10) / 10 };
+    }
+    function computePreview() {
+      var keys = QUESTIONS.slice(0, 6);
+      var sum = 0;
+      for (var i = 0; i < keys.length; i++) sum += scoreQuestion(keys[i]);
+      return { score: sum, max: 30 };
+    }
+    function level(v) { if (v >= 85) return "卓越"; if (v >= 70) return "良好"; if (v >= 50) return "一般"; return "薄弱"; }
+    function gotoPreview() {
+      var pv = computePreview();
+      document.getElementById("previewScore").textContent = pv.score + " / " + pv.max + "（初估）";
+      state.phase = "preview";
+      save();
+      setVisible("preview");
+    }
+    function gotoReport() {
+      var res = computeScores();
+      var lv = level(res.total);
+      document.getElementById("reportTitle").textContent = CONFIG.reportTitle;
+      document.getElementById("finalScore").textContent = res.total + " / 100";
+      document.getElementById("levelText").textContent = "等级：" + lv;
+      document.getElementById("reportCompany").textContent = state.basic.companyName || "未填写";
+      document.getElementById("reportSeg").textContent = segText();
+      document.getElementById("reportAdvice").textContent = lv === "卓越" ? "建议进入行业标杆复制阶段。" : (lv === "良好" ? "建议优先补齐流程断点并加强协同。" : "建议先夯实基础流程与数据能力。");
+      setVisible("report");
+      state.phase = "report";
+      state.generated = true;
+      clearSaved();
+    }
+
+    document.getElementById("btnStart").addEventListener("click", function () {
+      state = { v: STORAGE_VERSION, qIndex: 0, phase: "quiz", unlockedFull: false, basic: { companyName: "", q_b2: [], scale: "", years: "" }, answers: {}, text: { contactName: "", contactPhone: "", contactRole: "", open: "" }, generated: false };
+      setVisible("quiz");
+      renderQuestion();
+      save();
+    });
+    document.getElementById("btnResume").addEventListener("click", function () {
+      if (state.phase === "preview") setVisible("preview");
+      else { state.phase = "quiz"; setVisible("quiz"); renderQuestion(); }
+    });
+    document.getElementById("btnPrev").addEventListener("click", function () {
+      if (state.qIndex > 0) { state.qIndex -= 1; state.phase = "quiz"; save(); renderQuestion(); }
+    });
+    document.getElementById("btnNext").addEventListener("click", function () {
+      if (!validCurrent()) { alert("请先完成当前题目。"); return; }
+      if (!state.unlockedFull && state.qIndex === LIGHT_TAIL_QI) { gotoPreview(); return; }
+      if (state.qIndex < TOTAL_STEPS - 1) { state.qIndex += 1; state.phase = "quiz"; save(); renderQuestion(); }
+      else gotoReport();
+    });
+    document.getElementById("btnContinueFull").addEventListener("click", function () {
+      state.unlockedFull = true;
+      state.phase = "quiz";
+      state.qIndex = FULL_RESUME_QI;
+      save();
+      setVisible("quiz");
+      renderQuestion();
+    });
+    document.getElementById("btnBook").addEventListener("click", function () {
+      if (confirm("将打开预约落地页，是否继续？")) window.open(CONFIG.bookingUrl, "_blank", "noopener");
+    });
+    document.getElementById("btnPdf").addEventListener("click", function () {
+      var btn = this;
+      if (typeof html2pdf === "undefined") { alert("PDF 导出组件不可用，请检查 cdnjs 网络可达性。"); return; }
+      btn.textContent = "PDF 生成中...";
+      btn.disabled = true;
+      var opt = { margin: 10, filename: "智能制造营销能力诊断报告.pdf", image: { type: "jpeg", quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, logging: false }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } };
+      html2pdf().set(opt).from(document.getElementById("screenReport")).save()
+        .then(function () { btn.disabled = false; btn.textContent = "导出 PDF"; })
+        .catch(function () { btn.disabled = false; btn.textContent = "导出 PDF"; alert("PDF 导出失败，请重试。"); });
+    });
+    document.getElementById("btnReset").addEventListener("click", function () {
+      clearSaved();
+      state = { v: STORAGE_VERSION, qIndex: 0, phase: "welcome", unlockedFull: false, basic: { companyName: "", q_b2: [], scale: "", years: "" }, answers: {}, text: { contactName: "", contactPhone: "", contactRole: "", open: "" }, generated: false };
+      btnResume.classList.add("hide");
+      setVisible("welcome");
+    });
+
+    if (loadSaved()) btnResume.classList.remove("hide");
+  })();
+  </script>
+</body>
+</html>
