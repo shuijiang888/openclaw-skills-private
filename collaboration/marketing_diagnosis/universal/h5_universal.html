@@ -6,6 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no" />
   <title>通用营销诊断 · 全行业能力测评</title>
+  <script>
+    (function () {
+      function normalizeBase(input) {
+        var raw = String(input || "").trim();
+        if (!raw) return "";
+        if (!raw.startsWith("/")) raw = "/" + raw;
+        return raw.replace(/\/+$/, "");
+      }
+
+      var html = document.documentElement;
+      var fixedBase = normalizeBase(html.getAttribute("data-universal-static-base"));
+      var path = window.location.pathname || "";
+      var autoBase = "";
+
+      if (path && path !== "/" && path.indexOf("/") >= 0) {
+        autoBase = path.endsWith("/") ? path.slice(0, -1) : path.replace(/\/[^/]*$/, "");
+      }
+      autoBase = normalizeBase(autoBase);
+
+      var finalBase = fixedBase || autoBase || "/diag/universal";
+      var baseEl = document.createElement("base");
+      baseEl.setAttribute("href", finalBase + "/");
+      document.head.appendChild(baseEl);
+      window.__UNIVERSAL_STATIC_BASE__ = finalBase;
+    })();
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="./data/questionnaire.bundle.js"></script>
   <script src="./data/rubrics.bundle.js"></script>
@@ -287,7 +313,19 @@
   var Q = window.UNIVERSAL_QUESTIONNAIRE;
   var R = window.UNIVERSAL_RUBRICS;
   if (!Q || !R) {
-    document.body.innerHTML = "<p style='padding:24px'>数据加载失败：请通过本地或静态服务器打开，并确保 data/questionnaire.bundle.js 与 rubrics.bundle.js 可访问。</p>";
+    var basePath = window.__UNIVERSAL_STATIC_BASE__ || "/diag/universal";
+    var origin = window.location.origin || "";
+    var h5Url = origin + basePath + "/h5_universal.html";
+    var qUrl = origin + basePath + "/data/questionnaire.bundle.js";
+    var rUrl = origin + basePath + "/data/rubrics.bundle.js";
+    document.body.innerHTML =
+      "<div style='padding:24px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif;line-height:1.6'>" +
+      "<h3 style='margin:0 0 10px'>数据加载失败</h3>" +
+      "<p style='margin:0 0 10px'>请使用完整页面地址打开，并确认两个数据包可访问：</p>" +
+      "<p style='margin:0 0 6px'><a href='" + h5Url + "' target='_blank' rel='noopener'>" + h5Url + "</a></p>" +
+      "<p style='margin:0 0 6px'><a href='" + qUrl + "' target='_blank' rel='noopener'>" + qUrl + "</a></p>" +
+      "<p style='margin:0 0 6px'><a href='" + rUrl + "' target='_blank' rel='noopener'>" + rUrl + "</a></p>" +
+      "</div>";
     return;
   }
 
