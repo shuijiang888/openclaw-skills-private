@@ -64,6 +64,19 @@ function regChart(ch) {
   if (ch) __charts.push(ch);
 }
 
+const __roiCharts = [];
+function destroyRoiCharts() {
+  while (__roiCharts.length) {
+    const c = __roiCharts.pop();
+    try {
+      c.destroy();
+    } catch (_) {}
+  }
+}
+function regRoiChart(ch) {
+  if (ch) __roiCharts.push(ch);
+}
+
 function applyChartDefaults() {
   if (typeof Chart === "undefined") return;
   Chart.defaults.color = chartColors.text;
@@ -73,6 +86,7 @@ function applyChartDefaults() {
 
 function showView(name) {
   destroyCharts();
+  destroyRoiCharts();
   document.querySelectorAll("[data-view]").forEach((el) => {
     el.classList.toggle("hidden", el.getAttribute("data-view") !== name);
   });
@@ -89,6 +103,7 @@ function showView(name) {
       perf: "绩效看板",
       playbook: "业务作战台",
       valueMap: "全场景价值图谱",
+      valueRoi: "价值量化对比",
       alerts: "预警中心",
       import: "数据与录入",
     }[name] || "";
@@ -217,6 +232,394 @@ async function loadValueMap() {
     mount.innerHTML =
       '<p class="muted">价值图谱加载失败，请刷新重试。若持续失败，请确认服务端已更新并包含 <code>value-map-snippet.html</code>。</p>';
   }
+}
+
+/** 价值量化对比：默认假设与首次预填 */
+const ROI_DEF = {
+  roiRev: 2_400_000,
+  roiMargin: 22,
+  roiCritical: 2,
+  roiOpenAlerts: 8,
+  roiArDays: 18,
+  roiWeeksStalled: 4,
+  roiWeeklyDrag: 0.12,
+  roiFrictionHigh: 12000,
+  roiFrictionLow: 2800,
+  roiLiftPct: 3.5,
+  roiMarginPts: 0.8,
+  roiArDaysSaved: 5,
+  roiWcRate: 8,
+  roiCritAvoid: 40,
+  roiIntelUplift: 1.2,
+};
+
+const ROI_IDS = Object.keys(ROI_DEF);
+let roiUiBound = false;
+let roiFirstOpen = true;
+
+function numInp(id, fallback) {
+  const el = $(`#${id}`);
+  if (!el) return fallback;
+  const n = Number(el.value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function applyRoiDefaults() {
+  for (const id of ROI_IDS) {
+    const el = $(`#${id}`);
+    if (el) el.value = String(ROI_DEF[id]);
+  }
+}
+
+function readRoiModel() {
+  const rev = Math.max(0, numInp("roiRev", ROI_DEF.roiRev));
+  const marginPct = Math.min(80, Math.max(0, numInp("roiMargin", ROI_DEF.roiMargin)));
+  const critical = Math.max(0, Math.round(numInp("roiCritical", ROI_DEF.roiCritical)));
+  const openAlerts = Math.max(0, Math.round(numInp("roiOpenAlerts", ROI_DEF.roiOpenAlerts)));
+  const arDays = Math.max(0, numInp("roiArDays", ROI_DEF.roiArDays));
+  const weeksStalled = Math.max(0, numInp("roiWeeksStalled", ROI_DEF.roiWeeksStalled));
+  const weeklyDragPct = Math.max(0, numInp("roiWeeklyDrag", ROI_DEF.roiWeeklyDrag));
+  const frictionHigh = Math.max(0, numInp("roiFrictionHigh", ROI_DEF.roiFrictionHigh));
+  const frictionLow = Math.max(0, numInp("roiFrictionLow", ROI_DEF.roiFrictionLow));
+  const liftPct = Math.max(0, numInp("roiLiftPct", ROI_DEF.roiLiftPct));
+  const marginPts = Math.max(0, numInp("roiMarginPts", ROI_DEF.roiMarginPts));
+  const arDaysSaved = Math.max(0, numInp("roiArDaysSaved", ROI_DEF.roiArDaysSaved));
+  const wcRate = Math.max(0, numInp("roiWcRate", ROI_DEF.roiWcRate));
+  const critAvoid = Math.min(100, Math.max(0, numInp("roiCritAvoid", ROI_DEF.roiCritAvoid)));
+  const intelUplift = Math.max(0, numInp("roiIntelUplift", ROI_DEF.roiIntelUplift));
+  return {
+    rev,
+    marginPct,
+    critical,
+    openAlerts,
+    arDays,
+    weeksStalled,
+    weeklyDragPct,
+    frictionHigh,
+    frictionLow,
+    liftPct,
+    marginPts,
+    arDaysSaved,
+    wcRate,
+    critAvoid,
+    intelUplift,
+  };
+}
+
+function computeRoi(m) {
+  const stalled = m.rev * (m.weeklyDragPct / 100) * m.weeksStalled;
+  const otherAlerts = Math.max(0, m.openAlerts - m.critical);
+  const alertFriction = m.critical * m.frictionHigh + otherAlerts * m.frictionLow;
+  const arStrain = m.rev * (m.arDays / 365) * (m.wcRate / 100) * 0.35;
+  const totalCost = stalled + alertFriction + arStrain;
+
+  const liftRev = m.rev * (m.liftPct / 100) * (m.marginPct / 100);
+  const marginGain = m.rev * (m.marginPts / 100);
+  const wcRelease = m.rev * (m.arDaysSaved / 365) * (m.wcRate / 100) * 0.35;
+  const alertSave = m.critical * (m.critAvoid / 100) * m.frictionHigh * 0.45;
+  const intelLift = m.rev * (m.intelUplift / 100) * (m.marginPct / 100);
+  const totalBenefit = liftRev + marginGain + wcRelease + alertSave + intelLift;
+
+  return {
+    costParts: {
+      stalled,
+      alertFriction,
+      arStrain,
+    },
+    benefitParts: {
+      liftRev,
+      marginGain,
+      wcRelease,
+      alertSave,
+      intelLift,
+    },
+    totalCost,
+    totalBenefit,
+    net: totalBenefit - totalCost,
+  };
+}
+
+function fmtUsdAnnual(n) {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const sign = n < 0 ? "−" : "";
+  const v = Math.abs(n);
+  if (v >= 1e6) return sign + (v / 1e6).toFixed(2) + "M USD/年";
+  if (v >= 1e3) return sign + Math.round(v / 1e3) + "k USD/年";
+  return sign + Math.round(v) + " USD/年";
+}
+
+function fmtUsdPlain(n) {
+  if (!Number.isFinite(n)) return "—";
+  return Math.round(n).toLocaleString("zh-CN") + " USD";
+}
+
+async function prefillRoiFromSystem() {
+  const [ov, pb, sc] = await Promise.all([
+    api("/v1/analytics/overview"),
+    api("/v1/scenarios/playbook"),
+    api("/v1/performance/scorecard"),
+  ]);
+  const sum = ov?.summary || {};
+  const rev = Number(sum.activeRevenueUsd);
+  if (Number.isFinite(rev) && rev >= 0) $("#roiRev").value = String(Math.round(rev));
+
+  const sev = sc?.bsc?.process?.open_alerts_by_severity || {};
+  const crit = Number(sev.critical);
+  const warn = Number(sev.warn);
+  const info = Number(sev.info);
+  if (Number.isFinite(crit)) $("#roiCritical").value = String(Math.max(0, Math.round(crit)));
+  const openTotal = [crit, warn, info].filter(Number.isFinite).reduce((a, b) => a + b, 0);
+  if (openTotal > 0) $("#roiOpenAlerts").value = String(Math.round(openTotal));
+
+  const ar = Number(sc?.bsc?.process?.avg_ar_days);
+  if (Number.isFinite(ar)) $("#roiArDays").value = String(Math.max(0, Math.round(ar)));
+
+  const cg = pb?.coverage_gaps || {};
+  const unassigned = Number(cg.unassigned_active_channels);
+  const intelGap = Number(cg.active_countries_without_intel);
+  let weeks = 3;
+  if (Number.isFinite(unassigned) && Number.isFinite(intelGap)) weeks = Math.min(12, 2 + unassigned * 0.4 + intelGap * 0.5);
+  $("#roiWeeksStalled").value = String(Math.max(0, Math.round(weeks)));
+
+  const f = sc?.bsc?.financial;
+  const att = Number(f?.proxy_quarter_attainment_pct);
+  if (Number.isFinite(att)) {
+    const lift = Math.max(0, Math.min(12, (85 - att) * 0.12));
+    $("#roiLiftPct").value = (Math.round(lift * 10) / 10).toFixed(1);
+  }
+}
+
+function bindRoiUi() {
+  if (roiUiBound) return;
+  roiUiBound = true;
+  ROI_IDS.forEach((id) => {
+    const el = $(`#${id}`);
+    if (!el) return;
+    el.addEventListener("input", () => renderValueRoi());
+    el.addEventListener("change", () => renderValueRoi());
+  });
+  $("#btnRoiPrefill").addEventListener("click", () => {
+    prefillRoiFromSystem()
+      .then(() => renderValueRoi())
+      .catch(() => renderValueRoi());
+  });
+  $("#btnRoiReset").addEventListener("click", () => {
+    applyRoiDefaults();
+    renderValueRoi();
+  });
+  $("#btnRoiCopy").addEventListener("click", () => copyRoiSummary().catch((e) => alert(e.message)));
+}
+
+function renderValueRoi() {
+  const m = readRoiModel();
+  const r = computeRoi(m);
+  $("#roiTotalCost").textContent = fmtUsdAnnual(r.totalCost);
+  $("#roiTotalBenefit").textContent = fmtUsdAnnual(r.totalBenefit);
+  $("#roiNet").textContent = fmtUsdAnnual(r.net);
+
+  const cb = $("#roiCostBreakdown");
+  if (cb) {
+    cb.innerHTML = `
+      机会停滞：<strong>${fmtUsdPlain(r.costParts.stalled)}</strong><br/>
+      预警摩擦：<strong>${fmtUsdPlain(r.costParts.alertFriction)}</strong><br/>
+      资金占用（演示）：<strong>${fmtUsdPlain(r.costParts.arStrain)}</strong>
+    `;
+  }
+  const bb = $("#roiBenefitBreakdown");
+  if (bb) {
+    bb.innerHTML = `
+      出货/达成提升：<strong>${fmtUsdPlain(r.benefitParts.liftRev)}</strong><br/>
+      毛利改善：<strong>${fmtUsdPlain(r.benefitParts.marginGain)}</strong><br/>
+      周转释放：<strong>${fmtUsdPlain(r.benefitParts.wcRelease)}</strong><br/>
+      预警闭环：<strong>${fmtUsdPlain(r.benefitParts.alertSave)}</strong><br/>
+      情报与拓展：<strong>${fmtUsdPlain(r.benefitParts.intelLift)}</strong>
+    `;
+  }
+
+  if (typeof Chart === "undefined") return;
+  destroyRoiCharts();
+  applyChartDefaults();
+
+  const c1 = $("#chartRoiCostStack");
+  const c2 = $("#chartRoiBenefitStack");
+  const c3 = $("#chartRoiCompare");
+  if (!c1 || !c2 || !c3) return;
+
+  regRoiChart(
+    new Chart(c1, {
+      type: "bar",
+      data: {
+        labels: ["代价构成"],
+        datasets: [
+          {
+            label: "机会停滞",
+            data: [r.costParts.stalled],
+            backgroundColor: "rgba(240, 113, 120, 0.85)",
+            borderRadius: 6,
+            stack: "c",
+          },
+          {
+            label: "预警摩擦",
+            data: [r.costParts.alertFriction],
+            backgroundColor: "rgba(255, 204, 102, 0.85)",
+            borderRadius: 6,
+            stack: "c",
+          },
+          {
+            label: "资金占用",
+            data: [r.costParts.arStrain],
+            backgroundColor: "rgba(139, 154, 171, 0.75)",
+            borderRadius: 6,
+            stack: "c",
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10 } } },
+        scales: {
+          x: { stacked: true, beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } },
+          y: { stacked: true, grid: { display: false } },
+        },
+      },
+    })
+  );
+
+  regRoiChart(
+    new Chart(c2, {
+      type: "bar",
+      data: {
+        labels: ["收益构成"],
+        datasets: [
+          {
+            label: "出货提升",
+            data: [r.benefitParts.liftRev],
+            backgroundColor: "rgba(127, 217, 154, 0.9)",
+            borderRadius: 6,
+            stack: "b",
+          },
+          {
+            label: "毛利改善",
+            data: [r.benefitParts.marginGain],
+            backgroundColor: "rgba(61, 158, 239, 0.75)",
+            borderRadius: 6,
+            stack: "b",
+          },
+          {
+            label: "周转释放",
+            data: [r.benefitParts.wcRelease],
+            backgroundColor: "rgba(127, 217, 154, 0.55)",
+            borderRadius: 6,
+            stack: "b",
+          },
+          {
+            label: "预警闭环",
+            data: [r.benefitParts.alertSave],
+            backgroundColor: "rgba(255, 204, 102, 0.65)",
+            borderRadius: 6,
+            stack: "b",
+          },
+          {
+            label: "情报拓展",
+            data: [r.benefitParts.intelLift],
+            backgroundColor: "rgba(61, 158, 239, 0.45)",
+            borderRadius: 6,
+            stack: "b",
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10 } } },
+        scales: {
+          x: { stacked: true, beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } },
+          y: { stacked: true, grid: { display: false } },
+        },
+      },
+    })
+  );
+
+  const maxBar = Math.max(r.totalCost, r.totalBenefit, 1);
+  regRoiChart(
+    new Chart(c3, {
+      type: "bar",
+      data: {
+        labels: ["不采用系统（年度代价）", "采用系统（年度收益）"],
+        datasets: [
+          {
+            label: "USD/年（演示）",
+            data: [r.totalCost, r.totalBenefit],
+            backgroundColor: ["rgba(240, 113, 120, 0.8)", "rgba(127, 217, 154, 0.85)"],
+            borderRadius: 10,
+            borderSkipped: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => fmtUsdPlain(ctx.raw),
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: maxBar * 1.15,
+            ticks: { callback: (v) => fmtUsd(v) },
+          },
+        },
+      },
+    })
+  );
+}
+
+async function copyRoiSummary() {
+  const m = readRoiModel();
+  const r = computeRoi(m);
+  const lines = [
+    "# 硕日渠道智能系统 · 价值量化对比（演示模型）",
+    "",
+    `生成时间: ${new Date().toLocaleString("zh-CN")}`,
+    "",
+    "## 摘要",
+    `- 年度代价（估）: ${fmtUsdAnnual(r.totalCost)}`,
+    `- 年度收益（估）: ${fmtUsdAnnual(r.totalBenefit)}`,
+    `- 净影响: ${fmtUsdAnnual(r.net)}`,
+    "",
+    "## 输入要点",
+    `- 年出货基数: ${Math.round(m.rev)} USD · 毛利率 ${m.marginPct}%`,
+    `- 未关预警 ${m.openAlerts}（Critical ${m.critical}）· 演示平均逾期 ${m.arDays} 天`,
+    "",
+    "（本页为辅助决策的演示演算，非合同或审计口径。）",
+  ];
+  const text = lines.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    showCopyToast();
+  } catch (_) {
+    window.prompt("请手动复制：", text);
+  }
+}
+
+async function loadValueRoi() {
+  bindRoiUi();
+  if (roiFirstOpen) {
+    roiFirstOpen = false;
+    applyRoiDefaults();
+    try {
+      await prefillRoiFromSystem();
+    } catch (_) {}
+  }
+  renderValueRoi();
 }
 
 function fmtUsd(n) {
@@ -1809,6 +2212,7 @@ function bindNav() {
       if (v === "alerts") loadAlerts().catch((e) => console.error(e));
       if (v === "playbook") loadPlaybook().catch((e) => console.error(e));
       if (v === "valueMap") loadValueMap().catch((e) => console.error(e));
+      if (v === "valueRoi") loadValueRoi().catch((e) => console.error(e));
       if (v === "perf") loadPerf().catch((e) => console.error(e));
       if (v === "import") loadImportBatches().catch(() => {});
     });

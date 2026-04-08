@@ -1178,3 +1178,187 @@ code.batch-id {
   margin: 0 0 8px;
   font-size: 12px;
 }
+
+/* 价值量化对比 */
+.roi-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(61, 158, 239, 0.12) 0%, var(--surface) 48%, rgba(127, 217, 154, 0.08) 100%);
+  border: 1px solid var(--border);
+}
+
+.roi-hero-text h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.roi-hero-text p {
+  margin: 0;
+  max-width: 52rem;
+  line-height: 1.55;
+}
+
+.roi-hero-actions {
+  gap: 8px;
+  align-items: center;
+}
+
+.roi-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+}
+
+.roi-kpi {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.roi-kpi strong {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin: 6px 0 4px;
+  letter-spacing: -0.02em;
+}
+
+.roi-kpi-cost strong {
+  color: var(--danger);
+}
+
+.roi-kpi-benefit strong {
+  color: var(--ok);
+}
+
+.roi-kpi-net strong {
+  color: var(--primary);
+}
+
+.roi-kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.roi-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
+
+.roi-column {
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.roi-column::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
+}
+
+.roi-column-cost::before {
+  background: linear-gradient(180deg, var(--danger), rgba(240, 113, 120, 0.35));
+}
+
+.roi-column-benefit::before {
+  background: linear-gradient(180deg, var(--ok), rgba(127, 217, 154, 0.35));
+}
+
+.roi-col-head h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.roi-col-head p {
+  margin: 0 0 16px;
+}
+
+.roi-field {
+  margin-bottom: 14px;
+}
+
+.roi-field label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.roi-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.roi-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-dim);
+}
+
+.roi-hint {
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.roi-subtotals {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+  line-height: 1.65;
+}
+
+.roi-charts {
+  margin-bottom: 24px;
+}
+
+.roi-chart-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.roi-chart-sub {
+  margin: 0 0 16px;
+}
+
+.roi-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.roi-chart-box {
+  position: relative;
+  min-height: 220px;
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.roi-chart-box-wide {
+  min-height: 280px;
+}
