@@ -1,0 +1,18 @@
+{
+  "name": "marketing-diagnosis-diag-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MVP API for universal marketing diagnosis — SQLite, aligns with /v1 contract",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "better-sqlite3": "^11.6.0",
+    "fastify": "^5.1.0"
+  }
+}

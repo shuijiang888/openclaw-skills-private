@@ -1,0 +1,17 @@
+# 本地/轻量部署：API + 持久化 SQLite 卷
+services:
+  diag-api:
+    build: ./api
+    ports:
+      - "8787:8787"
+    environment:
+      PORT: "8787"
+      DIAG_DB_PATH: /data/diag_mvp.db
+      # API_KEY: "optional"
+      CORS_ORIGINS: "*"
+    volumes:
+      - diag-data:/data
+    restart: unless-stopped
+
+volumes:
+  diag-data:
