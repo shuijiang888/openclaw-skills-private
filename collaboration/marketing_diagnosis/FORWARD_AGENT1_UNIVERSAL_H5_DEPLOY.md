@@ -1,7 +1,8 @@
 # 通用营销诊断 H5（universal）· 转发 Agent1 覆盖部署
 
 **来源：** 营销 Cursor 发布说明 + 本仓库已对齐的代码变更。  
-**用途：** 请业务方将本文 **整段转发** 给 **Agent1**，按现网目录 **覆盖部署** `h5_universal.html`，部署后 **回传 commit 或文件 SHA** 便于对账。
+**用途：** 请业务方将本文 **整段转发** 给 **Agent1**，按现网目录 **覆盖部署** `h5_universal.html`，部署后 **回传 commit 或文件 SHA** 便于对账。  
+**正式发布分工与回执：** 另见同目录 **`RELEASE_NOTICE_UNIVERSAL_MARKETING_DIAG_H5.md`**（OpenClaw + Agent1 分工、第五节验收、第六节回执模板）。
 
 ---
 
