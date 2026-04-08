@@ -1,7 +1,8 @@
 # 通用营销诊断（陈玮 universal H5）· 正式发布通知
 
 **文档用途：** 业务方将本文 **转发** 给 **OpenClaw（或代码维护人）** 与 **运维 Agent1**；各方 **只做与本角色相关的步骤**。  
-**技术细节补充：** 与同目录 **`FORWARD_AGENT1_UNIVERSAL_H5_DEPLOY.md`** 互为补充；路径、变更摘要、可选校验脚本等以两份文档为准。
+**技术细节补充：** 与同目录 **`FORWARD_AGENT1_UNIVERSAL_H5_DEPLOY.md`** 互为补充；路径、变更摘要、可选校验脚本等以两份文档为准。  
+**给 OpenClaw 的试发诉求（长文）：** **`OPENCLAW_RELEASE_REQUEST_UNIVERSAL_H5.md`**
 
 ---
 
