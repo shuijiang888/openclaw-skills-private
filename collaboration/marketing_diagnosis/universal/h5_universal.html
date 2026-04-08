@@ -33,6 +33,7 @@
       window.__UNIVERSAL_STATIC_ROOT__ = finalBase;
     })();
   </script>
+  <!-- 数据包必须早于 html2pdf：境外 CDN 阻塞会导致 Q/R 永远不执行。PDF 库见 loadHtml2Pdf() -->
   <script src="./data/questionnaire.bundle.js"></script>
   <script src="./data/rubrics.bundle.js"></script>
   <style>
@@ -294,7 +295,7 @@
   <script>
 (function () {
   var CONFIG = {
-    /** 仓库默认可移植；现网部署时请改为真实诊断 API 根（无末尾 /），如 https://域名/api/diag */
+    /** 诊断 API 根（无末尾 /）。本地联调示例：http://localhost:8787；现网同源可填 "" 再用相对路径（需网关转发）。 */
     apiBaseUrl: "",
     /**
      * API 路径前缀。本地 MVP（universal/api）："/v1"。
@@ -310,13 +311,19 @@
     BRIDGE_TOKEN: ""
   };
 
-  // 兼容两种 bundle 导出名：无后缀（主线）与 *_BUNDLE（历史/协作产物）；兼容 { default: ... } 嵌套导出
+  // 兼容两种 bundle 导出名：无后缀（主线）与 *_BUNDLE（历史/协作产物）
   var Q = window.UNIVERSAL_QUESTIONNAIRE || window.UNIVERSAL_QUESTIONNAIRE_BUNDLE;
   var R = window.UNIVERSAL_RUBRICS || window.UNIVERSAL_RUBRICS_BUNDLE;
-  if (Q && typeof Q === "object" && Q.default) Q = Q.default;
-  if (R && typeof R === "object" && R.default) R = R.default;
   if (!window.UNIVERSAL_QUESTIONNAIRE && Q) window.UNIVERSAL_QUESTIONNAIRE = Q;
   if (!window.UNIVERSAL_RUBRICS && R) window.UNIVERSAL_RUBRICS = R;
+  if (R && !R.gradeBands && R.default && typeof R.default === "object" && R.default.gradeBands) {
+    R = R.default;
+    window.UNIVERSAL_RUBRICS = R;
+  }
+  if (Q && !Q.roles && Q.default && typeof Q.default === "object" && (Q.default.roles || Q.default.sales_rep)) {
+    Q = Q.default;
+    window.UNIVERSAL_QUESTIONNAIRE = Q;
+  }
   if (!Q || !R) {
     var basePath = window.__UNIVERSAL_STATIC_BASE__ || "/diag/universal";
     var origin = window.location.origin || "";
@@ -377,42 +384,31 @@
       var r = normalizeRoleId(sessionStorage.getItem(STORAGE_KEY_ROLE));
       var m = String(sessionStorage.getItem(STORAGE_KEY_MODE) || "").trim();
       if (r) state.role = r;
-      if (r === "sales_rep") {
-        if (m) state.saleMode = m;
-      } else {
-        state.saleMode = null;
-        clearSessionValue(STORAGE_KEY_MODE);
-      }
+      if (r === "sales_rep" && m) state.saleMode = m;
+      else state.saleMode = null;
     } catch (_) {}
-  }
-
-  function syncUiFromState() {
-    var rid = normalizeRoleId(state.role);
-    if (rid) {
-      var rb = document.querySelector('#role-choices .choice[data-role-id="' + rid + '"]');
-      if (rb) {
-        document.querySelectorAll("#role-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
-        rb.classList.add("selected");
-      }
-    }
-    if (rid === "sales_rep" && state.saleMode) {
-      var mb = document.querySelector('#mode-choices .choice[data-mode-id="' + state.saleMode + '"]');
-      if (mb) {
-        document.querySelectorAll("#mode-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
-        mb.classList.add("selected");
-      }
-    }
+    sanitizeStoredRoleMode();
   }
 
   function getRolesFromQuestionnaire() {
+    var def = Q && Q.default;
     var candidates = [
       Q && Q.roles,
       Q && Q.data && Q.data.roles,
-      Q && Q.questionnaire && Q.questionnaire.roles,
-      Q && Q.payload && Q.payload.roles
+      Q && Q.questionnaire && isObj(Q.questionnaire) && Q.questionnaire.roles,
+      Q && Q.payload && Q.payload.roles,
+      def && def.roles,
+      def && (def.sales_rep || def.salesRep || def.sales_manager || def.salesManager) ? def : null
     ];
     for (var i = 0; i < candidates.length; i++) {
       if (isObj(candidates[i])) return candidates[i];
+    }
+    if (isObj(def) && (
+      def.sales_rep || def.salesRep ||
+      def.sales_manager || def.salesManager ||
+      def.marketing_system || def.marketingSystem
+    )) {
+      return def;
     }
     if (isObj(Q) && (
       Q.sales_rep || Q.salesRep ||
@@ -421,7 +417,7 @@
     )) {
       return Q;
     }
-    console.warn("[diag] roles not found in questionnaire bundle");
+    console.warn("[diag] roles not found in questionnaire bundle", Q && typeof Q === "object" ? Object.keys(Q) : Q);
     return {};
   }
 
@@ -448,9 +444,23 @@
   }
 
   function resolveModeEntry(roleEntry, modeKey) {
-    var modes = roleEntry && (roleEntry.modes || roleEntry.salesModes || roleEntry.modeMap);
+    var modes = roleEntry && (roleEntry.modes || roleEntry.salesModes || roleEntry.modeMap || roleEntry.mode_list);
+    if (Array.isArray(modes)) {
+      var target = normalizeModeKey(modeKey);
+      var targetLoose = target.replace(/_/g, "");
+      for (var i = 0; i < modes.length; i++) {
+        var item = modes[i];
+        if (!isObj(item)) continue;
+        var mid = item.id != null ? item.id : item.key != null ? item.key : item.mode != null ? item.mode : item.code;
+        if (mid == null) continue;
+        var nk = normalizeModeKey(mid);
+        if (nk === target || nk.replace(/_/g, "") === targetLoose) return item;
+      }
+      console.warn("[diag] mode not found in modes[]", modeKey, "len=", modes.length);
+      return null;
+    }
     if (!isObj(modes)) {
-      console.warn("[diag] modes missing for sales role");
+      console.warn("[diag] modes missing or not object/array for sales role", roleEntry && Object.keys(roleEntry));
       return null;
     }
     if (modes[modeKey]) return modes[modeKey];
@@ -463,7 +473,7 @@
         return modes[k];
       }
     }
-    console.warn("[diag] mode entry missing", modeKey);
+    console.warn("[diag] mode entry missing", modeKey, "keys=", Object.keys(modes));
     return null;
   }
 
@@ -471,10 +481,30 @@
     if (!isObj(entry)) return [];
     if (Array.isArray(entry.dimensions)) return entry.dimensions;
     if (Array.isArray(entry.dimensionList)) return entry.dimensionList;
+    if (Array.isArray(entry.dimension_list)) return entry.dimension_list;
+    return [];
+  }
+
+  function questionsOfDimension(d) {
+    if (!d) return [];
+    if (Array.isArray(d.questions)) return d.questions;
+    if (Array.isArray(d.items)) return d.items;
+    if (Array.isArray(d.list)) return d.list;
     return [];
   }
 
   restoreRoleModeFromSession();
+
+  function syncUiFromState() {
+    var rid = state.role;
+    document.querySelectorAll("#role-choices [data-role-id]").forEach(function (el) {
+      el.classList.toggle("selected", rid && el.getAttribute("data-role-id") === rid);
+    });
+    var mid = state.saleMode;
+    document.querySelectorAll("#mode-choices [data-mode-id]").forEach(function (el) {
+      el.classList.toggle("selected", mid && el.getAttribute("data-mode-id") === mid);
+    });
+  }
 
   function useV1Api() {
     return !!(CONFIG.apiBaseUrl && String(CONFIG.apiBaseUrl).trim());
@@ -517,6 +547,60 @@
     { id: "solution", title: "解决方案", desc: "含商机培育等完整维度" }
   ];
 
+  var VALID_ROLE_IDS = { sales_rep: 1, sales_manager: 1, marketing_system: 1 };
+  var VALID_MODE_IDS = { raw_material: 1, semi_custom: 1, standard_product: 1, solution: 1 };
+
+  /** session 里可能残留旧版/错误角色键，会导致 getRoleEntry 失败 → flat 为空 */
+  function sanitizeStoredRoleMode() {
+    var r = normalizeRoleId(state.role);
+    if (r && !VALID_ROLE_IDS[r]) {
+      console.warn("[diag] clear invalid stored role", state.role);
+      state.role = null;
+      state.saleMode = null;
+      clearSessionValue(STORAGE_KEY_ROLE);
+      clearSessionValue(STORAGE_KEY_MODE);
+      return;
+    }
+    state.role = r || null;
+    if (r === "sales_rep") {
+      var m = String(state.saleMode || "").trim();
+      if (m && !VALID_MODE_IDS[m]) {
+        console.warn("[diag] clear invalid stored saleMode", state.saleMode);
+        state.saleMode = null;
+        clearSessionValue(STORAGE_KEY_MODE);
+      }
+    } else {
+      state.saleMode = null;
+      clearSessionValue(STORAGE_KEY_MODE);
+    }
+  }
+
+  function explainEmptyFlat(roleId) {
+    var re = getRoleEntry(roleId);
+    if (!re) {
+      return "未识别角色：请返回上一页重新选择「测评角色」，勿跳过。";
+    }
+    if (roleId === "sales_rep") {
+      if (!state.saleMode) {
+        return "请先选择四象限销售模式（返回上一页点选）。";
+      }
+      var me = resolveModeEntry(re, state.saleMode);
+      if (!me) {
+        return "销售模式与题本不匹配：请返回重选四象限，勿用浏览器后退跳步。";
+      }
+      var dims = extractDimensions(me);
+      if (!dims.length) {
+        return "题本无该模式题目：请硬刷新或同步 questionnaire.bundle.js。";
+      }
+    } else {
+      var dims2 = extractDimensions(re);
+      if (!dims2.length) {
+        return "题本无该角色题目：请硬刷新或同步数据包。";
+      }
+    }
+    return "题目未加载：请硬刷新（Ctrl+F5），仍失败看控制台 [diag]。";
+  }
+
   function showToast(msg) {
     var el = document.getElementById("toast");
     el.textContent = msg;
@@ -538,6 +622,8 @@
     var id = map[name];
     if (id) document.getElementById(id).classList.add("active");
     document.getElementById("app-wrap").classList.toggle("wide", name === "report");
+    if (name === "profile") sanitizeStoredRoleMode();
+    if (name === "role" || name === "mode" || name === "profile") syncUiFromState();
   }
 
   function getDimensions() {
@@ -567,8 +653,10 @@
     var dims = getDimensions();
     var list = [];
     dims.forEach(function (d, di) {
-      if (!d || !Array.isArray(d.questions)) return;
-      d.questions.forEach(function (q, qi) {
+      if (!d) return;
+      var qs = questionsOfDimension(d);
+      if (!qs.length) return;
+      qs.forEach(function (q, qi) {
         if (!q) return;
         list.push({ dimIndex: di, qIndex: qi, dim: d, question: q, key: di + "_" + qi });
       });
@@ -580,7 +668,7 @@
 
   function overallBand(total) {
     var gb = R && R.gradeBands;
-    if (!gb || !Array.isArray(gb.C) || !Array.isArray(gb.B)) return "B";
+    if (!gb || !gb.C || !gb.B || !gb.A) return "B";
     if (total <= gb.C[1]) return "C";
     if (total <= gb.B[1]) return "B";
     return "A";
@@ -617,25 +705,28 @@
   }
 
   function snippetForDimension(role, dimName, band) {
-    var g = R.generic_by_band && R.generic_by_band[band];
-    if (!g || typeof g !== "object") {
-      g = { evaluation: "", suggestion: "", training: "" };
-    }
+    var fallback = {
+      evaluation: "（该维度暂无研判模板）",
+      suggestion: "建议结合业务复盘与上级反馈制定改进计划。",
+      training: ""
+    };
     if (role === "sales_manager" && R.sales_manager_by_dimension && R.sales_manager_by_dimension[dimName]) {
       var sm = R.sales_manager_by_dimension[dimName][band];
-      if (sm && typeof sm === "object") return sm;
+      if (sm && sm.evaluation) return sm;
     }
+    var g = R.generic_by_band && R.generic_by_band[band];
+    if (!g) return fallback;
     return {
-      evaluation: String(g.evaluation || "").replace(/\{dimension\}/g, dimName),
-      suggestion: String(g.suggestion || "").replace(/\{dimension\}/g, dimName),
-      training: String(g.training || "").replace(/\{dimension\}/g, dimName)
+      evaluation: (g.evaluation || "").replace(/\{dimension\}/g, dimName),
+      suggestion: (g.suggestion || "").replace(/\{dimension\}/g, dimName),
+      training: (g.training || "").replace(/\{dimension\}/g, dimName)
     };
   }
 
   function computeResult() {
     var dims = getDimensions();
     var dimScores = dims.map(function (d, di) {
-      var questions = Array.isArray(d && d.questions) ? d.questions : [];
+      var questions = questionsOfDimension(d);
       var s = 0;
       questions.forEach(function (q, qi) {
         var k = di + "_" + qi;
@@ -657,7 +748,7 @@
     var questionDetails = [];
     var globalNo = 1;
     dims.forEach(function (d, di) {
-      var questions = Array.isArray(d && d.questions) ? d.questions : [];
+      var questions = questionsOfDimension(d);
       questions.forEach(function (q, qi) {
         var k = di + "_" + qi;
         var ansKey = state.answers[k];
@@ -698,10 +789,6 @@
 
   function renderReport() {
     var res = state.result;
-    if (!res) {
-      showToast("报告数据异常，请重新完成测评");
-      return;
-    }
     var p = state.profile || {};
     var metaHtml =
       "<p style='margin:4px 0'><strong>企业 / 组织</strong>：" + escHtml(p.company) + "</p>" +
@@ -719,15 +806,15 @@
     document.getElementById("rep-meta-lines").innerHTML = metaHtml;
 
     document.getElementById("rep-total").textContent = "总分 " + res.total + " / 100 · " + bandLabel(res.overallBand);
-    document.getElementById("rep-intro").textContent = res.intro || "";
+    document.getElementById("rep-intro").textContent = res.intro;
     var bars = document.getElementById("rep-bars");
     bars.innerHTML = "";
     res.dimScores.forEach(function (d) {
       var pct = d.maxPoints ? Math.min(100, Math.round((d.score / d.maxPoints) * 100)) : 0;
-      var dn = escHtml(d.name);
       var row = document.createElement("div");
       row.className = "bar-row";
-      row.innerHTML = "<span class='bar-name' title='" + dn + "'>" + dn + "</span>" +
+      var nm = escHtml(d.name || "—");
+      row.innerHTML = "<span class='bar-name' title='" + nm + "'>" + nm + "</span>" +
         "<div class='bar-track'><div class='bar-fill' style='width:" + pct + "%'></div></div>" +
         "<span class='bar-val'>" + d.score + "/" + (d.maxPoints || "—") + "</span>";
       bars.appendChild(row);
@@ -739,12 +826,15 @@
     if (res.gaps.length) {
       sumParts.push("优先改进维度：" + res.gaps.map(function (x) { return x.name; }).join("、"));
     }
-    var gbSum = R.gradeBands || {};
-    var cS = gbSum.C || [0, 59];
-    var bS = gbSum.B || [60, 79];
-    var aS = gbSum.A || [80, 100];
-    sumParts.push("综合等级：" + res.overallBand + " 级（按总分 " + cS[0] + "–" + cS[1] + " / " +
-      bS[0] + "–" + bS[1] + " / " + aS[0] + "–" + aS[1] + " 划分）。");
+    var gb = R.gradeBands || {};
+    var c0 = (gb.C && gb.C[0]) != null ? gb.C[0] : 0;
+    var c1 = (gb.C && gb.C[1]) != null ? gb.C[1] : 59;
+    var b0 = (gb.B && gb.B[0]) != null ? gb.B[0] : 60;
+    var b1 = (gb.B && gb.B[1]) != null ? gb.B[1] : 79;
+    var a0 = (gb.A && gb.A[0]) != null ? gb.A[0] : 80;
+    var a1 = (gb.A && gb.A[1]) != null ? gb.A[1] : 100;
+    sumParts.push("综合等级：" + res.overallBand + " 级（按总分 " + c0 + "–" + c1 + " / " +
+      b0 + "–" + b1 + " / " + a0 + "–" + a1 + " 划分）。");
     document.getElementById("rep-summary").textContent = sumParts.join(" ");
 
     var det = document.getElementById("rep-dim-details");
@@ -753,7 +843,7 @@
       var sn = snippetForDimension(state.role, d.name, d.band);
       var blk = document.createElement("div");
       blk.className = "report-block rep-pdf-dim-detail";
-      blk.innerHTML = "<h4>" + escHtml(d.name) + " · 维度得分 " + d.score + "/" + (d.maxPoints || "—") + " · 解读档 " + escHtml(d.band) + " 档</h4>" +
+      blk.innerHTML = "<h4>" + escHtml(d.name) + " · 维度得分 " + d.score + "/" + (d.maxPoints || "—") + " · 解读档 " + d.band + " 档</h4>" +
         "<p><strong>评价：</strong>" + escHtml(sn.evaluation) + "</p>" +
         "<p><strong>建议：</strong>" + escHtml(sn.suggestion) + "</p>" +
         (sn.training ? "<p><strong>培训参考：</strong>" + escHtml(sn.training) + "</p>" : "");
@@ -841,19 +931,18 @@
     document.getElementById("quiz-idx").textContent = (state.index + 1) + " / " + total;
     document.getElementById("quiz-dim").textContent = item.dim.name;
     document.getElementById("quiz-dim-tag").textContent = item.dim.name;
-    document.getElementById("quiz-text").textContent = item.question.text;
+    document.getElementById("quiz-text").textContent = (item.question && item.question.text) || "（题目缺失）";
     document.getElementById("quiz-bar").style.width = ((state.index + 1) / total * 100) + "%";
     var opts = document.getElementById("quiz-options");
     opts.innerHTML = "";
     var sel = state.answers[item.key];
-    var qOpts = item.question && item.question.options;
-    if (!Array.isArray(qOpts) || !qOpts.length) {
-      showToast("本题缺少选项数据，请检查题本或联系管理员");
-      console.warn("[diag] question without options", item.question && item.question.id);
+    var olist = Array.isArray(item.question && item.question.options) ? item.question.options : [];
+    if (!olist.length) {
+      showToast("本题选项数据异常，请刷新或检查题本");
       document.getElementById("btn-next").disabled = true;
       return;
     }
-    qOpts.forEach(function (o) {
+    olist.forEach(function (o) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "opt" + (sel === o.key ? " selected" : "");
@@ -897,10 +986,10 @@
         version: Q.version,
         role: state.role,
         saleMode: state.saleMode,
-        profile: state.profile || {},
+        profile: state.profile,
         completedAt: new Date().toISOString(),
-        scores: null,
-        summary: null,
+        scores: { total: 0, overallBand: "", dimensions: [], questionDetails: [] },
+        summary: { intro: "", strengths: [], gaps: [] },
         answers: state.answers
       };
     }
@@ -914,7 +1003,7 @@
       scores: {
         total: res.total,
         overallBand: res.overallBand,
-        dimensions: (res.dimScores || []).map(function (d) {
+        dimensions: res.dimScores.map(function (d) {
           return { name: d.name, score: d.score, maxPoints: d.maxPoints, band: d.band };
         }),
         questionDetails: (res.questionDetails || []).map(function (r) {
@@ -932,8 +1021,8 @@
       },
       summary: {
         intro: res.intro,
-        strengths: (res.strengths || []).map(function (x) { return x.name; }),
-        gaps: (res.gaps || []).map(function (x) { return x.name; })
+        strengths: res.strengths.map(function (x) { return x.name; }),
+        gaps: res.gaps.map(function (x) { return x.name; })
       },
       answers: state.answers
     };
@@ -973,6 +1062,7 @@
   }
 
   document.getElementById("btn-start").addEventListener("click", function () {
+    sanitizeStoredRoleMode();
     var roleId = normalizeRoleId(state.role);
     if (!roleId) {
       showScreen("role");
@@ -1024,8 +1114,6 @@
     mc.appendChild(b);
   });
 
-  syncUiFromState();
-
   document.querySelectorAll("[data-back]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var t = btn.getAttribute("data-back");
@@ -1054,11 +1142,21 @@
       }
       buildFlat();
       if (!state.flat.length) {
-        showToast("问卷数据为空：题本结构不兼容，请刷新后重试");
-        console.warn("[diag] enter quiz: empty flat list", {
-          role: state.role,
-          saleMode: state.saleMode
-        });
+        showToast(explainEmptyFlat(roleId));
+        try {
+          var repDbg = roleId === "sales_rep" ? getRoleEntry("sales_rep") : null;
+          var modesDbg = repDbg && (repDbg.modes || repDbg.salesModes || repDbg.modeMap);
+          console.warn("[diag] enter quiz: empty flat", {
+            role: state.role,
+            saleMode: state.saleMode,
+            roleNormalized: roleId,
+            repKeys: repDbg ? Object.keys(repDbg) : null,
+            modesShape: Array.isArray(modesDbg) ? "array(" + modesDbg.length + ")" : isObj(modesDbg) ? Object.keys(modesDbg) : modesDbg,
+            qTopKeys: Q && isObj(Q) ? Object.keys(Q).slice(0, 20) : null
+          });
+        } catch (e) {
+          console.warn("[diag] enter quiz: empty flat (no introspection)", state.role, state.saleMode, e);
+        }
         return;
       }
       showScreen("quiz");
@@ -1089,72 +1187,67 @@
     }
   });
 
-  function loadHtml2pdf() {
+  var html2pdfLoadPromise = null;
+  function loadHtml2Pdf() {
     if (typeof window.html2pdf === "function") return Promise.resolve();
-    return new Promise(function (resolve, reject) {
-      var urls = [
-        "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
-        "https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"
-      ];
-      var i = 0;
-      function tryNext() {
+    if (html2pdfLoadPromise) return html2pdfLoadPromise;
+    var urls = [
+      "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
+      "https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"
+    ];
+    var inner = new Promise(function (resolve, reject) {
+      function tryNext(i) {
         if (i >= urls.length) {
-          reject(new Error("html2pdf load failed"));
+          reject(new Error("html2pdf_cdn_all_failed"));
           return;
         }
         var s = document.createElement("script");
-        s.src = urls[i++];
+        s.src = urls[i];
+        s.async = true;
         s.crossOrigin = "anonymous";
         s.referrerPolicy = "no-referrer";
-        s.onload = function () { resolve(); };
-        s.onerror = function () {
-          s.remove();
-          tryNext();
+        s.onload = function () {
+          if (typeof window.html2pdf === "function") resolve();
+          else tryNext(i + 1);
         };
+        s.onerror = function () { tryNext(i + 1); };
         document.head.appendChild(s);
       }
-      tryNext();
+      tryNext(0);
     });
+    html2pdfLoadPromise = inner.finally(function () {
+      if (typeof window.html2pdf !== "function") html2pdfLoadPromise = null;
+    });
+    return html2pdfLoadPromise;
   }
 
   document.getElementById("btn-pdf").addEventListener("click", function () {
     var el = document.getElementById("pdf-area");
-    var btn = document.getElementById("btn-pdf");
-    var prevText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "正在加载 PDF 组件…";
-    loadHtml2pdf()
+    var opt = {
+      margin: [10, 10, 12, 10],
+      filename: "通用营销诊断报告_" + (state.profile.company || "未命名") + ".pdf",
+      image: { type: "jpeg", quality: 0.96 },
+      pagebreak: {
+        mode: ["css", "legacy"],
+        before: ["#rep-pdf-section-detail", "#rep-appendix"],
+        avoid: ["tr.rep-q-row", ".rep-appendix-block", ".rep-pdf-dim-detail"]
+      },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        scrollY: 0,
+        windowWidth: el.scrollWidth
+      },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+    showToast("正在加载 PDF 组件…");
+    loadHtml2Pdf()
       .then(function () {
-        if (typeof window.html2pdf !== "function") throw new Error("no html2pdf");
-        btn.textContent = "正在生成 PDF…";
-        var opt = {
-          margin: [10, 10, 12, 10],
-          filename: "通用营销诊断报告_" + (state.profile.company || "未命名") + ".pdf",
-          image: { type: "jpeg", quality: 0.96 },
-          pagebreak: {
-            mode: ["css", "legacy"],
-            before: ["#rep-pdf-section-detail", "#rep-appendix"],
-            avoid: ["tr.rep-q-row", ".rep-appendix-block", ".rep-pdf-dim-detail"]
-          },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            scrollY: 0,
-            windowWidth: el.scrollWidth
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-        };
-        return window.html2pdf().set(opt).from(el).save();
-      })
-      .then(function () {
-        btn.textContent = prevText;
-        btn.disabled = false;
+        return html2pdf().set(opt).from(el).save();
       })
       .catch(function () {
-        showToast("PDF 生成失败，可尝试使用浏览器打印");
-        btn.textContent = prevText;
-        btn.disabled = false;
+        showToast("PDF 库加载失败，请用浏览器「打印→存储为 PDF」");
       });
   });
 
@@ -1241,6 +1334,8 @@
     document.querySelectorAll(".choice").forEach(function (c) { c.classList.remove("selected"); });
     showScreen("welcome");
   });
+
+  syncUiFromState();
 })();
   </script>
 </body>
