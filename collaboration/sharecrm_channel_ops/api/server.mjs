@@ -1,5 +1,5 @@
 /**
- * 硕日海外渠道运营 — 高保真演示 API
+ * 纷享销客海外渠道运营 — 高保真演示 API
  * SQLite + JWT(HMAC) + 静态 Web；种子数据见 ../data/seed.json
  */
 import Fastify from "fastify";
@@ -18,10 +18,10 @@ const WEB_DIR = join(ROOT, "web");
 const SEED_PATH = join(ROOT, "data", "seed.json");
 
 const PORT = Number(process.env.PORT || 8790);
-const DB_PATH = process.env.SRNE_DB_PATH || join(__dirname, "srne_channel.db");
-const JWT_SECRET = process.env.JWT_SECRET || "srne-demo-change-me-in-production";
+const DB_PATH = process.env.SHARECRM_DB_PATH || join(__dirname, "sharecrm_channel.db");
+const JWT_SECRET = process.env.JWT_SECRET || "sharecrm-demo-change-me-in-production";
 const TOKEN_TTL_SEC = Number(process.env.TOKEN_TTL_SEC || 604800);
-const SRNE_DEMO_MODE = process.env.SRNE_DEMO_MODE === "1" || process.env.SRNE_DEMO_MODE === "true";
+const SHARECRM_DEMO_MODE = process.env.SHARECRM_DEMO_MODE === "1" || process.env.SHARECRM_DEMO_MODE === "true";
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
@@ -349,7 +349,7 @@ function seedMonthlyForAllChannels() {
 }
 
 function nextChannelCode(region) {
-  const prefix = `SRNE-${region}-`;
+  const prefix = `SHARECRM-${region}-`;
   const rows = db
     .prepare(`SELECT channel_code FROM channel WHERE channel_code LIKE ?`)
     .all(prefix + "%");
@@ -383,14 +383,14 @@ function channelScopeWhere(user) {
 
 app.get("/v1/health", async () => ({
   ok: true,
-  service: "srne-channel-ops",
+  service: "sharecrm-channel-ops",
   time: new Date().toISOString(),
 }));
 
 /** 前端演示模式、标题等；无需登录 */
 app.get("/v1/config", async () => ({
-  demo_mode: SRNE_DEMO_MODE,
-  product_title: "硕日海外渠道拓展运营管理系统",
+  demo_mode: SHARECRM_DEMO_MODE,
+  product_title: "纷享销客海外渠道拓展运营管理系统",
 }));
 
 /** 价值图谱长页 HTML 片段（避免子路径下静态路径不一致） */
@@ -1757,8 +1757,8 @@ function validateChannelForImport(raw) {
   const issues = [];
   const code = String(raw?.channel_code ?? "").trim();
   if (!code) issues.push("缺少 channel_code");
-  else if (!/^SRNE-[A-Z]+-\d{3,}$/.test(code)) {
-    issues.push("channel_code 须为 SRNE-大写区域-至少三位数字，如 SRNE-SEA-010");
+  else if (!/^SHARECRM-[A-Z]+-\d{3,}$/.test(code)) {
+    issues.push("channel_code 须为 SHARECRM-大写区域-至少三位数字，如 SHARECRM-SEA-010");
   }
   const name_en = String(raw?.name_en ?? "").trim();
   if (!name_en) issues.push("缺少 name_en");
@@ -1942,7 +1942,7 @@ app.get("/v1/import/template", async (req, reply) => {
   return {
     channels: [
       {
-        channel_code: "SRNE-SEA-099",
+        channel_code: "SHARECRM-SEA-099",
         name_en: "Demo Channel Ltd",
         name_cn: "演示渠道",
         country_code: "MY",
@@ -1955,7 +1955,7 @@ app.get("/v1/import/template", async (req, reply) => {
         gross_margin_pct: 21,
         ar_overdue_days: 0,
         notes: "由模板生成，可改编码后导入",
-        owner_email: "sam.zhang@srne.demo",
+        owner_email: "sam.zhang@sharecrm.demo",
       },
     ],
     field_spec: {
@@ -2052,4 +2052,4 @@ if (existsSync(WEB_DIR)) {
 }
 
 await app.listen({ port: PORT, host: "0.0.0.0" });
-console.error(`SRNE channel ops: http://0.0.0.0:${PORT}  db=${DB_PATH}`);
+console.error(`ShareCRM channel ops: http://0.0.0.0:${PORT}  db=${DB_PATH}`);

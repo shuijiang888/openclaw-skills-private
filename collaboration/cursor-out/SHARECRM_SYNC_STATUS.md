@@ -1,4 +1,4 @@
-# SRNE 第六轮同步状态（v4 发布）
+# ShareCRM 第六轮同步状态（v4 发布）
 
 **同步完成时间：** 2026-04-08 08:09 GMT+8
 **同步人：** 小江
@@ -7,7 +7,7 @@
 - **私库：** https://github.com/shuijiang888/openclaw-skills-private.git
 - **分支：** main
 - **tip SHA：** 99a50d2
-- **open 仓库分支 tip：** 79c3ddf（feature/srne-channel-ops）
+- **open 仓库分支 tip：** 79c3ddf（feature/sharecrm-channel-ops）
 
 ## v4 grep 结果
 ```
@@ -26,8 +26,8 @@ OK AI 赋能文档 ✅
 - AI_AGENT_ENABLEMENT.md
 
 ## 已同步文件
-- collaboration/srne_channel_ops/（全部，含 v4 FORWARD + AI_AGENT_ENABLEMENT.md）
-- collaboration/cursor-out/SRNE_SYNC_STATUS.md
+- collaboration/sharecrm_channel_ops/（全部，含 v4 FORWARD + AI_AGENT_ENABLEMENT.md）
+- collaboration/cursor-out/SHARECRM_SYNC_STATUS.md
 
 ## 下一步
 Agent1：pull main → build --no-cache → 验收下钻 / topChannels.id / watchlist.channel_id

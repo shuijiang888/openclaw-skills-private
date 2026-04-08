@@ -1,18 +1,18 @@
-# 硕日渠道运营原型 · 第四轮发布（转发 OpenClaw + Agent1）
+# 纷享销客渠道运营原型 · 第四轮发布（转发 OpenClaw + Agent1）
 
 **文档用途：** 业务方将本文 **整段转发** 给 OpenClaw 与 Agent1；OpenClaw 负责 **代码同步与触发部署**，Agent1 负责 **拉取、构建、上线与验收回传**。  
-**发布代号：** SRNE v4（对象下钻 + 接口主键补强 + AI 赋能说明文档）  
+**发布代号：** ShareCRM v4（对象下钻 + 接口主键补强 + AI 赋能说明文档）  
 **日期：** 2026-04-08（以实际推送日为准）
 
 ---
 
 ## 一、给 OpenClaw 的协作说明（请先执行）
 
-1. **确认源：** Cursor 侧交付在仓库路径 `collaboration/srne_channel_ops/`（本轮涉及 **`api/server.mjs`**、**`web/index.html`**、**`web/app.js`**、**`web/styles.css`**、**`README.md`**、**`AI_AGENT_ENABLEMENT.md`**）。
-2. **同步到部署用仓库：** 将含本轮改动的提交 **合并/推送** 到 Agent1 实际 `pull` 的分支（建议：`feature/srne-channel-ops` 或团队约定主分支）。
+1. **确认源：** Cursor 侧交付在仓库路径 `collaboration/sharecrm_channel_ops/`（本轮涉及 **`api/server.mjs`**、**`web/index.html`**、**`web/app.js`**、**`web/styles.css`**、**`README.md`**、**`AI_AGENT_ENABLEMENT.md`**）。
+2. **同步到部署用仓库：** 将含本轮改动的提交 **合并/推送** 到 Agent1 实际 `pull` 的分支（建议：`feature/sharecrm-channel-ops` 或团队约定主分支）。
 3. **记录 SHA：** 推送后记下 **`git rev-parse HEAD`**（短 SHA），写入下方「版本锚点」或回传群。
 4. **通知 Agent1：** 「请按 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`** + **`AGENT1_发布_直观清单.md`** 执行发布；代码已更新到 SHA ______」（v3 及以前能力仍包含在内，本单在 v3 之上验收 **下钻与 v4 grep**）。
-5. **阻塞时：** 若私库与 open 不同步，按既有流程打 **`collaboration/cursor-out/srne_channel_ops_*.tar.gz`**（或更新包），并同步 **`cursor-out/AGENT1_SRNE_INGEST_AND_DEPLOY.md`** 中的文件名与校验说明。
+5. **阻塞时：** 若私库与 open 不同步，按既有流程打 **`collaboration/cursor-out/sharecrm_channel_ops_*.tar.gz`**（或更新包），并同步 **`cursor-out/AGENT1_SHARECRM_INGEST_AND_DEPLOY.md`** 中的文件名与校验说明。
 
 **OpenClaw 完成后请回传（可复制）：**
 
@@ -41,7 +41,7 @@ Agent1 已 @ / 已发任务单：是 / 否
 
 **数据库：** 无新增表、无手工迁移步骤；与 v3 相同，**重启新版本进程即可**。
 
-**须一并发布的制品：** 仍为 **`collaboration/srne_channel_ops/`** 整包；Docker **build context = 该目录**。
+**须一并发布的制品：** 仍为 **`collaboration/sharecrm_channel_ops/`** 整包；Docker **build context = 该目录**。
 
 ---
 
@@ -50,11 +50,11 @@ Agent1 已 @ / 已发任务单：是 / 否
 详细命令仍以 **`AGENT1_发布_直观清单.md`** 为准。构建前在宿主机建议执行 **v4 快速 grep**（该文件已收录）；至少应满足：
 
 ```bash
-grep -q 'ch.id, ch.channel_code' collaboration/srne_channel_ops/api/server.mjs && echo "OK topChannels 含 id"
-grep -q 'AS channel_id' collaboration/srne_channel_ops/api/server.mjs && echo "OK watchlist 含 channel_id"
-grep -q 'jumpChannelsByRegion' collaboration/srne_channel_ops/web/app.js && echo "OK 下钻逻辑"
-grep -q 'dashIntelOppty' collaboration/srne_channel_ops/web/index.html && echo "OK 国别机会面板"
-test -f collaboration/srne_channel_ops/AI_AGENT_ENABLEMENT.md && echo "OK AI 赋能文档"
+grep -q 'ch.id, ch.channel_code' collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK topChannels 含 id"
+grep -q 'AS channel_id' collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK watchlist 含 channel_id"
+grep -q 'jumpChannelsByRegion' collaboration/sharecrm_channel_ops/web/app.js && echo "OK 下钻逻辑"
+grep -q 'dashIntelOppty' collaboration/sharecrm_channel_ops/web/index.html && echo "OK 国别机会面板"
+test -f collaboration/sharecrm_channel_ops/AI_AGENT_ENABLEMENT.md && echo "OK AI 赋能文档"
 ```
 
 然后：`docker compose build --no-cache` → `up -d`（或等价流程）。

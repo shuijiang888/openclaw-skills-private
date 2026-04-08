@@ -1,0 +1,6 @@
+node_modules/
+sharecrm_channel.db
+sharecrm_channel.db-*
+# 旧版本地库文件名（可删）
+srne_channel.db
+srne_channel.db-*

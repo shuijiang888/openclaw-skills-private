@@ -1,7 +1,7 @@
-# Agent1 任务单 · 硕日 `srne` 部署更新（仅此一份即可执行）
+# Agent1 任务单 · 纷享销客 `sharecrm` 部署更新（仅此一份即可执行）
 
 **给你：** Agent1（部署 / 运维）  
-**前提：** OpenClaw（或业务方）已把 **含 `b27fdfc` 等价改动的代码** 推进你方用于构建的 Git 仓库；若未同步，请先不要构建，向 OpenClaw 要 **`feature/srne-channel-ops`** 对齐后的提交。
+**前提：** OpenClaw（或业务方）已把 **含 `b27fdfc` 等价改动的代码** 推进你方用于构建的 Git 仓库；若未同步，请先不要构建，向 OpenClaw 要 **`feature/sharecrm-channel-ops`** 对齐后的提交。
 
 ---
 
@@ -10,11 +10,11 @@
 ### 1. 构建前自检（在「将要 docker build 的那份仓库」里执行）
 
 ```bash
-grep -q 'performance/scorecard' collaboration/srne_channel_ops/api/server.mjs && echo OK_scorecard || echo FAIL
-grep -q 'import/batches' collaboration/srne_channel_ops/api/server.mjs && echo OK_batches || echo FAIL
-grep -q 'import/channels/preview' collaboration/srne_channel_ops/api/server.mjs && echo OK_preview || echo FAIL
-grep -q 'scenarios/playbook' collaboration/srne_channel_ops/api/server.mjs && echo OK_playbook || echo FAIL
-grep -q 'value-map-html' collaboration/srne_channel_ops/api/server.mjs && echo OK_value_map || echo FAIL
+grep -q 'performance/scorecard' collaboration/sharecrm_channel_ops/api/server.mjs && echo OK_scorecard || echo FAIL
+grep -q 'import/batches' collaboration/sharecrm_channel_ops/api/server.mjs && echo OK_batches || echo FAIL
+grep -q 'import/channels/preview' collaboration/sharecrm_channel_ops/api/server.mjs && echo OK_preview || echo FAIL
+grep -q 'scenarios/playbook' collaboration/sharecrm_channel_ops/api/server.mjs && echo OK_playbook || echo FAIL
+grep -q 'value-map-html' collaboration/sharecrm_channel_ops/api/server.mjs && echo OK_value_map || echo FAIL
 ```
 
 五行都打印 `OK_*` 才继续做第 2 步。若出现 `FAIL`，说明拉到的仍是旧 `server.mjs`，**重建多少次都不会出现新接口**。
@@ -22,18 +22,18 @@ grep -q 'value-map-html' collaboration/srne_channel_ops/api/server.mjs && echo O
 ### 2. 构建与启动
 
 ```bash
-cd collaboration/srne_channel_ops
+cd collaboration/sharecrm_channel_ops
 docker compose down
 docker compose build --no-cache
 docker compose up -d --force-recreate
 ```
 
-**必须**以 **`collaboration/srne_channel_ops/`** 为构建根目录（与现 Dockerfile 一致），不要用单独的 `api/` 当 context。
+**必须**以 **`collaboration/sharecrm_channel_ops/`** 为构建根目录（与现 Dockerfile 一致），不要用单独的 `api/` 当 context。
 
 ### 3. 容器内确认（可选但推荐）
 
 ```bash
-docker exec <你的 srne 容器名或 ID> grep -n performance/scorecard /app/api/server.mjs
+docker exec <你的 sharecrm 容器名或 ID> grep -n performance/scorecard /app/api/server.mjs
 ```
 
 有输出即镜像内文件正确。
@@ -41,12 +41,12 @@ docker exec <你的 srne 容器名或 ID> grep -n performance/scorecard /app/api
 ### 4. 对外验收（子路径部署时把 `BASE` 换成你们真实地址）
 
 ```bash
-BASE="http://<IP或域名>/srne"
+BASE="http://<IP或域名>/sharecrm"
 curl -sS "$BASE/v1/health" | head -c 200
 
 TOKEN=$(curl -sS -X POST "$BASE/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@srne.demo","password":"Demo2026!"}' \
+  -d '{"email":"admin@sharecrm.demo","password":"Demo2026!"}' \
   | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
 curl -sS -o /dev/null -w "scorecard HTTP %{http_code}\n" -H "Authorization: Bearer $TOKEN" "$BASE/v1/performance/scorecard"
@@ -62,7 +62,7 @@ curl -sS -o /dev/null -w "batches HTTP %{http_code}\n" -H "Authorization: Bearer
 ## 回传（请填好发给业务方）
 
 ```
-公网 BASE（示例 http://IP/srne）：________________
+公网 BASE（示例 http://IP/sharecrm）：________________
 构建用 Git 分支 + tip SHA：________________
 第 1 步五 grep：全 OK / 有 FAIL
 scorecard HTTP 码：____   batches HTTP 码：____

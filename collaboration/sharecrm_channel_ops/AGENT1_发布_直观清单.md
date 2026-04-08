@@ -1,7 +1,7 @@
-# Agent1：硕日系统发布 — 直观版（按顺序做）
+# Agent1：纷享销客系统发布 — 直观版（按顺序做）
 
 > **根因（已核实）：** `scorecard` / `import/batches` / `import/channels/preview` 曾**只存在于 Cursor 工作区**，**未进入 Git**。历史提交 `c74e182` 的 `server.mjs` 里本来就没有这些路由，因此你在 **`033aeb9` 上 no-cache 重建**后容器内 `grep` 仍没有它们——**结论正确，不是网关或缓存问题**。  
-> **现已在 open 仓库提交：** `b27fdfc`（分支 `feature/srne-channel-ops`）。请 **pull/合并到该提交或更新** 后再 `docker compose build --no-cache`，第一步 `grep` 应能在**宿主机** `collaboration/srne_channel_ops/api/server.mjs` 看到 `performance/scorecard`。
+> **现已在 open 仓库提交：** `b27fdfc`（分支 `feature/sharecrm-channel-ops`）。请 **pull/合并到该提交或更新** 后再 `docker compose build --no-cache`，第一步 `grep` 应能在**宿主机** `collaboration/sharecrm_channel_ops/api/server.mjs` 看到 `performance/scorecard`。
 
 > **第三轮（v3）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`** 后，除 v2 能力外，代码须含 **`channel_360`**、竞品/活动路由及前端 **`ch360Mount`**。构建前用下方「v3 快速 grep」；OpenClaw 应先完成同步并给出 **Git SHA** 再构建。
 
@@ -13,7 +13,7 @@
 
 ## 这一单要你做什么？（一句话）
 
-把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。**若执行 v3：** 另须看到渠道详情 **360° 三流**与市场情报增强（见第四步第 4 条）。**若执行 v4：** 另须验证 **下钻与国别机会 TOP**（见第四步第 5 条）。**若执行 v5：** 另须验证 **价值量化 / ROI**（见第四步第 6 条）。
+把仓库里的 **`collaboration/sharecrm_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。**若执行 v3：** 另须看到渠道详情 **360° 三流**与市场情报增强（见第四步第 4 条）。**若执行 v4：** 另须验证 **下钻与国别机会 TOP**（见第四步第 5 条）。**若执行 v5：** 另须验证 **价值量化 / ROI**（见第四步第 6 条）。
 
 ---
 
@@ -34,35 +34,35 @@
 在部署用仓库根目录执行：
 
 ```bash
-test -f collaboration/srne_channel_ops/api/server.mjs && echo "OK server"
-test -f collaboration/srne_channel_ops/web/app.js && echo "OK web"
-grep -q performance/scorecard collaboration/srne_channel_ops/api/server.mjs && echo "OK 含 scorecard 接口"
+test -f collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK server"
+test -f collaboration/sharecrm_channel_ops/web/app.js && echo "OK web"
+grep -q performance/scorecard collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK 含 scorecard 接口"
 ```
 
 **v3 快速 grep（第三轮发布时必过）：**
 
 ```bash
-grep -q channel_360 collaboration/srne_channel_ops/api/server.mjs && echo "OK channel_360"
-grep -qE '/v1/channels/.*/competitors' collaboration/srne_channel_ops/api/server.mjs && echo "OK competitors"
-grep -q ch360Mount collaboration/srne_channel_ops/web/index.html && echo "OK ch360 前端挂载点"
+grep -q channel_360 collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK channel_360"
+grep -qE '/v1/channels/.*/competitors' collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK competitors"
+grep -q ch360Mount collaboration/sharecrm_channel_ops/web/index.html && echo "OK ch360 前端挂载点"
 ```
 
 **v4 快速 grep（第四轮发布时必过）：**
 
 ```bash
-grep -q 'ch.id, ch.channel_code' collaboration/srne_channel_ops/api/server.mjs && echo "OK topChannels 含 id"
-grep -q 'AS channel_id' collaboration/srne_channel_ops/api/server.mjs && echo "OK watchlist 含 channel_id"
-grep -q jumpChannelsByRegion collaboration/srne_channel_ops/web/app.js && echo "OK 下钻"
-grep -q dashIntelOppty collaboration/srne_channel_ops/web/index.html && echo "OK 国别机会 TOP"
-test -f collaboration/srne_channel_ops/AI_AGENT_ENABLEMENT.md && echo "OK AI 文档"
+grep -q 'ch.id, ch.channel_code' collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK topChannels 含 id"
+grep -q 'AS channel_id' collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK watchlist 含 channel_id"
+grep -q jumpChannelsByRegion collaboration/sharecrm_channel_ops/web/app.js && echo "OK 下钻"
+grep -q dashIntelOppty collaboration/sharecrm_channel_ops/web/index.html && echo "OK 国别机会 TOP"
+test -f collaboration/sharecrm_channel_ops/AI_AGENT_ENABLEMENT.md && echo "OK AI 文档"
 ```
 
 **v5 快速 grep（第五轮 · 价值量化/ROI）：**
 
 ```bash
-grep -q 'data-nav="valueRoi"' collaboration/srne_channel_ops/web/index.html && echo "OK ROI 侧栏"
-grep -q computeVroiModel collaboration/srne_channel_ops/web/app.js && echo "OK ROI 逻辑"
-test -f collaboration/srne_channel_ops/FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md && echo "OK ROI 交接文档"
+grep -q 'data-nav="valueRoi"' collaboration/sharecrm_channel_ops/web/index.html && echo "OK ROI 侧栏"
+grep -q computeVroiModel collaboration/sharecrm_channel_ops/web/app.js && echo "OK ROI 逻辑"
+test -f collaboration/sharecrm_channel_ops/FORWARD_SHARECRM_AGENT_VALUE_ROI_HANDOFF.md && echo "OK ROI 交接文档"
 ```
 
 若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。  
@@ -77,42 +77,42 @@ test -f collaboration/srne_channel_ops/FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md &
 **必须在包含 `web/`、`data/` 的那一层当构建根目录：**
 
 ```bash
-cd collaboration/srne_channel_ops
+cd collaboration/sharecrm_channel_ops
 docker compose build --no-cache
 docker compose up -d
 ```
 
-（若你们不用 compose，等价于：以 **`collaboration/srne_channel_ops/`** 为 context 构建镜像，并设置好下面的环境变量。）
+（若你们不用 compose，等价于：以 **`collaboration/sharecrm_channel_ops/`** 为 context 构建镜像，并设置好下面的环境变量。）
 
 **环境变量（生产别忘了）：**
 
-- `SRNE_DB_PATH`：SQLite 文件路径，且**挂卷持久化**（重启不能丢库）
+- `SHARECRM_DB_PATH`：SQLite 文件路径，且**挂卷持久化**（重启不能丢库）
 - `JWT_SECRET`：**换成强随机**，不要用仓库默认值
 
 ---
 
 ## 第三步：公网地址怎么拼？（两种部署二选一）
 
-你们线上若是 **`http://IP/srne/`** 这种子路径：
+你们线上若是 **`http://IP/sharecrm/`** 这种子路径：
 
-- 健康检查：`http://IP/srne/v1/health`
-- 登录页：`http://IP/srne/`（或 `http://IP/srne/index.html`）
+- 健康检查：`http://IP/sharecrm/v1/health`
+- 登录页：`http://IP/sharecrm/`（或 `http://IP/sharecrm/index.html`）
 
-若是**根路径**部署（没有 `/srne`）：
+若是**根路径**部署（没有 `/sharecrm`）：
 
 - 健康检查：`http://域名或IP:端口/v1/health`
 
-下面命令里把 **`BASE`** 换成你的前缀：**子路径用 `http://IP/srne`，根路径用 `http://IP:8790`**（不要多写末尾斜杠也可以，curl 注意路径）。
+下面命令里把 **`BASE`** 换成你的前缀：**子路径用 `http://IP/sharecrm`，根路径用 `http://IP:8790`**（不要多写末尾斜杠也可以，curl 注意路径）。
 
 ```bash
-BASE="http://你的IP或域名/srne"   # 子路径示例；根路径则 BASE="http://IP:8790"
+BASE="http://你的IP或域名/sharecrm"   # 子路径示例；根路径则 BASE="http://IP:8790"
 
 curl -sS "$BASE/v1/health"
 # 应看到 JSON 里有 "ok": true
 
 TOKEN=$(curl -sS -X POST "$BASE/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@srne.demo","password":"Demo2026!"}' | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+  -d '{"email":"admin@sharecrm.demo","password":"Demo2026!"}' | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
 curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/performance/scorecard" | head -c 400
 # 应看到 JSON 里有 bsc、region_scorecard、watchlist 等字段（不是 404）
@@ -125,7 +125,7 @@ curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
 
 ## 第四步：浏览器里 3 个肉眼检查（管理员账号）
 
-账号：`admin@srne.demo`  
+账号：`admin@sharecrm.demo`  
 密码：`Demo2026!`
 
 1. 登录后进 **总览**：能看到图表（不是光秃秃数字）。
@@ -156,7 +156,7 @@ JWT_SECRET 已更换：是 / 否
 
 | 轮次 | Git 提交（你方部署仓库） | 已验证可用 | 仍为 404 / 说明 |
 |------|-------------------------|------------|-----------------|
-| 1 | `e5ba48d` | `/srne/`、`/srne/v1/health`、登录、`dashboard`、`performance/summary`、`import/channels`、持久化 | `performance/scorecard`、`import/batches` |
+| 1 | `e5ba48d` | `/sharecrm/`、`/sharecrm/v1/health`、登录、`dashboard`、`performance/summary`、`import/channels`、持久化 | `performance/scorecard`、`import/batches` |
 | 2 | `033aeb9` | 容器内 `grep`：仅有 `performance/summary`、`import/channels`、`import/channels/upload`；已 `down` + `build --no-cache` + `up --force-recreate`；网关复测同上 | `scorecard`、`batches` 仍 404 — **构建源 `server.mjs` 本身无这两段路由** |
 
 ---
@@ -168,12 +168,12 @@ JWT_SECRET 已更换：是 / 否
 **当前对策：**
 
 1. 在**宿主机**（构建前）执行：  
-   `grep -n "performance/scorecard" collaboration/srne_channel_ops/api/server.mjs`  
+   `grep -n "performance/scorecard" collaboration/sharecrm_channel_ops/api/server.mjs`  
    无输出 → **禁止**指望 Docker 自愈，必须先 **同步代码**。
-2. open 仓库已提交含完整路由的版本：**`b27fdfc`**（`feature/srne-channel-ops`）。请 merge / cherry-pick / 由 OpenClaw 同步后再构建。
+2. open 仓库已提交含完整路由的版本：**`b27fdfc`**（`feature/sharecrm-channel-ops`）。请 merge / cherry-pick / 由 OpenClaw 同步后再构建。
 3. 同步后再做容器内 `grep`（应与宿主机一致），然后对外 curl。
 
-**可选：不依赖 pull 时**，用 `git show b27fdfc:collaboration/srne_channel_ops/api/server.mjs` 对比你方文件是否出现 `app.get("/v1/performance/scorecard"`。
+**可选：不依赖 pull 时**，用 `git show b27fdfc:collaboration/sharecrm_channel_ops/api/server.mjs` 对比你方文件是否出现 `app.get("/v1/performance/scorecard"`。
 
 **容器内验证（同步代码并重建后）：**
 
@@ -188,7 +188,7 @@ docker exec CONTAINER grep -n "import/batches" /app/api/server.mjs
 **对外复测：**
 
 ```bash
-BASE="http://<IP>/srne"
+BASE="http://<IP>/sharecrm"
 TOKEN=... # 同第三步登录
 curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE/v1/performance/scorecard"
 curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
@@ -200,8 +200,8 @@ curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE
 ## 仍不通过时，优先查这 3 条
 
 1. 浏览器 **强制刷新** 或清缓存（旧 `app.js` 常被缓存）。
-2. 反代是否把 **`/srne/`** 转到**新容器**的 8790，且没有混用两个版本。
-3. 构建 context 是否是 **`collaboration/srne_channel_ops/`**（不是单独 `api/`）。
+2. 反代是否把 **`/sharecrm/`** 转到**新容器**的 8790，且没有混用两个版本。
+3. 构建 context 是否是 **`collaboration/sharecrm_channel_ops/`**（不是单独 `api/`）。
 
 ---
 

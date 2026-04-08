@@ -1,8 +1,8 @@
-# 发布诉求 · 硕日海外渠道运营原型（转发 Agent1）
+# 发布诉求 · 纷享销客海外渠道运营原型（转发 Agent1）
 
 > **Agent1 若优先要「按步骤执行」：** 请先读 **`AGENT1_发布_直观清单.md`**（短清单 + 命令 + 浏览器勾选项）。本文是功能与验收的**详细版**。
 
-> **用途：** 将 Cursor 侧已完成的**多轮增强**同步到部署环境并**重新发布**；请 Agent1 拉取/解压最新 `collaboration/srne_channel_ops/` 后按本文验收并回传 URL 与结果。  
+> **用途：** 将 Cursor 侧已完成的**多轮增强**同步到部署环境并**重新发布**；请 Agent1 拉取/解压最新 `collaboration/sharecrm_channel_ops/` 后按本文验收并回传 URL 与结果。  
 > **当前线上风险：** 若服务器仍为早期镜像或旧静态文件，**绩效看板 / 数据导入** 仍表现为简陋版；必须更新 **API（`server.mjs`）+ `web/*`** 后新功能才可见。
 
 ---
@@ -20,8 +20,8 @@
 - **驾驶舱图表：** `GET /v1/analytics/overview`（区域出货、月度趋势、TOP 渠道、分级毛利等）；前端 Chart.js 与总览联动。
 - **快捷建渠道：** `POST /v1/channels`（自动生成编码等）。
 - **月度补录：** `POST /v1/channels/:id/monthly-metrics`；种子侧为全渠道补全多个月度数据，便于图表饱满。
-- **网关子路径：** 公网入口为 **`/srne/`** 时，前端 `app.js` 中 `apiBase()` 已拼接 **`/srne/v1/*`**；本机根路径部署仍为默认前缀 `""`。
-- **门户：** 营销诊断门户首页「硕日能源」卡片指向约定公网入口（以实际部署 URL 为准）。
+- **网关子路径：** 公网入口为 **`/sharecrm/`** 时，前端 `app.js` 中 `apiBase()` 已拼接 **`/sharecrm/v1/*`**；本机根路径部署仍为默认前缀 `""`。
+- **门户：** 营销诊断门户首页「纷享销客能源」卡片指向约定公网入口（以实际部署 URL 为准）。
 
 ### 3. 第二轮 · 绩效看板 + 数据导入（实战向）
 
@@ -100,7 +100,7 @@
 ### 6. 第五轮 · 价值量化 / ROI（纯前端）
 
 - 侧栏 **「价值量化 / ROI」**：工时/节省/年费/风险等参数 → KPI、对比表、恢复默认、localStorage、复制 Markdown；**无新接口**。
-- 交接与公式：**`FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md`**。
+- 交接与公式：**`FORWARD_SHARECRM_AGENT_VALUE_ROI_HANDOFF.md`**。
 - **转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**。
 
 ---
@@ -109,22 +109,22 @@
 
 | 类型 | 路径 |
 |------|------|
-| 后端 | `collaboration/srne_channel_ops/api/server.mjs`、`package.json`、`package-lock.json` |
-| 前端 | `collaboration/srne_channel_ops/web/index.html`、`app.js`、`styles.css` |
-| 文档 | `collaboration/srne_channel_ops/README.md`、`AI_AGENT_ENABLEMENT.md`（v4 起） |
-| 种子 | `collaboration/srne_channel_ops/data/seed.json` |
-| 容器 | `collaboration/srne_channel_ops/Dockerfile`、`docker-compose.yml`（可选） |
+| 后端 | `collaboration/sharecrm_channel_ops/api/server.mjs`、`package.json`、`package-lock.json` |
+| 前端 | `collaboration/sharecrm_channel_ops/web/index.html`、`app.js`、`styles.css` |
+| 文档 | `collaboration/sharecrm_channel_ops/README.md`、`AI_AGENT_ENABLEMENT.md`（v4 起） |
+| 种子 | `collaboration/sharecrm_channel_ops/data/seed.json` |
+| 容器 | `collaboration/sharecrm_channel_ops/Dockerfile`、`docker-compose.yml`（可选） |
 
-**构建上下文：** 与 `FORWARD_TO_AGENT1_CLOUD_DEPLOY.md` 一致 — Docker **build context = `collaboration/srne_channel_ops/`**，勿仅用 `api/`。
+**构建上下文：** 与 `FORWARD_TO_AGENT1_CLOUD_DEPLOY.md` 一致 — Docker **build context = `collaboration/sharecrm_channel_ops/`**，勿仅用 `api/`。
 
-**离线同步：** 若对方仓库暂无最新提交，可用 OpenClaw/管道同步后的 **`collaboration/cursor-out/srne_channel_ops_*.tar.gz`**（若有更新包请以最新 ingest 说明为准），或 `git pull` 含上述文件的提交。
+**离线同步：** 若对方仓库暂无最新提交，可用 OpenClaw/管道同步后的 **`collaboration/cursor-out/sharecrm_channel_ops_*.tar.gz`**（若有更新包请以最新 ingest 说明为准），或 `git pull` 含上述文件的提交。
 
 ---
 
 ## 三、运行时与环境（复述）
 
-- `PORT` 默认 `8790`；**`SRNE_DB_PATH`** 持久化 SQLite；**`JWT_SECRET`** 生产强随机。
-- 反代在 **`/srne/`** 子路径时，需保证静态与 API 前缀与现网一致（前端已按 `/srne` 适配 `apiBase()`）。
+- `PORT` 默认 `8790`；**`SHARECRM_DB_PATH`** 持久化 SQLite；**`JWT_SECRET`** 生产强随机。
+- 反代在 **`/sharecrm/`** 子路径时，需保证静态与 API 前缀与现网一致（前端已按 `/sharecrm` 适配 `apiBase()`）。
 - 详细变量与红线见：`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`、`README.md`。
 
 ---
@@ -133,8 +133,8 @@
 
 **基础**
 
-1. 公网 URL 可打开登录页；**`GET {origin}/…/v1/health`**（注意子路径时为 `…/srne/v1/health`）200 且 `ok: true`。
-2. `admin@srne.demo` / `Demo2026!` 登录成功；总览有数据（渠道数、预警等）。
+1. 公网 URL 可打开登录页；**`GET {origin}/…/v1/health`**（注意子路径时为 `…/sharecrm/v1/health`）200 且 `ok: true`。
+2. `admin@sharecrm.demo` / `Demo2026!` 登录成功；总览有数据（渠道数、预警等）。
 
 **第一轮相关**
 
@@ -164,7 +164,7 @@
 
 **运维**
 
-16. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
+16. 重启容器/进程后数据仍在（`SHARECRM_DB_PATH` 卷挂载正确）。
 17. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
 
 ---
@@ -182,7 +182,7 @@
 - **第三轮转发：`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - **第四轮转发（下钻 + API 补强 + AI 文档）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**
 - **第五轮转发（价值量化/ROI 纯前端）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**
-- 离线 ingest：`collaboration/cursor-out/AGENT1_SRNE_INGEST_AND_DEPLOY.md`
+- 离线 ingest：`collaboration/cursor-out/AGENT1_SHARECRM_INGEST_AND_DEPLOY.md`
 - API 与账号：`README.md`
 - 协作状态摘要：`collaboration/STATUS.md`
 

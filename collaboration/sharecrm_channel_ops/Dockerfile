@@ -10,7 +10,7 @@ COPY api/server.mjs ./api/
 COPY web ./web
 COPY data ./data
 WORKDIR /app/api
-ENV SRNE_DB_PATH=/data/srne_channel.db
+ENV SHARECRM_DB_PATH=/data/sharecrm_channel.db
 VOLUME /data
 EXPOSE 8790
 CMD ["node", "server.mjs"]

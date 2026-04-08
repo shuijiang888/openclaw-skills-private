@@ -1,7 +1,7 @@
 /* global fetch, localStorage, document, window, Chart */
 
-const TOKEN_KEY = "srne_ops_token";
-const USER_KEY = "srne_ops_user";
+const TOKEN_KEY = "sharecrm_ops_token";
+const USER_KEY = "sharecrm_ops_user";
 
 let appConfig = { demo_mode: false };
 
@@ -18,7 +18,7 @@ const chartColors = {
 /** 与网关子路径部署一致 */
 function apiBase() {
   const p = window.location.pathname || "";
-  if (p === "/srne" || p.startsWith("/srne/")) return "/srne";
+  if (p === "/sharecrm" || p.startsWith("/sharecrm/")) return "/sharecrm";
   return "";
 }
 
@@ -134,7 +134,7 @@ async function fetchAppConfig() {
     const res = await fetch(prefix + "/v1/config");
     if (!res.ok) return;
     appConfig = await res.json();
-    document.documentElement.classList.toggle("srne-demo-mode", !!appConfig.demo_mode);
+    document.documentElement.classList.toggle("sharecrm-demo-mode", !!appConfig.demo_mode);
   } catch (_) {
     appConfig = { demo_mode: false };
   }
@@ -149,7 +149,7 @@ function showCopyToast() {
 
 async function copyExecutiveBriefing() {
   const lines = [
-    "# 硕日海外渠道运营 · 高管简报",
+    "# 纷享销客海外渠道运营 · 高管简报",
     "",
     "生成时间: " + new Date().toLocaleString("zh-CN"),
     "",
@@ -220,7 +220,7 @@ async function loadValueMap() {
   }
 }
 
-const VROI_STORAGE_KEY = "srne_vroi_inputs_v1";
+const VROI_STORAGE_KEY = "sharecrm_vroi_inputs_v1";
 const VROI_DEFAULTS = {
   sysFeeWan: 14,
   weekHrs: 26,
@@ -418,7 +418,7 @@ function loadValueRoi() {
 async function copyVroiMarkdown() {
   const r = computeVroiModel();
   const lines = [
-    "# 硕日渠道 OS · 价值量化对比（演示）",
+    "# 纷享销客渠道 OS · 价值量化对比（演示）",
     "",
     "## 参数",
     `- 系统年费：${fmtWan(r.sysFeeWan)} 万元/年`,
@@ -1191,7 +1191,7 @@ function jumpIntelToPlaybook() {
 
 function jumpIntelToQuote(cc) {
   try {
-    sessionStorage.setItem("srne_prefill_quote_country", cc);
+    sessionStorage.setItem("sharecrm_prefill_quote_country", cc);
   } catch (_) {}
   showView("sales");
   const sel = $("#quoteCountry");
@@ -1954,7 +1954,7 @@ function fillSampleImport() {
     {
       channels: [
         {
-          channel_code: "SRNE-SEA-098",
+          channel_code: "SHARECRM-SEA-098",
           name_en: "Sample Import Co",
           name_cn: "演示导入公司",
           country_code: "SG",

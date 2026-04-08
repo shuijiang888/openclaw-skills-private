@@ -1,0 +1,18 @@
+# 纷享销客海外渠道运营 — 演示原型（API + Web + SQLite 持久化）
+services:
+  sharecrm-channel-ops:
+    build: .
+    ports:
+      - "8790:8790"
+    environment:
+      PORT: "8790"
+      SHARECRM_DB_PATH: /data/sharecrm_channel.db
+      JWT_SECRET: ${JWT_SECRET:-sharecrm-demo-change-in-production}
+      # 高管演示：1=隐藏调试区与「数据与录入」入口、弱化技术感
+      SHARECRM_DEMO_MODE: ${SHARECRM_DEMO_MODE:-0}
+    volumes:
+      - sharecrm-ops-data:/data
+    restart: unless-stopped
+
+volumes:
+  sharecrm-ops-data:

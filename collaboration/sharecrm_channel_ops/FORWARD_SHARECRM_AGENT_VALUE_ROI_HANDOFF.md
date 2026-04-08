@@ -1,6 +1,6 @@
 # 价值量化对比页 · Cursor 定稿交接（→ OpenClaw / 发布侧 / Agent1）
 
-**背景：** 发布协作侧（Agent1）曾提供**纯前端、无新接口**的初稿方向；仓库内原无对应 `FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md` 与落地页。Cursor 已按**同一约束**实现定稿，并完成**公式复核、预填合理性、文案与表格语义**修订。
+**背景：** 发布协作侧（Agent1）曾提供**纯前端、无新接口**的初稿方向；仓库内原无对应 `FORWARD_SHARECRM_AGENT_VALUE_ROI_HANDOFF.md` 与落地页。Cursor 已按**同一约束**实现定稿，并完成**公式复核、预填合理性、文案与表格语义**修订。
 
 **用途：** 业务方将本文与**合并后的分支名 + Git SHA**一并回传发布侧；发布侧按 **`AGENT1_发布_直观清单.md`** 做 Docker 构建与上线验收。
 
@@ -10,10 +10,10 @@
 
 | 类型 | 路径 |
 |------|------|
-| 页面结构 | `collaboration/srne_channel_ops/web/index.html`（侧栏「价值量化 / ROI」、`data-view="valueRoi"`） |
-| 逻辑与交互 | `collaboration/srne_channel_ops/web/app.js`（`loadValueRoi`、`computeVroiModel`、`renderVroi`、本地存储、复制 Markdown） |
-| 样式 | `collaboration/srne_channel_ops/web/styles.css`（`.vroi-*`） |
-| 说明 | `collaboration/srne_channel_ops/README.md`（能力表已增一行） |
+| 页面结构 | `collaboration/sharecrm_channel_ops/web/index.html`（侧栏「价值量化 / ROI」、`data-view="valueRoi"`） |
+| 逻辑与交互 | `collaboration/sharecrm_channel_ops/web/app.js`（`loadValueRoi`、`computeVroiModel`、`renderVroi`、本地存储、复制 Markdown） |
+| 样式 | `collaboration/sharecrm_channel_ops/web/styles.css`（`.vroi-*`） |
+| 说明 | `collaboration/sharecrm_channel_ops/README.md`（能力表已增一行） |
 
 **无新增 HTTP 接口**；不依赖登录态即可进入侧栏（与现有 SPA 一致，需登录后使用）。
 
@@ -23,7 +23,7 @@
 
 1. 登录后侧栏可见 **「价值量化 / ROI」**，点击进入独立视图，标题为 **价值量化 / ROI**。
 2. 调整 **系统年费、周工时、节省比例滑块、万元/小时、风险与机会、其他节省** 后，**KPI 卡片与对比表**即时变化，无报错。
-3. **恢复默认** 回到 Cursor 设定的一套预填；刷新后若曾改过参数，**localStorage** 应恢复上次输入（键名 `srne_vroi_inputs_v1`）。
+3. **恢复默认** 回到 Cursor 设定的一套预填；刷新后若曾改过参数，**localStorage** 应恢复上次输入（键名 `sharecrm_vroi_inputs_v1`）。
 4. **复制摘要（Markdown）** 成功提示或降级为 `prompt` 手动复制；内容含参数与结果，末行含**非审计/非合同**免责声明。
 5. 页面下方 **公式与验收说明** 列表与第三节数学定义一致。
 
@@ -83,16 +83,16 @@
 ## 六、合并与发布约定
 
 - **Cursor 定稿提交所在分支：** 以实际推送为准；当前工作区默认 **`main`**。
-- **若发布侧约定部署分支为 `feature/srne-channel-ops`（与历史 v2–v4 文档一致）：** 请将 **`main` 上含本页的提交 merge / cherry-pick 到该分支** 后再构建镜像。
-- **Docker：** 仍使用 **`collaboration/srne_channel_ops/`** 为 build context；**无后端变更**时亦须更新 **`web/*`** 静态，否则线上看不到新侧栏。
+- **若发布侧约定部署分支为 `feature/sharecrm-channel-ops`（与历史 v2–v4 文档一致）：** 请将 **`main` 上含本页的提交 merge / cherry-pick 到该分支** 后再构建镜像。
+- **Docker：** 仍使用 **`collaboration/sharecrm_channel_ops/`** 为 build context；**无后端变更**时亦须更新 **`web/*`** 静态，否则线上看不到新侧栏。
 
 ---
 
 ## 七、回传给发布侧（复制填空）
 
 ```
-价值量化/ROI 页：已按 FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md 定稿
-合并分支：________________（例：main 或 feature/srne-channel-ops）
+价值量化/ROI 页：已按 FORWARD_SHARECRM_AGENT_VALUE_ROI_HANDOFF.md 定稿
+合并分支：________________（例：main 或 feature/sharecrm-channel-ops）
 Git SHA：________________
 验收：侧栏 / 参数联动 / 恢复默认 / 复制 Markdown / 公式说明 — 通过
 ```

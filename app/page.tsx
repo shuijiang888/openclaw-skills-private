@@ -38,11 +38,11 @@ const portalCards: PortalCard[] = [
     cta: "即将上线",
   },
   {
-    title: "硕日能源系统",
-    subtitle: "SRNE Channel Ops",
+    title: "纷享销客能源系统",
+    subtitle: "ShareCRM Channel Ops",
     description: "海外渠道拓展运营管理演示系统，覆盖渠道总览、市场情报、销售赋能与预警协同。",
-    href: "/srne/",
-    cta: "进入硕日能源系统",
+    href: "/sharecrm/",
+    cta: "进入纷享销客能源系统",
   },
 ];
 

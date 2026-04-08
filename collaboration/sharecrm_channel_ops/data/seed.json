@@ -1,25 +1,25 @@
 {
   "users": [
     {
-      "email": "admin@srne.demo",
+      "email": "admin@sharecrm.demo",
       "password": "Demo2026!",
       "name": "系统管理员",
       "role": "admin"
     },
     {
-      "email": "manager@srne.demo",
+      "email": "manager@sharecrm.demo",
       "password": "Demo2026!",
       "name": "海外销售总监",
       "role": "manager"
     },
     {
-      "email": "sam.zhang@srne.demo",
+      "email": "sam.zhang@sharecrm.demo",
       "password": "Demo2026!",
       "name": "张敏（东南亚）",
       "role": "sales"
     },
     {
-      "email": "li.wei@srne.demo",
+      "email": "li.wei@sharecrm.demo",
       "password": "Demo2026!",
       "name": "李伟（中东欧）",
       "role": "sales"
@@ -47,7 +47,7 @@
       "country_code": "ID",
       "opportunity_score": 82,
       "policy_digest": "岛屿微电网项目增多，工商业峰谷价差扩大。",
-      "competitor_note": "阳光电源在大储品牌强；中小集成商侧 SRNE 性价比敏感。",
+      "competitor_note": "阳光电源在大储品牌强；中小集成商侧纷享销客性价比敏感。",
       "product_fit_note": "控制器贴牌 + 本地化固件语言包为切入点。",
       "value_headline": "岛屿微网项目增多，性价比敏感集成商入口",
       "trend_direction": "stable",
@@ -250,7 +250,7 @@
   ],
   "channels": [
     {
-      "channel_code": "SRNE-SEA-001",
+      "channel_code": "SHARECRM-SEA-001",
       "name_cn": "马尼拉光能集成",
       "name_en": "Manila Solar Integration Co.",
       "country_code": "PH",
@@ -261,7 +261,7 @@
       "agreement_expire_date": "2028-12-31",
       "sam_flag": 1,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2026-04-02",
       "annual_revenue_usd": 520000,
       "gross_margin_pct": 28,
@@ -272,7 +272,7 @@
       "notes": "A 类战略渠道；季度联合营销，专属应用工程师对接。"
     },
     {
-      "channel_code": "SRNE-SEA-002",
+      "channel_code": "SHARECRM-SEA-002",
       "name_cn": "胡志明能源科技",
       "name_en": "HCMC Energy Tech JSC",
       "country_code": "VN",
@@ -283,7 +283,7 @@
       "agreement_expire_date": "2027-06-30",
       "sam_flag": 1,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2026-03-28",
       "annual_revenue_usd": 380000,
       "gross_margin_pct": 26,
@@ -294,7 +294,7 @@
       "notes": "高增长潜力，计划 2026Q4 评估升 SAM 专属条款。"
     },
     {
-      "channel_code": "SRNE-SEA-003",
+      "channel_code": "SHARECRM-SEA-003",
       "name_cn": "雅加达绿电伙伴",
       "name_en": "Jakarta Green Power Partner",
       "country_code": "ID",
@@ -305,7 +305,7 @@
       "agreement_expire_date": "2026-09-15",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2026-02-10",
       "annual_revenue_usd": 120000,
       "gross_margin_pct": 22,
@@ -316,7 +316,7 @@
       "notes": "培育对象；需加强培训与样机支持。"
     },
     {
-      "channel_code": "SRNE-MENA-001",
+      "channel_code": "SHARECRM-MENA-001",
       "name_cn": "利雅得沙漠电力工程",
       "name_en": "Riyadh Desert Power EPC",
       "country_code": "SA",
@@ -327,7 +327,7 @@
       "agreement_expire_date": "2027-03-01",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-04-01",
       "annual_revenue_usd": 210000,
       "gross_margin_pct": 24,
@@ -338,7 +338,7 @@
       "notes": "项目型出货波动大，关注回款与里程碑交付。"
     },
     {
-      "channel_code": "SRNE-MENA-002",
+      "channel_code": "SHARECRM-MENA-002",
       "name_cn": "迪拜海湾新能源贸易",
       "name_en": "Dubai Gulf New Energy Trading",
       "country_code": "AE",
@@ -349,7 +349,7 @@
       "agreement_expire_date": "2026-08-20",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-01-22",
       "annual_revenue_usd": 95000,
       "gross_margin_pct": 21,
@@ -360,7 +360,7 @@
       "notes": "贸易商属性强，需引导向项目型合作转型。"
     },
     {
-      "channel_code": "SRNE-EU-001",
+      "channel_code": "SHARECRM-EU-001",
       "name_cn": "巴塞罗那伊比利亚储能",
       "name_en": "Iberia Storage Solutions SL",
       "country_code": "ES",
@@ -371,7 +371,7 @@
       "agreement_expire_date": "2027-01-10",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-03-15",
       "annual_revenue_usd": 165000,
       "gross_margin_pct": 25,
@@ -382,7 +382,7 @@
       "notes": "南欧跳板市场，重点推进认证与品牌联合活动。"
     },
     {
-      "channel_code": "SRNE-EU-002",
+      "channel_code": "SHARECRM-EU-002",
       "name_cn": "米兰南欧光储分销",
       "name_en": "Southern Europe PV Distribuzione Srl",
       "country_code": "IT",
@@ -393,7 +393,7 @@
       "agreement_expire_date": "2026-05-30",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2025-11-02",
       "annual_revenue_usd": 42000,
       "gross_margin_pct": 17,
@@ -404,7 +404,7 @@
       "notes": "逾期与毛利偏低，触发预警；进入整改观察期。"
     },
     {
-      "channel_code": "SRNE-SEA-005",
+      "channel_code": "SHARECRM-SEA-005",
       "name_cn": "吉隆坡绿能分销",
       "name_en": "KL Green Energy Distribution Sdn Bhd",
       "country_code": "MY",
@@ -415,7 +415,7 @@
       "agreement_expire_date": "2027-08-01",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2026-03-20",
       "annual_revenue_usd": 142000,
       "gross_margin_pct": 23,
@@ -426,7 +426,7 @@
       "notes": "槟城与吉隆坡双仓备货意向；关注回款节奏。"
     },
     {
-      "channel_code": "SRNE-SEA-006",
+      "channel_code": "SHARECRM-SEA-006",
       "name_cn": "新加坡亚太能源枢纽",
       "name_en": "Singapore APAC Energy Hub Pte Ltd",
       "country_code": "SG",
@@ -437,7 +437,7 @@
       "agreement_expire_date": "2028-03-15",
       "sam_flag": 1,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2026-04-05",
       "annual_revenue_usd": 310000,
       "gross_margin_pct": 27,
@@ -448,7 +448,7 @@
       "notes": "区域分货中心；可辐射印尼与马来东马。"
     },
     {
-      "channel_code": "SRNE-SEA-007",
+      "channel_code": "SHARECRM-SEA-007",
       "name_cn": "清迈北部光储",
       "name_en": "Chiang Mai North Solar & Storage",
       "country_code": "TH",
@@ -459,7 +459,7 @@
       "agreement_expire_date": "2026-11-30",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2026-02-28",
       "annual_revenue_usd": 108000,
       "gross_margin_pct": 20,
@@ -470,7 +470,7 @@
       "notes": "旅游岛微网项目多；需加强售后备件。"
     },
     {
-      "channel_code": "SRNE-SEA-008",
+      "channel_code": "SHARECRM-SEA-008",
       "name_cn": "金边高棉新能源",
       "name_en": "Phnom Penh Khmer New Energy",
       "country_code": "KH",
@@ -481,7 +481,7 @@
       "agreement_expire_date": "2026-06-01",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2025-12-15",
       "annual_revenue_usd": 28000,
       "gross_margin_pct": 16,
@@ -492,7 +492,7 @@
       "notes": "培育期；样机试用中。"
     },
     {
-      "channel_code": "SRNE-MENA-003",
+      "channel_code": "SHARECRM-MENA-003",
       "name_cn": "开罗尼罗河电力设备",
       "name_en": "Nile Electric Equipment Cairo",
       "country_code": "EG",
@@ -503,7 +503,7 @@
       "agreement_expire_date": "2027-02-28",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-03-01",
       "annual_revenue_usd": 88000,
       "gross_margin_pct": 21,
@@ -514,7 +514,7 @@
       "notes": "项目回款周期长；需信用证或分期条款。"
     },
     {
-      "channel_code": "SRNE-MENA-004",
+      "channel_code": "SHARECRM-MENA-004",
       "name_cn": "多哈海湾项目渠道",
       "name_en": "Doha Gulf Projects Trading",
       "country_code": "QA",
@@ -525,7 +525,7 @@
       "agreement_expire_date": "2027-09-10",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-04-04",
       "annual_revenue_usd": 178000,
       "gross_margin_pct": 24,
@@ -536,7 +536,7 @@
       "notes": "世界杯后基建余温；关注大型标案窗口。"
     },
     {
-      "channel_code": "SRNE-EU-003",
+      "channel_code": "SHARECRM-EU-003",
       "name_cn": "华沙中欧储能伙伴",
       "name_en": "Warsaw CEE Storage Partner Sp z o.o.",
       "country_code": "PL",
@@ -547,7 +547,7 @@
       "agreement_expire_date": "2027-04-20",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-03-18",
       "annual_revenue_usd": 128000,
       "gross_margin_pct": 23,
@@ -558,7 +558,7 @@
       "notes": "东欧跳板；需 CE 文档包齐全。"
     },
     {
-      "channel_code": "SRNE-EU-004",
+      "channel_code": "SHARECRM-EU-004",
       "name_cn": "里斯本伊比利亚西门户",
       "name_en": "Lisbon Iberia West Gate Lda",
       "country_code": "PT",
@@ -569,7 +569,7 @@
       "agreement_expire_date": "2026-07-15",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "li.wei@srne.demo",
+      "owner_email": "li.wei@sharecrm.demo",
       "last_contact_date": "2026-01-08",
       "annual_revenue_usd": 48000,
       "gross_margin_pct": 18,
@@ -580,7 +580,7 @@
       "notes": "与西班牙团队协同开拓。"
     },
     {
-      "channel_code": "SRNE-SCA-001",
+      "channel_code": "SHARECRM-SCA-001",
       "name_cn": "达卡恒河光储",
       "name_en": "Dhaka Ganges PV Storage Ltd",
       "country_code": "BD",
@@ -591,7 +591,7 @@
       "agreement_expire_date": "2026-10-01",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "manager@srne.demo",
+      "owner_email": "manager@sharecrm.demo",
       "last_contact_date": "2026-02-02",
       "annual_revenue_usd": 55000,
       "gross_margin_pct": 17,
@@ -602,7 +602,7 @@
       "notes": "总监直管试点；微网离网场景。"
     },
     {
-      "channel_code": "SRNE-SCA-002",
+      "channel_code": "SHARECRM-SCA-002",
       "name_cn": "孟买西海岸控制器专营",
       "name_en": "Mumbai West Coast Controller Specialist",
       "country_code": "IN",
@@ -613,7 +613,7 @@
       "agreement_expire_date": "2027-01-05",
       "sam_flag": 0,
       "status": "ACTIVE",
-      "owner_email": "manager@srne.demo",
+      "owner_email": "manager@sharecrm.demo",
       "last_contact_date": "2026-03-25",
       "annual_revenue_usd": 92000,
       "gross_margin_pct": 19,
@@ -624,7 +624,7 @@
       "notes": "价格敏感；走量 SKU 与账期折中。"
     },
     {
-      "channel_code": "SRNE-SEA-004",
+      "channel_code": "SHARECRM-SEA-004",
       "name_cn": "曼谷渠道测试户（休眠样例）",
       "name_en": "Bangkok Channel Demo Sleep",
       "country_code": "TH",
@@ -635,7 +635,7 @@
       "agreement_expire_date": "2025-12-31",
       "sam_flag": 0,
       "status": "SLEEP",
-      "owner_email": "sam.zhang@srne.demo",
+      "owner_email": "sam.zhang@sharecrm.demo",
       "last_contact_date": "2025-08-01",
       "annual_revenue_usd": 15000,
       "gross_margin_pct": 14,
@@ -648,37 +648,37 @@
   ],
   "alerts": [
     {
-      "channel_code": "SRNE-EU-002",
+      "channel_code": "SHARECRM-EU-002",
       "alert_type": "ar_overdue",
       "severity": "critical",
       "message": "应收账款逾期超过 30 天，且近两月出货低于近 6 月均值的 50%。"
     },
     {
-      "channel_code": "SRNE-SEA-003",
+      "channel_code": "SHARECRM-SEA-003",
       "alert_type": "performance",
       "severity": "warn",
       "message": "连续两个月出货低于滚动均值 50%，建议安排现场回访与库存盘点。"
     },
     {
-      "channel_code": "SRNE-MENA-001",
+      "channel_code": "SHARECRM-MENA-001",
       "alert_type": "contract",
       "severity": "info",
       "message": "合作协议将于 12 个月内到期，可提前启动续签与目标对齐。"
     },
     {
-      "channel_code": "SRNE-MENA-003",
+      "channel_code": "SHARECRM-MENA-003",
       "alert_type": "ar_overdue",
       "severity": "warn",
       "message": "应收账款逾期接近 30 天阈值，建议财务与销售联合发函。"
     },
     {
-      "channel_code": "SRNE-SEA-008",
+      "channel_code": "SHARECRM-SEA-008",
       "alert_type": "onboarding",
       "severity": "info",
       "message": "新培育渠道 90 天复盘窗口将至，请更新拜访记录与样机反馈。"
     },
     {
-      "channel_code": "SRNE-SEA-006",
+      "channel_code": "SHARECRM-SEA-006",
       "alert_type": "sam_review",
       "severity": "info",
       "message": "SAM 账户季度联合营销预算待确认。"
@@ -686,25 +686,25 @@
   ],
   "channel_competitors": [
     {
-      "channel_code": "SRNE-SEA-001",
+      "channel_code": "SHARECRM-SEA-001",
       "name": "Growatt 户储",
       "threat": "high",
       "note": "渠道重叠度高，需差异化控制器+服务 SLA。"
     },
     {
-      "channel_code": "SRNE-SEA-001",
+      "channel_code": "SHARECRM-SEA-001",
       "name": "本地集成商联盟",
       "threat": "medium",
       "note": "价格联盟倾向，关注账期条款。"
     },
     {
-      "channel_code": "SRNE-MENA-001",
+      "channel_code": "SHARECRM-MENA-001",
       "name": "中资 EPC 总包",
       "threat": "medium",
       "note": "项目型压价，靠技术支持与交付绑定。"
     },
     {
-      "channel_code": "SRNE-EU-001",
+      "channel_code": "SHARECRM-EU-001",
       "name": "南欧头部逆变品牌",
       "threat": "high",
       "note": "品牌溢价强，窗口在中小渠道性价比。"
@@ -712,48 +712,48 @@
   ],
   "channel_activities": [
     {
-      "channel_code": "SRNE-SEA-001",
-      "actor_email": "sam.zhang@srne.demo",
+      "channel_code": "SHARECRM-SEA-001",
+      "actor_email": "sam.zhang@sharecrm.demo",
       "kind": "visit",
       "title": "马尼拉总部复盘",
       "body": "确认 Q2 控制器备货与促销包材。",
       "status": "done"
     },
     {
-      "channel_code": "SRNE-SEA-001",
-      "actor_email": "manager@srne.demo",
+      "channel_code": "SHARECRM-SEA-001",
+      "actor_email": "manager@sharecrm.demo",
       "kind": "enablement",
       "title": "技术培训周",
       "body": "微网保护策略与故障录波解读。",
       "status": "doing"
     },
     {
-      "channel_code": "SRNE-SEA-001",
-      "actor_email": "sam.zhang@srne.demo",
+      "channel_code": "SHARECRM-SEA-001",
+      "actor_email": "sam.zhang@sharecrm.demo",
       "kind": "request",
       "title": "索要南岛项目授权价",
       "body": "待财务批复特价梯度。",
       "status": "open"
     },
     {
-      "channel_code": "SRNE-SEA-001",
-      "actor_email": "sam.zhang@srne.demo",
+      "channel_code": "SHARECRM-SEA-001",
+      "actor_email": "sam.zhang@sharecrm.demo",
       "kind": "issue",
       "title": "竞品捆绑逆变器套餐",
       "body": "客户反馈对方买赠冲击控制器单品。",
       "status": "open"
     },
     {
-      "channel_code": "SRNE-MENA-001",
-      "actor_email": "li.wei@srne.demo",
+      "channel_code": "SHARECRM-MENA-001",
+      "actor_email": "li.wei@sharecrm.demo",
       "kind": "milestone",
       "title": "中标备件框架",
       "body": "首批 PO 预计下月到港。",
       "status": "doing"
     },
     {
-      "channel_code": "SRNE-EU-001",
-      "actor_email": "manager@srne.demo",
+      "channel_code": "SHARECRM-EU-001",
+      "actor_email": "manager@sharecrm.demo",
       "kind": "visit",
       "title": "巴塞罗那渠道日",
       "body": "对齐认证清单与样机排期。",
