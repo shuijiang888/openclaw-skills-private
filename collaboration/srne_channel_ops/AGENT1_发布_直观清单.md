@@ -5,11 +5,13 @@
 
 > **第三轮（v3）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`** 后，除 v2 能力外，代码须含 **`channel_360`**、竞品/活动路由及前端 **`ch360Mount`**。构建前用下方「v3 快速 grep」；OpenClaw 应先完成同步并给出 **Git SHA** 再构建。
 
+> **第四轮（v4）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`** 后，在 v3 之上验收 **图表/列表下钻**、`overview.topChannels[].id`、`scorecard.watchlist[].channel_id`、**国别机会 TOP** 面板、**`AI_AGENT_ENABLEMENT.md`**。构建前执行下方「v4 快速 grep」。
+
 ---
 
 ## 这一单要你做什么？（一句话）
 
-把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。**若执行 v3：** 另须看到渠道详情 **360° 三流**与市场情报增强（见第四步第 4 条）。
+把仓库里的 **`collaboration/srne_channel_ops/` 整包** 更新到服务器上，**重新构建并重启**服务，让浏览器里的 **「绩效看板」** 和 **「数据导入」** 变成新版本（带图表、校验预览、导入批次记录）。**若执行 v3：** 另须看到渠道详情 **360° 三流**与市场情报增强（见第四步第 4 条）。**若执行 v4：** 另须验证 **下钻与国别机会 TOP**（见第四步第 5 条）。
 
 ---
 
@@ -43,8 +45,19 @@ grep -qE '/v1/channels/.*/competitors' collaboration/srne_channel_ops/api/server
 grep -q ch360Mount collaboration/srne_channel_ops/web/index.html && echo "OK ch360 前端挂载点"
 ```
 
+**v4 快速 grep（第四轮发布时必过）：**
+
+```bash
+grep -q 'ch.id, ch.channel_code' collaboration/srne_channel_ops/api/server.mjs && echo "OK topChannels 含 id"
+grep -q 'AS channel_id' collaboration/srne_channel_ops/api/server.mjs && echo "OK watchlist 含 channel_id"
+grep -q jumpChannelsByRegion collaboration/srne_channel_ops/web/app.js && echo "OK 下钻"
+grep -q dashIntelOppty collaboration/srne_channel_ops/web/index.html && echo "OK 国别机会 TOP"
+test -f collaboration/srne_channel_ops/AI_AGENT_ENABLEMENT.md && echo "OK AI 文档"
+```
+
 若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。  
-**v3：** 须同步到 OpenClaw/业务方提供的 **含第三轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`）。
+**v3：** 须同步到 OpenClaw/业务方提供的 **含第三轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`）。  
+**v4：** 须同步到 **含第四轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`）。
 
 ---
 
@@ -108,6 +121,7 @@ curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/v1/import/batches"
 2. 打开 **绩效看板**：有多块内容（BSC、区域图、关注清单、负责人表等），**不是**一两行占位。
 3. 打开 **数据导入**：能先 **预览/校验**，再 **确认写入**，下面有 **导入批次** 列表（或接口 `import/batches` 有数据）。
 4. **（v3）渠道 360°：** 进入 **渠道商** → 打开任一渠道详情页，可见 **「信息流 / 业务流 / 资金流」** 三列及业绩洞察区块（非仅旧版业务上下文+图表）；建议 **强制刷新**（Cmd+Shift+R）避免缓存旧 `app.js`。
+5. **（v4）下钻：** **总览** 有 **国别机会指数 TOP**，点击进情报；点击 **TOP 渠道** 横条进渠道详情；**绩效** 关注清单 **渠道详情**、区域表 **区域渠道**；**预警** 可进渠道详情；**渠道详情** 页眉有一行 **快捷链**。
 
 任意一步明显还是「空壳页」→ 说明静态 `web/` 没更新到当前访问的站点，或反代指错了目录/旧容器。
 
@@ -122,6 +136,7 @@ Git 提交或镜像 tag：________________
 JWT_SECRET 已更换：是 / 否
 浏览器三步（总览图 / 绩效多块 / 导入预览+批次）：通过 / 未通过
 渠道 360°（v3）：通过 / 未通过 / 本轮不涉及
+下钻与国别 TOP（v4）：通过 / 未通过 / 本轮不涉及
 ```
 
 ### 业务方已回传记录（便于 Agent1 对账）
@@ -180,6 +195,7 @@ curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE
 ## 和「长版发布说明」的关系
 
 - **执行发布：以本文件为准**（步骤短、可勾选项多）。
-- **第三轮转发 OpenClaw + Agent1：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
+- **第三轮转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
+- **第四轮转发 OpenClaw + Agent1：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**
 - 环境变量细则、安全红线、完整 API 列表：仍看 **`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`** 和 **`README.md`**。
 - 历史完整功能列表： **`RELEASE_REQUEST_FOR_AGENT1.md`**。

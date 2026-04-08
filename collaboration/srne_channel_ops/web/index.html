@@ -97,8 +97,17 @@
           </div>
           <div class="panel chart-panel chart-panel-wide">
             <h2>TOP 渠道年出货</h2>
+            <p class="muted small drill-chart-hint">点击横条 → 打开对应渠道详情（与列表编码链接同源）。</p>
             <div class="chart-wrap"><canvas id="chartTopBar" height="260"></canvas></div>
           </div>
+        </div>
+        <p class="muted small drill-chart-hint" style="margin:-8px 0 16px;padding:0 4px">
+          下钻：<strong>区域柱图</strong> → 渠道列表按区域筛选；<strong>A/B/C 环形图</strong> → 按分级筛选；右上图与作战台、情报数据同源。
+        </p>
+        <div class="panel">
+          <h2>国别机会指数 TOP</h2>
+          <p class="muted small">与「市场情报」同源；点击国家进入该国卡片并联动渠道。</p>
+          <div id="dashIntelOppty" class="dash-intel-oppty muted">—</div>
         </div>
         <div class="panel demo-debug-only exec-tech-note">
           <h2>演示说明（技术）</h2>
@@ -141,6 +150,7 @@
             <h3>覆盖缺口</h3>
             <p>未分配负责人的活跃渠道 <strong id="playbookUnassigned">—</strong></p>
             <p>有渠道但缺情报卡的国家数 <strong id="playbookIntelGap">—</strong></p>
+            <div id="playbookGapActions" class="row flex-wrap" style="margin-top:12px;gap:8px"></div>
           </div>
         </div>
         <div class="panel">
@@ -377,6 +387,7 @@
                   <th>均毛利%</th>
                   <th>A 家数</th>
                   <th>AR&gt;30d</th>
+                  <th>下钻</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -396,6 +407,7 @@
                   <th>年出货</th>
                   <th>CLV</th>
                   <th>最近联系</th>
+                  <th>下钻</th>
                 </tr>
               </thead>
               <tbody></tbody>

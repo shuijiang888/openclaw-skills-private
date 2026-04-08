@@ -89,7 +89,7 @@ grep -q 'ch360Mount' collaboration/srne_channel_ops/web/index.html && echo "OK c
 ## 六、版本锚点（推送后填写）
 
 ```
-主仓 Git SHA：________________（由 OpenClaw 或 Agent1 在 pull 后填写）
+主仓 Git SHA：05f8121（由 OpenClaw 或 Agent1 在 pull 后填写）
 部署 URL：________________
 ```
 

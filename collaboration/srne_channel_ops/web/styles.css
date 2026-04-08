@@ -1148,3 +1148,33 @@ code.batch-id {
   background: var(--surface);
   color: var(--text);
 }
+
+/* 下钻与对象关联 */
+.ch-meta-drill a,
+.dash-intel-cc,
+.drill-ch-link {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.ch-meta-drill a:hover,
+.dash-intel-cc:hover,
+.drill-ch-link:hover {
+  text-decoration: underline;
+}
+
+.dash-intel-oppty {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 8px;
+}
+
+.dash-intel-row {
+  min-width: 140px;
+}
+
+.drill-chart-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+}

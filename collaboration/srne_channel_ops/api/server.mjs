@@ -538,7 +538,7 @@ app.get("/v1/analytics/overview", async (req, reply) => {
 
   const topChannels = db
     .prepare(
-      `SELECT ch.channel_code, ch.name_en, ch.annual_revenue_usd, ch.abc_class, ch.region, ch.country_code
+      `SELECT ch.id, ch.channel_code, ch.name_en, ch.annual_revenue_usd, ch.abc_class, ch.region, ch.country_code
        FROM channel ch WHERE ch.status = 'ACTIVE' ${chFilter}
        ORDER BY COALESCE(ch.annual_revenue_usd, 0) DESC LIMIT 12`
     )
@@ -1510,7 +1510,7 @@ app.get("/v1/performance/scorecard", async (req, reply) => {
 
   const watchlist = db
     .prepare(
-      `SELECT ch.channel_code, ch.name_en, ch.abc_class, ch.ar_overdue_days,
+      `SELECT ch.id AS channel_id, ch.channel_code, ch.name_en, ch.abc_class, ch.ar_overdue_days,
               ch.annual_revenue_usd, ch.clv_score, ch.last_contact_date
        FROM channel ch WHERE ch.status='ACTIVE' ${chFilter}
        ORDER BY ch.ar_overdue_days DESC,
