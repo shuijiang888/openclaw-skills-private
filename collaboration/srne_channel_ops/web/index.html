@@ -40,6 +40,7 @@
       <div class="brand">SRNE · Channel OS</div>
       <nav>
         <button type="button" data-nav="valueMap">全场景价值图谱</button>
+        <button type="button" data-nav="valueRoi">价值量化对比</button>
         <button type="button" data-nav="dashboard">运营总览</button>
         <button type="button" data-nav="playbook">业务作战台</button>
         <button type="button" data-nav="channels">渠道商</button>
@@ -120,6 +121,137 @@
       <section data-view="valueMap" class="hidden">
         <div id="valueMapMount" class="value-map-mount">
           <p class="muted">正在加载价值图谱…</p>
+        </div>
+      </section>
+
+      <section data-view="valueRoi" class="hidden">
+        <div class="roi-hero panel">
+          <div class="roi-hero-text">
+            <h2>价值主张 · 量化对比</h2>
+            <p class="muted">
+              左侧估算<strong>不采用</strong>智能运营体系的年度隐性代价；右侧估算<strong>采用硕日能源渠道智能系统</strong>后，结合您企业参数可兑现的收益区间。参数可从运营总览、作战台、绩效看板对齐，也可完全手工调整。
+            </p>
+          </div>
+          <div class="roi-hero-actions row flex-wrap">
+            <button type="button" class="btn secondary" id="btnRoiPrefill">从系统拉取建议值</button>
+            <button type="button" class="btn secondary" id="btnRoiReset">恢复默认假设</button>
+            <button type="button" class="btn secondary" id="btnRoiCopy">复制对比摘要</button>
+          </div>
+        </div>
+
+        <div class="roi-summary-strip panel">
+          <div class="roi-kpi roi-kpi-cost">
+            <span class="roi-kpi-label">年度代价（估算）</span>
+            <strong id="roiTotalCost">—</strong>
+            <span class="muted small" id="roiCostNote">机会停滞、回款与协同摩擦</span>
+          </div>
+          <div class="roi-kpi roi-kpi-benefit">
+            <span class="roi-kpi-label">年度收益（估算）</span>
+            <strong id="roiTotalBenefit">—</strong>
+            <span class="muted small" id="roiBenefitNote">执行、毛利、周转与预警</span>
+          </div>
+          <div class="roi-kpi roi-kpi-net">
+            <span class="roi-kpi-label">净影响（收益 − 代价）</span>
+            <strong id="roiNet">—</strong>
+            <span class="muted small" id="roiNetNote">演示模型，非财务承诺</span>
+          </div>
+        </div>
+
+        <div class="roi-columns">
+          <div class="panel roi-column roi-column-cost">
+            <div class="roi-col-head">
+              <h3>不采用系统的代价</h3>
+              <p class="muted small">基于渠道出货、预警与回款等运营指标的简化模型</p>
+            </div>
+            <div class="roi-field">
+              <label for="roiRev">年出货基数（USD / 年）</label>
+              <input type="number" id="roiRev" min="0" step="1000" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiMargin">综合毛利率（%）</label>
+              <input type="number" id="roiMargin" min="0" max="80" step="0.5" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiCritical">Critical 未关预警（个）</label>
+              <input type="number" id="roiCritical" min="0" step="1" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiOpenAlerts">未关预警合计（个）</label>
+              <input type="number" id="roiOpenAlerts" min="0" step="1" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiArDays">渠道平均逾期天数（演示）</label>
+              <input type="number" id="roiArDays" min="0" max="365" step="1" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiWeeksStalled">流程停滞 / 机会搁置（周）</label>
+              <input type="number" id="roiWeeksStalled" min="0" max="52" step="1" class="roi-input" />
+              <p class="muted small roi-hint">作战台「覆盖缺口」与跨区协同不畅时，机会往往在管道中多停若干周。</p>
+            </div>
+            <div class="roi-field">
+              <label for="roiWeeklyDrag">每周机会侵蚀（占年出货 %）</label>
+              <input type="number" id="roiWeeklyDrag" min="0" max="5" step="0.01" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiFrictionHigh">单条 Critical 年度协同摩擦（USD，演示系数）</label>
+              <input type="number" id="roiFrictionHigh" min="0" step="500" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiFrictionLow">单条一般预警年度摩擦（USD）</label>
+              <input type="number" id="roiFrictionLow" min="0" step="100" class="roi-input" />
+            </div>
+            <div class="roi-subtotals muted small" id="roiCostBreakdown"></div>
+          </div>
+
+          <div class="panel roi-column roi-column-benefit">
+            <div class="roi-col-head">
+              <h3>采用系统的收益</h3>
+              <p class="muted small">假设上线后达成率、回款与预警闭环的改善幅度（可改）</p>
+            </div>
+            <div class="roi-field">
+              <label for="roiLiftPct">出货 / 达成提升（占基数 %）</label>
+              <input type="number" id="roiLiftPct" min="0" max="30" step="0.1" class="roi-input" />
+              <p class="muted small roi-hint">对齐绩效看板「达成指数」改善预期。</p>
+            </div>
+            <div class="roi-field">
+              <label for="roiMarginPts">毛利率改善（百分点）</label>
+              <input type="number" id="roiMarginPts" min="0" max="10" step="0.1" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiArDaysSaved">平均逾期天数下降（天）</label>
+              <input type="number" id="roiArDaysSaved" min="0" max="120" step="1" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiWcRate">资金成本（年化 %，用于周转收益）</label>
+              <input type="number" id="roiWcRate" min="0" max="30" step="0.5" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiCritAvoid">Critical 预警可减少比例（%）</label>
+              <input type="number" id="roiCritAvoid" min="0" max="100" step="5" class="roi-input" />
+            </div>
+            <div class="roi-field">
+              <label for="roiIntelUplift">高机会国别覆盖提升带来的增量（占基数 %）</label>
+              <input type="number" id="roiIntelUplift" min="0" max="15" step="0.1" class="roi-input" />
+              <p class="muted small roi-hint">对齐市场情报「国别机会」与渠道拓展节奏。</p>
+            </div>
+            <div class="roi-subtotals muted small" id="roiBenefitBreakdown"></div>
+          </div>
+        </div>
+
+        <div class="roi-charts panel">
+          <h3 class="roi-chart-title">构成对比</h3>
+          <p class="muted small roi-chart-sub">左：代价结构 · 右：收益结构 · 柱高为美元量级（演示）</p>
+          <div class="roi-chart-grid">
+            <div class="roi-chart-box">
+              <canvas id="chartRoiCostStack" height="220"></canvas>
+            </div>
+            <div class="roi-chart-box">
+              <canvas id="chartRoiBenefitStack" height="220"></canvas>
+            </div>
+          </div>
+          <div class="roi-chart-box roi-chart-box-wide">
+            <canvas id="chartRoiCompare" height="280"></canvas>
+          </div>
         </div>
       </section>
 
