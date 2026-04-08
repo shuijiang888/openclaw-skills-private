@@ -266,6 +266,21 @@ async function loadPlaybook() {
   const cg = pb.coverage_gaps || {};
   $("#playbookUnassigned").textContent = cg.unassigned_active_channels ?? "—";
   $("#playbookIntelGap").textContent = cg.active_countries_without_intel ?? "—";
+  const ga = $("#playbookGapActions");
+  if (ga) {
+    ga.innerHTML = `
+      <button type="button" class="btn secondary" id="pbGapChannels">打开渠道列表</button>
+      <button type="button" class="btn secondary" id="pbGapIntel">打开情报国别表</button>
+    `;
+    $("#pbGapChannels")?.addEventListener("click", () => {
+      showView("channels");
+      loadChannels().catch((e) => console.error(e));
+    });
+    $("#pbGapIntel")?.addEventListener("click", () => {
+      showView("intel");
+      loadIntelList().catch((e) => console.error(e));
+    });
+  }
 
   const tb = $("#playbookActionsTable tbody");
   tb.innerHTML = "";
@@ -297,6 +312,33 @@ async function loadDashboard() {
   $("#kpiSam").textContent = s.samAccounts;
   $("#kpiAbc").textContent = `A ${s.abc.A || 0} · B ${s.abc.B || 0} · C ${s.abc.C || 0}`;
 
+  const op = $("#dashIntelOppty");
+  if (op) {
+    const top = (d.intelOpportunity || []).slice(0, 12);
+    if (!top.length) {
+      op.textContent = "暂无国别情报数据";
+    } else {
+      op.innerHTML = top
+        .map(
+          (x) =>
+            `<div class="dash-intel-row"><a href="#" class="dash-intel-cc" data-cc="${escapeHtml(x.country_code)}">${escapeHtml(
+              x.country_code
+            )}</a> <span class="muted">机会指数</span> <strong>${Number(x.opportunity_score) || 0}</strong></div>`
+        )
+        .join("");
+      op.querySelectorAll(".dash-intel-cc").forEach((a) => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          const cc = a.getAttribute("data-cc");
+          showView("intel");
+          loadIntelList()
+            .then(() => openIntel(cc))
+            .catch((err) => console.error(err));
+        });
+      });
+    }
+  }
+
   destroyCharts();
   if (typeof Chart === "undefined") return;
   applyChartDefaults();
@@ -320,6 +362,11 @@ async function loadDashboard() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: { y: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+        onClick: (_evt, els) => {
+          if (!els.length) return;
+          const r = d.revenueByRegion[els[0].index];
+          if (r && r.region) jumpChannelsByRegion(r.region);
+        },
       },
     })
   );
@@ -337,7 +384,16 @@ async function loadDashboard() {
           },
         ],
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        onClick: (_evt, els) => {
+          if (!els.length) return;
+          const abc = ["A", "B", "C"][els[0].index];
+          if (abc) jumpChannelsByAbc(abc);
+        },
+      },
     })
   );
 
@@ -385,6 +441,11 @@ async function loadDashboard() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: { x: { beginAtZero: true, ticks: { callback: (v) => fmtUsd(v) } } },
+        onClick: (_evt, els) => {
+          if (!els.length) return;
+          const row = d.topChannels[els[0].index];
+          if (row && row.id != null) openChannel(Number(row.id));
+        },
       },
     })
   );
@@ -663,7 +724,48 @@ async function openChannel(id) {
     &nbsp;|&nbsp; <span class="muted">年出货</span> ${fmtUsd(c.annual_revenue_usd)} USD
     &nbsp;|&nbsp; <span class="muted">状态</span> ${c.status}</div>
     <p class="muted">负责人：${escapeHtml(c.owner_name || "—")} ${c.owner_email ? `(${escapeHtml(c.owner_email)})` : ""}</p>
+    <p class="muted small ch-meta-drill">
+      <a href="#" id="chDrillIntel">情报 · ${escapeHtml(c.country_code)}</a>
+      <span> · </span>
+      <a href="#" id="chDrillChList">该国渠道</a>
+      <span> · </span>
+      <a href="#" id="chDrillRegionList">本区域渠道</a>
+      <span> · </span>
+      <a href="#" id="chDrillQuote">报价</a>
+      <span> · </span>
+      <a href="#" id="chDrillPlaybook">作战台</a>
+      <span> · </span>
+      <a href="#" id="chDrillAlerts">预警中心</a>
+    </p>
   `;
+  $("#chDrillIntel")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    showView("intel");
+    loadIntelList()
+      .then(() => openIntel(c.country_code))
+      .catch((err) => console.error(err));
+  });
+  $("#chDrillChList")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    jumpIntelToChannels(c.country_code);
+  });
+  $("#chDrillRegionList")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    jumpChannelsByRegion(c.region);
+  });
+  $("#chDrillQuote")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    jumpIntelToQuote(c.country_code);
+  });
+  $("#chDrillPlaybook")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    jumpIntelToPlaybook();
+  });
+  $("#chDrillAlerts")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    showView("alerts");
+    loadAlerts().catch((err) => console.error(err));
+  });
   renderChannel360(res);
   const ctx = res.business_context;
   const ctxEl = $("#chBusinessContextBody");
@@ -824,6 +926,26 @@ function intelTrendLabel(d) {
 function jumpIntelToChannels(cc) {
   const el = $("#filterCountry");
   if (el) el.value = cc;
+  showView("channels");
+  loadChannels().catch((e) => console.error(e));
+}
+
+/** 总览 / 绩效区域表 → 渠道列表（按区域） */
+function jumpChannelsByRegion(region) {
+  const el = $("#filterRegion");
+  if (el) el.value = region || "";
+  const fc = $("#filterCountry");
+  if (fc) fc.value = "";
+  showView("channels");
+  loadChannels().catch((e) => console.error(e));
+}
+
+/** 总览 A/B/C 图 → 渠道列表（按分级） */
+function jumpChannelsByAbc(abc) {
+  const el = $("#filterAbc");
+  if (el) el.value = abc || "";
+  const fc = $("#filterCountry");
+  if (fc) fc.value = "";
   showView("channels");
   loadChannels().catch((e) => console.error(e));
 }
@@ -1166,15 +1288,27 @@ async function loadAlerts() {
   tb.innerHTML = "";
   for (const a of res.items) {
     const tr = document.createElement("tr");
+    const cid = a.channel_id != null ? Number(a.channel_id) : null;
+    const chCell =
+      cid != null
+        ? `<a href="#" class="drill-ch-link" data-cid="${cid}">${escapeHtml(a.channel_code)}</a>`
+        : escapeHtml(a.channel_code);
     tr.innerHTML = `
       <td>${a.severity}</td>
       <td>${slaAgeLabel(a.age_days, a.severity)}</td>
-      <td>${escapeHtml(a.channel_code)}</td>
+      <td>${chCell}</td>
       <td>${escapeHtml(a.message)}</td>
-      <td><button class="btn secondary ack-b" data-aid="${a.id}">确认</button></td>
+      <td><button type="button" class="btn secondary ack-b" data-aid="${a.id}">确认</button>
+      ${cid != null ? ` <button type="button" class="btn secondary open-ch-from-alert" data-cid="${cid}">渠道详情</button>` : ""}</td>
     `;
     tb.appendChild(tr);
   }
+  tb.querySelectorAll(".drill-ch-link, .open-ch-from-alert").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      openChannel(Number(el.getAttribute("data-cid")));
+    });
+  });
   tb.querySelectorAll(".ack-b").forEach((b) => {
     b.addEventListener("click", async () => {
       await api("/v1/alerts/" + b.getAttribute("data-aid") + "/ack", { method: "POST" });
@@ -1238,14 +1372,19 @@ function renderPerfTables(sc) {
       <td>${r.avg_margin_pct}%</td>
       <td>${r.a_count}</td>
       <td>${r.ar_over_30}</td>
+      <td><button type="button" class="btn secondary small drill-perf-region" data-reg="${escapeHtml(r.region)}">区域渠道</button></td>
     `;
     rt.appendChild(tr);
   }
+  rt.querySelectorAll(".drill-perf-region").forEach((b) => {
+    b.addEventListener("click", () => jumpChannelsByRegion(b.getAttribute("data-reg")));
+  });
 
   const wt = $("#perfWatchTable tbody");
   wt.innerHTML = "";
   for (const w of sc.watchlist || []) {
     const tr = document.createElement("tr");
+    const wid = w.channel_id != null ? Number(w.channel_id) : null;
     tr.innerHTML = `
       <td>${escapeHtml(w.channel_code)}</td>
       <td>${escapeHtml(w.name_en)}</td>
@@ -1254,9 +1393,17 @@ function renderPerfTables(sc) {
       <td>${fmtUsd(w.annual_revenue_usd)}</td>
       <td>${w.clv_score != null ? Number(w.clv_score).toFixed(1) : "—"}</td>
       <td>${w.last_contact_date || "—"}</td>
+      <td>${
+        wid
+          ? `<button type="button" class="btn secondary small drill-perf-ch" data-cid="${wid}">渠道详情</button>`
+          : "—"
+      }</td>
     `;
     wt.appendChild(tr);
   }
+  wt.querySelectorAll(".drill-perf-ch").forEach((b) => {
+    b.addEventListener("click", () => openChannel(Number(b.getAttribute("data-cid"))));
+  });
 
   const ot = $("#perfOwnerTable tbody");
   ot.innerHTML = "";

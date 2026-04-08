@@ -74,6 +74,29 @@
 
 - 业务方转发：**`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**（含 OpenClaw 同步说明 + Agent1 验收项）。
 
+### 5. 第四轮 · 对象下钻 + API 主键补强 + AI 赋能文档
+
+**API**
+
+- **`GET /v1/analytics/overview`**：`topChannels` 每条增加 **`id`**（渠道主键），支撑总览 TOP 柱状图点击打开渠道详情。
+- **`GET /v1/performance/scorecard`**：`watchlist` 每条增加 **`channel_id`**，支撑关注清单「渠道详情」按钮。
+
+**前端（下钻与关联）**
+
+- 总览：区域柱图 / A·B·C 图 / TOP 渠道图 **点击交互**；**国别机会指数 TOP**（与 `intelOpportunity` 同源）点击进情报。
+- 作战台覆盖缺口：**打开渠道列表**、**打开情报国别表**。
+- 预警：渠道链接 + **渠道详情**（`channel_id`）。
+- 绩效：区域表 **区域渠道**、关注清单 **渠道详情**。
+- 渠道详情页眉：**快捷链**（情报、该国渠道、本区域、报价、作战台、预警中心）。
+
+**文档**
+
+- **`AI_AGENT_ENABLEMENT.md`**：对象关联、下钻路径、按角色的 AI Agent 赋能场景与红线；**`README.md`** 链到该文档。
+
+**转发**
+
+- 业务方转发：**`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**。
+
 ---
 
 ## 二、须同步的制品路径（相对仓库根）
@@ -82,6 +105,7 @@
 |------|------|
 | 后端 | `collaboration/srne_channel_ops/api/server.mjs`、`package.json`、`package-lock.json` |
 | 前端 | `collaboration/srne_channel_ops/web/index.html`、`app.js`、`styles.css` |
+| 文档 | `collaboration/srne_channel_ops/README.md`、`AI_AGENT_ENABLEMENT.md`（v4 起） |
 | 种子 | `collaboration/srne_channel_ops/data/seed.json` |
 | 容器 | `collaboration/srne_channel_ops/Dockerfile`、`docker-compose.yml`（可选） |
 
@@ -123,10 +147,15 @@
 9. **渠道详情页（浏览器）：** 可见「渠道 360°」三流区块及业绩洞察；竞品/活动区无致命脚本错误（管理员或渠道负责人可测写入）。
 10. **情报：** `GET …/v1/intel/countries` 与 `GET …/v1/intel/:cc` 200；详情页硬刷新后仍正常。
 
+**第四轮相关（本次若含 v4 则必验）**
+
+13. **`GET …/v1/analytics/overview`**：`topChannels[0].id` 存在且为数字；浏览器总览 **TOP 渠道图点击** 可进渠道详情；**国别机会 TOP** 可进情报。
+14. **绩效关注清单** 含 **「渠道详情」** 且可打开渠道；**区域表「区域渠道」** 有效；**预警中心** 渠道下钻可用；渠道详情 **页眉快捷链** 可见。
+
 **运维**
 
-11. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
-12. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
+15. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
+16. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
 
 ---
 
@@ -140,11 +169,12 @@
 ## 六、参考文档
 
 - 协同与 Docker：`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`
-- **第三轮转发（OpenClaw + Agent1）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
+- **第三轮转发：`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
+- **第四轮转发（下钻 + API 补强 + AI 文档）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**
 - 离线 ingest：`collaboration/cursor-out/AGENT1_SRNE_INGEST_AND_DEPLOY.md`
 - API 与账号：`README.md`
 - 协作状态摘要：`collaboration/STATUS.md`
 
 ---
 
-**文档版本：** v3 · 累计 v1/v2 + 第三轮（情报 v2、渠道 360°、竞品/活动、三流前端）
+**文档版本：** v4 · 累计 v1–v3 + 第四轮（下钻、overview/scorecard 字段、AI_AGENT_ENABLEMENT）
