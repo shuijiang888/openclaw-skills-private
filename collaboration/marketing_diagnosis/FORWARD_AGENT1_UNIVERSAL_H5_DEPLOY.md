@@ -2,7 +2,8 @@
 
 **来源：** 营销 Cursor 发布说明 + 本仓库已对齐的代码变更。  
 **用途：** 请业务方将本文 **整段转发** 给 **Agent1**，按现网目录 **覆盖部署** `h5_universal.html`，部署后 **回传 commit 或文件 SHA** 便于对账。  
-**正式发布分工与回执：** 另见同目录 **`RELEASE_NOTICE_UNIVERSAL_MARKETING_DIAG_H5.md`**（OpenClaw + Agent1 分工、第五节验收、第六节回执模板）。
+**正式发布分工与回执：** 另见同目录 **`RELEASE_NOTICE_UNIVERSAL_MARKETING_DIAG_H5.md`**（OpenClaw + Agent1 分工、第五节验收、第六节回执模板）。  
+**当前约定发布源（OpenClaw 已核实）：** 私库 **`main`**，短 SHA **`c0ee6d7`**（与历史分支上 `7e81d7f` 的 H5 **功能等价**）。
 
 ---
 
@@ -70,7 +71,7 @@ apiBaseUrl 现网值（是否已配置）：________________
 
 ## 六、代码来源说明（给 Agent1）
 
-若服务器拉取的分支 **不是** 包含本变更的 `main`，请从协作方指定的 **分支名** 或 **cherry-pick 对应提交** 取得 `h5_universal.html`（及可选 `scripts/validate_bundles.mjs`），再覆盖现网。**勿仅用旧分支上的同名文件。**
+**优先：** 从 **`main`** 检出 **`c0ee6d7`**（或含该提交的 `main` HEAD），路径见第一节。若只能从历史协作分支取文件，请确认 **`h5_universal.html` 与 `c0ee6d7` 树一致**（可与 OpenClaw 提供的 diff 结论对照）。**勿仅用未合并的旧分支文件。**
 
 ---
 
