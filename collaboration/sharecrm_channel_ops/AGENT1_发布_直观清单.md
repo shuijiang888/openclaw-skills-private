@@ -9,6 +9,8 @@
 
 > **第五轮（v5）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`** 后，在 v4 之上验收侧栏 **「价值量化 / ROI」**（**无新接口**）。构建前执行「v5 快速 grep」。**OpenClaw** 须先把含提交的代码同步到 Agent1 拉取的分支并给出 **SHA**（Cursor 参考：`92ab856` on `main`）。
 
+> **第六轮（v6）补充：** 业务方转发 **`FORWARD_OPENCLAW_AGENT1_RELEASE_v6.md`** 后，在 v5 能力不变前提下完成 **品牌/路径迁移**：制品目录仅为 **`collaboration/sharecrm_channel_ops/`**（**无 `srne_channel_ops`**）；网关 **`/srne/` → `/sharecrm/`**；环境变量 **`SHARECRM_DB_PATH` / `SHARECRM_DEMO_MODE`**（替代 `SRNE_*`）；健康检查 JSON 中 **`service`** 为 **`sharecrm-channel-ops`**；登录 **`admin@sharecrm.demo` / `Demo2026!`**。构建前执行下方「v6 快速 grep」。**OpenClaw** 推送 **`main`** 后回传 **短 SHA**（私库参考 **`53afae3`**，以远程 `git rev-parse HEAD` 为准）。
+
 ---
 
 ## 这一单要你做什么？（一句话）
@@ -65,10 +67,20 @@ grep -q computeVroiModel collaboration/sharecrm_channel_ops/web/app.js && echo "
 test -f collaboration/sharecrm_channel_ops/FORWARD_SHARECRM_AGENT_VALUE_ROI_HANDOFF.md && echo "OK ROI 交接文档"
 ```
 
+**v6 快速 grep（第六轮 · /sharecrm + SHARECRM_* + 无 srne 目录）：**
+
+```bash
+test -d collaboration/sharecrm_channel_ops && echo "OK sharecrm 目录"
+test ! -e collaboration/srne_channel_ops && echo "OK 无 srne_channel_ops" || echo "WARN 仍存在 srne_channel_ops"
+grep -q 'service: "sharecrm-channel-ops"' collaboration/sharecrm_channel_ops/api/server.mjs && echo "OK health service 名"
+grep -q '"/sharecrm"' collaboration/sharecrm_channel_ops/web/app.js && echo "OK apiBase /sharecrm"
+```
+
 若 `grep` 没有输出：**不要先 Docker**——说明当前 Git 工作区仍是旧快照（例如仅到 `c74e182` / `033aeb9`）。请先 **同步到含 `b27fdfc` 的提交**（或等价完整 `server.mjs`），再构建。  
 **v3：** 须同步到 OpenClaw/业务方提供的 **含第三轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`）。  
 **v4：** 须同步到 **含第四轮改动的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`）。  
-**v5：** 须同步到 **含第五轮（ROI 页）的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`；至少 `92ab856`，建议拉至发布分支 **最新**）。
+**v5：** 须同步到 **含第五轮（ROI 页）的 SHA**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`；至少 `92ab856`，建议拉至发布分支 **最新**）。  
+**v6：** 须同步到 **含 rebranding 的提交**（见 `FORWARD_OPENCLAW_AGENT1_RELEASE_v6.md`；私库 **`main`** 参考 **`53afae3`**，以 OpenClaw 推送后 **实际 HEAD** 为准）。
 
 ---
 
@@ -211,5 +223,6 @@ curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$BASE
 - **第三轮转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - **第四轮转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**
 - **第五轮转发 OpenClaw + Agent1：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**
+- **第六轮转发（/sharecrm + SHARECRM_*）：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v6.md`**
 - 环境变量细则、安全红线、完整 API 列表：仍看 **`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`** 和 **`README.md`**。
 - 历史完整功能列表： **`RELEASE_REQUEST_FOR_AGENT1.md`**。

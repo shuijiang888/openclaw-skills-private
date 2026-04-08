@@ -103,6 +103,15 @@
 - 交接与公式：**`FORWARD_SHARECRM_AGENT_VALUE_ROI_HANDOFF.md`**。
 - **转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**。
 
+### 7. 第六轮 · 品牌与路径迁移（ShareCRM / sharecrm）
+
+- **目录：** 仅 **`collaboration/sharecrm_channel_ops/`**；**不再**使用已移除的 **`collaboration/srne_channel_ops/`**。
+- **网关：** 公网前缀 **`/srne/` → `/sharecrm/`**，与 **`web/app.js`** 中 **`apiBase()`** 一致。
+- **环境变量：** **`SHARECRM_DB_PATH`**、**`SHARECRM_DEMO_MODE`** 替代 **`SRNE_*`**；沿用旧 SQLite 时将 **`SHARECRM_DB_PATH`** 指到原 **`srne_channel.db`** 绝对路径（见 **`README.md`**）。
+- **健康检查：** **`GET …/sharecrm/v1/health`** 返回 **`service: "sharecrm-channel-ops"`**。
+- **演示账号：** **`admin@sharecrm.demo`** / **`Demo2026!`**。
+- **转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v6.md`**。
+
 ---
 
 ## 二、须同步的制品路径（相对仓库根）
@@ -162,10 +171,16 @@
 
 15. 侧栏 **「价值量化 / ROI」** 可进入，参数与 KPI **联动**；**复制摘要** 可用。
 
+**第六轮相关（本次 v6 必验）**
+
+18. 网关入口为 **`/sharecrm/`**（**非** `/srne/`）；**`GET …/sharecrm/v1/health`** 200，`service` 为 **`sharecrm-channel-ops`**。
+19. 容器/进程环境变量使用 **`SHARECRM_DB_PATH`**、**`SHARECRM_DEMO_MODE`**（**非** `SRNE_*`）；若复用旧库，路径指向原 **`srne_channel.db`** 且重启后数据仍在。
+20. **`admin@sharecrm.demo` / `Demo2026!`** 可登录（与种子/README 一致）。
+
 **运维**
 
-16. 重启容器/进程后数据仍在（`SHARECRM_DB_PATH` 卷挂载正确）。
-17. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
+21. 重启容器/进程后数据仍在（`SHARECRM_DB_PATH` 卷挂载正确）。
+22. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**、**是否已完成 /srne → /sharecrm 切换**。
 
 ---
 
@@ -182,10 +197,11 @@
 - **第三轮转发：`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - **第四轮转发（下钻 + API 补强 + AI 文档）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**
 - **第五轮转发（价值量化/ROI 纯前端）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**
+- **第六轮转发（/sharecrm + SHARECRM_*）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v6.md`**
 - 离线 ingest：`collaboration/cursor-out/AGENT1_SHARECRM_INGEST_AND_DEPLOY.md`
 - API 与账号：`README.md`
 - 协作状态摘要：`collaboration/STATUS.md`
 
 ---
 
-**文档版本：** v5 · 累计 v1–v4 + 第五轮（价值量化/ROI 纯前端）
+**文档版本：** v6 · 累计 v1–v5 + 第六轮（ShareCRM 路径与环境变量迁移）
