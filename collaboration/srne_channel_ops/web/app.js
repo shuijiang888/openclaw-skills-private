@@ -89,6 +89,7 @@ function showView(name) {
       perf: "绩效看板",
       playbook: "业务作战台",
       valueMap: "全场景价值图谱",
+      valueRoi: "价值量化 / ROI",
       alerts: "预警中心",
       import: "数据与录入",
     }[name] || "";
@@ -216,6 +217,239 @@ async function loadValueMap() {
   } catch (_) {
     mount.innerHTML =
       '<p class="muted">价值图谱加载失败，请刷新重试。若持续失败，请确认服务端已更新并包含 <code>value-map-snippet.html</code>。</p>';
+  }
+}
+
+const VROI_STORAGE_KEY = "srne_vroi_inputs_v1";
+const VROI_DEFAULTS = {
+  sysFeeWan: 14,
+  weekHrs: 26,
+  effPct: 33,
+  hourCostWan: 0.042,
+  riskWan: 14,
+  otherWan: 5,
+};
+
+function vroiNum(el, fallback) {
+  const v = parseFloat(el && el.value);
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function computeVroiModel() {
+  const sysFeeWan = Math.max(0, vroiNum($("#vroiSysFee"), VROI_DEFAULTS.sysFeeWan));
+  const weekHrs = Math.max(0, vroiNum($("#vroiWeekHrs"), VROI_DEFAULTS.weekHrs));
+  const effPct = Math.min(90, Math.max(0, vroiNum($("#vroiEffPct"), VROI_DEFAULTS.effPct)));
+  const hourCostWan = Math.max(0, vroiNum($("#vroiHourCost"), VROI_DEFAULTS.hourCostWan));
+  const riskWan = Math.max(0, vroiNum($("#vroiRiskWan"), VROI_DEFAULTS.riskWan));
+  const otherWan = Math.max(0, vroiNum($("#vroiOtherWan"), VROI_DEFAULTS.otherWan));
+
+  const weeksPerYear = 52;
+  const laborBaselineWan = weekHrs * weeksPerYear * hourCostWan;
+  const laborSaveWan = laborBaselineWan * (effPct / 100);
+  const laborAfterWan = laborBaselineWan - laborSaveWan;
+  const totalBenefitWan = laborSaveWan + riskWan + otherWan;
+  const netWan = totalBenefitWan - sysFeeWan;
+  const roiX = sysFeeWan > 0 ? netWan / sysFeeWan : null;
+  const paybackMo = netWan > 0 && sysFeeWan > 0 ? sysFeeWan / (netWan / 12) : null;
+
+  return {
+    sysFeeWan,
+    weekHrs,
+    effPct,
+    hourCostWan,
+    riskWan,
+    otherWan,
+    laborBaselineWan,
+    laborSaveWan,
+    laborAfterWan,
+    totalBenefitWan,
+    netWan,
+    roiX,
+    paybackMo,
+  };
+}
+
+function fmtWan(n) {
+  if (n == null || Number.isNaN(n)) return "—";
+  const x = Math.round(n * 100) / 100;
+  return x.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+}
+
+function renderVroi() {
+  const r = computeVroiModel();
+  const lab = $("#vroiEffPctLab");
+  if (lab) lab.textContent = `${Math.round(r.effPct)}%`;
+
+  const kpi = $("#vroiKpiRow");
+  if (kpi) {
+    const roiStr = r.roiX != null ? `${fmtWan(r.roiX)} 倍` : "—";
+    const payStr = r.paybackMo != null ? `${fmtWan(r.paybackMo)} 月` : "—";
+    kpi.innerHTML = `
+      <div class="vroi-kpi"><div class="lab">年总收益（演示）</div><div class="val">${fmtWan(r.totalBenefitWan)} 万</div></div>
+      <div class="vroi-kpi"><div class="lab">年净收益</div><div class="val">${fmtWan(r.netWan)} 万</div></div>
+      <div class="vroi-kpi vroi-kpi-highlight"><div class="lab">ROI（倍）</div><div class="val">${roiStr}</div></div>
+      <div class="vroi-kpi"><div class="lab">静态回收期</div><div class="val">${payStr}</div></div>
+    `;
+  }
+
+  const tb = $("#vroiTbody");
+  if (tb) {
+    tb.innerHTML = `
+      <tr>
+        <td>工时相关成本</td>
+        <td>${fmtWan(r.laborBaselineWan)}</td>
+        <td>${fmtWan(r.laborAfterWan)}</td>
+        <td><strong>${fmtWan(r.laborSaveWan)}</strong>（节省）</td>
+      </tr>
+      <tr>
+        <td>风险与机会价值（演示）</td>
+        <td>0</td>
+        <td>${fmtWan(r.riskWan)}</td>
+        <td><strong>${fmtWan(r.riskWan)}</strong></td>
+      </tr>
+      <tr>
+        <td>其他硬节省</td>
+        <td>0</td>
+        <td>${fmtWan(r.otherWan)}</td>
+        <td><strong>${fmtWan(r.otherWan)}</strong></td>
+      </tr>
+      <tr>
+        <td><strong>年总收益（演示合计）</strong></td>
+        <td colspan="2" class="muted small">工时节省 + 风险与机会 + 其他硬节省</td>
+        <td><strong>${fmtWan(r.totalBenefitWan)}</strong></td>
+      </tr>
+      <tr>
+        <td><strong>系统年费</strong></td>
+        <td colspan="2" class="muted">—</td>
+        <td><strong>−${fmtWan(r.sysFeeWan)}</strong></td>
+      </tr>
+      <tr>
+        <td><strong>年净收益</strong></td>
+        <td colspan="2" class="muted">—</td>
+        <td><strong>${fmtWan(r.netWan)}</strong></td>
+      </tr>
+    `;
+  }
+}
+
+function applyVroiDefaults() {
+  const d = VROI_DEFAULTS;
+  const m = {
+    vroiSysFee: d.sysFeeWan,
+    vroiWeekHrs: d.weekHrs,
+    vroiEffPct: d.effPct,
+    vroiHourCost: d.hourCostWan,
+    vroiRiskWan: d.riskWan,
+    vroiOtherWan: d.otherWan,
+  };
+  Object.entries(m).forEach(([id, val]) => {
+    const el = $(`#${id}`);
+    if (el) el.value = String(val);
+  });
+}
+
+function saveVroiToStorage() {
+  try {
+    const d = VROI_DEFAULTS;
+    const payload = {
+      sysFeeWan: vroiNum($("#vroiSysFee"), d.sysFeeWan),
+      weekHrs: vroiNum($("#vroiWeekHrs"), d.weekHrs),
+      effPct: vroiNum($("#vroiEffPct"), d.effPct),
+      hourCostWan: vroiNum($("#vroiHourCost"), d.hourCostWan),
+      riskWan: vroiNum($("#vroiRiskWan"), d.riskWan),
+      otherWan: vroiNum($("#vroiOtherWan"), d.otherWan),
+    };
+    localStorage.setItem(VROI_STORAGE_KEY, JSON.stringify(payload));
+  } catch (_) {}
+}
+
+function loadVroiFromStorage() {
+  try {
+    const raw = localStorage.getItem(VROI_STORAGE_KEY);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (typeof o !== "object" || !o) return;
+    const map = [
+      ["vroiSysFee", "sysFeeWan"],
+      ["vroiWeekHrs", "weekHrs"],
+      ["vroiEffPct", "effPct"],
+      ["vroiHourCost", "hourCostWan"],
+      ["vroiRiskWan", "riskWan"],
+      ["vroiOtherWan", "otherWan"],
+    ];
+    map.forEach(([id, key]) => {
+      if (o[key] == null) return;
+      const el = $(`#${id}`);
+      if (el) el.value = String(o[key]);
+    });
+  } catch (_) {}
+}
+
+function bindValueRoi() {
+  const ids = ["vroiSysFee", "vroiWeekHrs", "vroiEffPct", "vroiHourCost", "vroiRiskWan", "vroiOtherWan"];
+  ids.forEach((id) => {
+    const el = $(`#${id}`);
+    if (!el) return;
+    el.addEventListener("input", () => {
+      renderVroi();
+      saveVroiToStorage();
+    });
+  });
+  $("#btnVroiReset")?.addEventListener("click", () => {
+    applyVroiDefaults();
+    try {
+      localStorage.removeItem(VROI_STORAGE_KEY);
+    } catch (_) {}
+    renderVroi();
+  });
+  $("#btnVroiCopy")?.addEventListener("click", () => copyVroiMarkdown().catch((e) => alert(e.message)));
+}
+
+let valueRoiBound = false;
+function loadValueRoi() {
+  if (!valueRoiBound) {
+    bindValueRoi();
+    valueRoiBound = true;
+  }
+  loadVroiFromStorage();
+  renderVroi();
+}
+
+async function copyVroiMarkdown() {
+  const r = computeVroiModel();
+  const lines = [
+    "# 硕日渠道 OS · 价值量化对比（演示）",
+    "",
+    "## 参数",
+    `- 系统年费：${fmtWan(r.sysFeeWan)} 万元/年`,
+    `- 周工时：${fmtWan(r.weekHrs)} 小时`,
+    `- 工时节省比例：${Math.round(r.effPct)}%`,
+    `- 万元/小时：${fmtWan(r.hourCostWan)}`,
+    `- 风险与机会价值：${fmtWan(r.riskWan)} 万元/年`,
+    `- 其他硬节省：${fmtWan(r.otherWan)} 万元/年`,
+    "",
+    "## 结果",
+    `- 年工时成本（现状）：${fmtWan(r.laborBaselineWan)} 万`,
+    `- 工时节省额：${fmtWan(r.laborSaveWan)} 万`,
+    `- 年总收益（演示）：${fmtWan(r.totalBenefitWan)} 万`,
+    `- 年净收益：${fmtWan(r.netWan)} 万`,
+    `- ROI：${r.roiX != null ? fmtWan(r.roiX) + " 倍" : "—"}`,
+    `- 静态回收期：${r.paybackMo != null ? fmtWan(r.paybackMo) + " 月" : "—"}`,
+    "",
+    "_模型为前端演示，非审计或合同依据。_",
+  ];
+  const text = lines.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    const h = $("#vroiCopyHint");
+    if (h) {
+      h.textContent = "已复制 Markdown 摘要";
+      setTimeout(() => {
+        if (h) h.textContent = "";
+      }, 2500);
+    }
+  } catch (_) {
+    window.prompt("请手动复制：", text);
   }
 }
 
@@ -1809,6 +2043,7 @@ function bindNav() {
       if (v === "alerts") loadAlerts().catch((e) => console.error(e));
       if (v === "playbook") loadPlaybook().catch((e) => console.error(e));
       if (v === "valueMap") loadValueMap().catch((e) => console.error(e));
+      if (v === "valueRoi") loadValueRoi();
       if (v === "perf") loadPerf().catch((e) => console.error(e));
       if (v === "import") loadImportBatches().catch(() => {});
     });

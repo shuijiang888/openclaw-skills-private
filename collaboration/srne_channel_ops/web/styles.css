@@ -1178,3 +1178,100 @@ code.batch-id {
   margin: 0 0 8px;
   font-size: 12px;
 }
+
+/* ---------- 价值量化 / ROI（纯前端） ---------- */
+.vroi-hero h2 {
+  margin-top: 0;
+}
+
+.vroi-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.15fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .vroi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vroi-inputs h3,
+.vroi-out h3 {
+  margin-top: 0;
+}
+
+.vroi-field {
+  margin-bottom: 14px;
+}
+
+.vroi-field label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.vroi-field input[type="number"] {
+  width: 100%;
+  max-width: 220px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font: inherit;
+}
+
+.vroi-field input[type="range"] {
+  width: calc(100% - 56px);
+  max-width: 240px;
+  vertical-align: middle;
+}
+
+.vroi-range-lab {
+  display: inline-block;
+  min-width: 42px;
+  margin-left: 8px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.vroi-kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.vroi-kpi {
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.vroi-kpi .lab {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vroi-kpi .val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.vroi-kpi.vroi-kpi-highlight {
+  border-color: rgba(127, 217, 154, 0.45);
+  background: rgba(127, 217, 154, 0.06);
+}
+
+.vroi-formula-list li {
+  margin-bottom: 6px;
+}

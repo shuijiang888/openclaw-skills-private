@@ -40,6 +40,7 @@
       <div class="brand">SRNE · Channel OS</div>
       <nav>
         <button type="button" data-nav="valueMap">全场景价值图谱</button>
+        <button type="button" data-nav="valueRoi">价值量化 / ROI</button>
         <button type="button" data-nav="dashboard">运营总览</button>
         <button type="button" data-nav="playbook">业务作战台</button>
         <button type="button" data-nav="channels">渠道商</button>
@@ -120,6 +121,81 @@
       <section data-view="valueMap" class="hidden">
         <div id="valueMapMount" class="value-map-mount">
           <p class="muted">正在加载价值图谱…</p>
+        </div>
+      </section>
+
+      <section data-view="valueRoi" class="hidden">
+        <div class="panel vroi-hero">
+          <h2>价值量化对比（演示模型）</h2>
+          <p class="muted">
+            纯前端、<strong>无新增接口</strong>。将「时间成本 + 风险与机会价值」与<strong>系统年费</strong>对比，便于与管理层对齐数量级。
+            所有数字为<strong>人民币 · 万元</strong>口径；非财务审计或合同承诺，正式商务需单独建模。
+          </p>
+        </div>
+        <div class="vroi-grid">
+          <div class="panel vroi-inputs">
+            <h3>假设参数</h3>
+            <p class="muted small">调整滑块或数字后结果即时重算；可「恢复默认」。</p>
+            <div class="vroi-field">
+              <label for="vroiSysFee">系统年费（万元 / 年）</label>
+              <input type="number" id="vroiSysFee" min="0" step="0.5" value="14" />
+            </div>
+            <div class="vroi-field">
+              <label for="vroiWeekHrs">渠道运营相关周工时（团队合计，小时 / 周）</label>
+              <input type="number" id="vroiWeekHrs" min="0" step="1" value="26" />
+            </div>
+            <div class="vroi-field">
+              <label for="vroiEffPct">上线后工时节省比例（%，含协同、报表、预警闭环）</label>
+              <input type="range" id="vroiEffPct" min="5" max="55" value="33" />
+              <span id="vroiEffPctLab" class="vroi-range-lab">33%</span>
+            </div>
+            <div class="vroi-field">
+              <label for="vroiHourCost">综合人力成本（万元 / 小时，含工资与公摊）</label>
+              <input type="number" id="vroiHourCost" min="0" step="0.001" value="0.042" />
+            </div>
+            <div class="vroi-field">
+              <label for="vroiRiskWan">风险与机会价值（万元 / 年，演示：回款、预警、丢单避免等）</label>
+              <input type="number" id="vroiRiskWan" min="0" step="1" value="14" />
+            </div>
+            <div class="vroi-field">
+              <label for="vroiOtherWan">其他硬节省（万元 / 年，如会务差旅压缩）</label>
+              <input type="number" id="vroiOtherWan" min="0" step="0.5" value="5" />
+            </div>
+            <div class="row flex-wrap" style="margin-top:14px;gap:8px">
+              <button type="button" class="btn secondary" id="btnVroiReset">恢复默认</button>
+              <button type="button" class="btn" id="btnVroiCopy">复制摘要（Markdown）</button>
+            </div>
+          </div>
+          <div class="panel vroi-out">
+            <h3>对比结果</h3>
+            <div id="vroiKpiRow" class="vroi-kpi-row"></div>
+            <div class="table-scroll">
+              <table class="data-table" id="vroiTable">
+                <thead>
+                  <tr>
+                    <th>科目</th>
+                    <th>现状（万元/年）</th>
+                    <th>上线后（万元/年）</th>
+                    <th>差异（万元/年）</th>
+                  </tr>
+                </thead>
+                <tbody id="vroiTbody"></tbody>
+              </table>
+            </div>
+            <p id="vroiCopyHint" class="muted small" style="margin-top:10px"></p>
+          </div>
+        </div>
+        <div class="panel vroi-formula">
+          <h3>公式与验收说明</h3>
+          <ul class="muted small vroi-formula-list">
+            <li><strong>年工时成本（现状）</strong> = 周工时 × 52 × 万元/小时。</li>
+            <li><strong>年工时成本（上线后）</strong> = 年工时成本（现状）×（1 − 节省比例）。</li>
+            <li><strong>工时节省额</strong> = 现状 − 上线后（等价：现状 × 节省比例）。</li>
+            <li><strong>年总收益（演示）</strong> = 工时节省额 + 风险与机会价值 + 其他硬节省。</li>
+            <li><strong>年净收益</strong> = 年总收益 − 系统年费。</li>
+            <li><strong>ROI（倍）</strong> = 年净收益 ÷ 系统年费（年费为 0 时不计算）。</li>
+            <li><strong>静态回收期（月）</strong> = 系统年费 ÷（年净收益 ÷ 12）（仅当年净收益 &gt; 0 时显示）。</li>
+          </ul>
         </div>
       </section>
 
