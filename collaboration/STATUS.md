@@ -19,3 +19,5 @@ collab-010 已交付：`marketing_diagnosis/medical_device/`（问卷文案、Be
 **硕日渠道运营原型 → Agent1：** 已本地提交 `c74e182`（源码树 `collaboration/srne_channel_ops/`），并追加 `6f17598`（`collaboration/cursor-out/srne_channel_ops_c74e182.tar.gz` + `AGENT1_SRNE_INGEST_AND_DEPLOY.md`）。本工作区无 `git remote`，由 OpenClaw/同步落库后 Agent1 按 ingest 文档部署闭环。
 
 **价值量化 / ROI 页（纯前端）：** 定稿与验收公式见 **`collaboration/srne_channel_ops/FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md`**。合并到约定部署分支后，将 **分支名 + Git SHA** 回传发布侧，按 **`AGENT1_发布_直观清单.md`** 构建上线。
+
+**第五轮发布转发：** **`collaboration/srne_channel_ops/FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**（OpenClaw 同步分支/SHA → Agent1 按清单构建；至少含 ROI 提交 `92ab856` + v5 文档提交，以远程 **HEAD** 为准）。

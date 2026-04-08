@@ -97,6 +97,12 @@
 
 - 业务方转发：**`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**。
 
+### 6. 第五轮 · 价值量化 / ROI（纯前端）
+
+- 侧栏 **「价值量化 / ROI」**：工时/节省/年费/风险等参数 → KPI、对比表、恢复默认、localStorage、复制 Markdown；**无新接口**。
+- 交接与公式：**`FORWARD_SRNE_AGENT_VALUE_ROI_HANDOFF.md`**。
+- **转发：** **`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**。
+
 ---
 
 ## 二、须同步的制品路径（相对仓库根）
@@ -152,10 +158,14 @@
 13. **`GET …/v1/analytics/overview`**：`topChannels[0].id` 存在且为数字；浏览器总览 **TOP 渠道图点击** 可进渠道详情；**国别机会 TOP** 可进情报。
 14. **绩效关注清单** 含 **「渠道详情」** 且可打开渠道；**区域表「区域渠道」** 有效；**预警中心** 渠道下钻可用；渠道详情 **页眉快捷链** 可见。
 
+**第五轮相关（本次若含 v5 则必验）**
+
+15. 侧栏 **「价值量化 / ROI」** 可进入，参数与 KPI **联动**；**复制摘要** 可用。
+
 **运维**
 
-15. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
-16. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
+16. 重启容器/进程后数据仍在（`SRNE_DB_PATH` 卷挂载正确）。
+17. 回传：最终 HTTPS URL、`JWT_SECRET` 是否已替换、部署方式、**Git SHA 或镜像 tag**。
 
 ---
 
@@ -171,10 +181,11 @@
 - 协同与 Docker：`FORWARD_TO_AGENT1_CLOUD_DEPLOY.md`
 - **第三轮转发：`FORWARD_OPENCLAW_AGENT1_RELEASE_v3.md`**
 - **第四轮转发（下钻 + API 补强 + AI 文档）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v4.md`**
+- **第五轮转发（价值量化/ROI 纯前端）：`FORWARD_OPENCLAW_AGENT1_RELEASE_v5.md`**
 - 离线 ingest：`collaboration/cursor-out/AGENT1_SRNE_INGEST_AND_DEPLOY.md`
 - API 与账号：`README.md`
 - 协作状态摘要：`collaboration/STATUS.md`
 
 ---
 
-**文档版本：** v4 · 累计 v1–v3 + 第四轮（下钻、overview/scorecard 字段、AI_AGENT_ENABLEMENT）
+**文档版本：** v5 · 累计 v1–v4 + 第五轮（价值量化/ROI 纯前端）
