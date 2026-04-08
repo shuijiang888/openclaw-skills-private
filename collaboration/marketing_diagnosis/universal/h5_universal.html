@@ -30,9 +30,9 @@
       baseEl.setAttribute("href", finalBase + "/");
       document.head.appendChild(baseEl);
       window.__UNIVERSAL_STATIC_BASE__ = finalBase;
+      window.__UNIVERSAL_STATIC_ROOT__ = finalBase;
     })();
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="./data/questionnaire.bundle.js"></script>
   <script src="./data/rubrics.bundle.js"></script>
   <style>
@@ -294,8 +294,8 @@
   <script>
 (function () {
   var CONFIG = {
-    /** 优先：自有诊断 API 根（无末尾 /），如 http://localhost:8787 或 http://119.45.205.137/api/diag */
-    apiBaseUrl: "http://119.45.205.137/api/diag",
+    /** 仓库默认可移植；现网部署时请改为真实诊断 API 根（无末尾 /），如 https://域名/api/diag */
+    apiBaseUrl: "",
     /**
      * API 路径前缀。本地 MVP（universal/api）："/v1"。
      * profit-web 现网（/api/diag 已为完整前缀）：填 ""，请求将变为 /submissions、/leads。
@@ -310,9 +310,11 @@
     BRIDGE_TOKEN: ""
   };
 
-  // 兼容两种 bundle 导出名：无后缀（主线）与 *_BUNDLE（历史/协作产物）
+  // 兼容两种 bundle 导出名：无后缀（主线）与 *_BUNDLE（历史/协作产物）；兼容 { default: ... } 嵌套导出
   var Q = window.UNIVERSAL_QUESTIONNAIRE || window.UNIVERSAL_QUESTIONNAIRE_BUNDLE;
   var R = window.UNIVERSAL_RUBRICS || window.UNIVERSAL_RUBRICS_BUNDLE;
+  if (Q && typeof Q === "object" && Q.default) Q = Q.default;
+  if (R && typeof R === "object" && R.default) R = R.default;
   if (!window.UNIVERSAL_QUESTIONNAIRE && Q) window.UNIVERSAL_QUESTIONNAIRE = Q;
   if (!window.UNIVERSAL_RUBRICS && R) window.UNIVERSAL_RUBRICS = R;
   if (!Q || !R) {
@@ -375,8 +377,31 @@
       var r = normalizeRoleId(sessionStorage.getItem(STORAGE_KEY_ROLE));
       var m = String(sessionStorage.getItem(STORAGE_KEY_MODE) || "").trim();
       if (r) state.role = r;
-      if (m) state.saleMode = m;
+      if (r === "sales_rep") {
+        if (m) state.saleMode = m;
+      } else {
+        state.saleMode = null;
+        clearSessionValue(STORAGE_KEY_MODE);
+      }
     } catch (_) {}
+  }
+
+  function syncUiFromState() {
+    var rid = normalizeRoleId(state.role);
+    if (rid) {
+      var rb = document.querySelector('#role-choices .choice[data-role-id="' + rid + '"]');
+      if (rb) {
+        document.querySelectorAll("#role-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
+        rb.classList.add("selected");
+      }
+    }
+    if (rid === "sales_rep" && state.saleMode) {
+      var mb = document.querySelector('#mode-choices .choice[data-mode-id="' + state.saleMode + '"]');
+      if (mb) {
+        document.querySelectorAll("#mode-choices .choice").forEach(function (x) { x.classList.remove("selected"); });
+        mb.classList.add("selected");
+      }
+    }
   }
 
   function getRolesFromQuestionnaire() {
@@ -554,8 +579,10 @@
   }
 
   function overallBand(total) {
-    if (total <= R.gradeBands.C[1]) return "C";
-    if (total <= R.gradeBands.B[1]) return "B";
+    var gb = R && R.gradeBands;
+    if (!gb || !Array.isArray(gb.C) || !Array.isArray(gb.B)) return "B";
+    if (total <= gb.C[1]) return "C";
+    if (total <= gb.B[1]) return "B";
     return "A";
   }
 
@@ -590,14 +617,18 @@
   }
 
   function snippetForDimension(role, dimName, band) {
-    var g = R.generic_by_band[band];
-    if (role === "sales_manager" && R.sales_manager_by_dimension[dimName]) {
-      return R.sales_manager_by_dimension[dimName][band];
+    var g = R.generic_by_band && R.generic_by_band[band];
+    if (!g || typeof g !== "object") {
+      g = { evaluation: "", suggestion: "", training: "" };
+    }
+    if (role === "sales_manager" && R.sales_manager_by_dimension && R.sales_manager_by_dimension[dimName]) {
+      var sm = R.sales_manager_by_dimension[dimName][band];
+      if (sm && typeof sm === "object") return sm;
     }
     return {
-      evaluation: g.evaluation.replace(/\{dimension\}/g, dimName),
-      suggestion: g.suggestion.replace(/\{dimension\}/g, dimName),
-      training: (g.training || "").replace(/\{dimension\}/g, dimName)
+      evaluation: String(g.evaluation || "").replace(/\{dimension\}/g, dimName),
+      suggestion: String(g.suggestion || "").replace(/\{dimension\}/g, dimName),
+      training: String(g.training || "").replace(/\{dimension\}/g, dimName)
     };
   }
 
@@ -627,7 +658,7 @@
     var globalNo = 1;
     dims.forEach(function (d, di) {
       var questions = Array.isArray(d && d.questions) ? d.questions : [];
-      d.questions.forEach(function (q, qi) {
+      questions.forEach(function (q, qi) {
         var k = di + "_" + qi;
         var ansKey = state.answers[k];
         var options = Array.isArray(q && q.options) ? q.options : [];
@@ -667,6 +698,10 @@
 
   function renderReport() {
     var res = state.result;
+    if (!res) {
+      showToast("报告数据异常，请重新完成测评");
+      return;
+    }
     var p = state.profile || {};
     var metaHtml =
       "<p style='margin:4px 0'><strong>企业 / 组织</strong>：" + escHtml(p.company) + "</p>" +
@@ -684,14 +719,15 @@
     document.getElementById("rep-meta-lines").innerHTML = metaHtml;
 
     document.getElementById("rep-total").textContent = "总分 " + res.total + " / 100 · " + bandLabel(res.overallBand);
-    document.getElementById("rep-intro").textContent = res.intro;
+    document.getElementById("rep-intro").textContent = res.intro || "";
     var bars = document.getElementById("rep-bars");
     bars.innerHTML = "";
     res.dimScores.forEach(function (d) {
       var pct = d.maxPoints ? Math.min(100, Math.round((d.score / d.maxPoints) * 100)) : 0;
+      var dn = escHtml(d.name);
       var row = document.createElement("div");
       row.className = "bar-row";
-      row.innerHTML = "<span class='bar-name' title='" + d.name + "'>" + d.name + "</span>" +
+      row.innerHTML = "<span class='bar-name' title='" + dn + "'>" + dn + "</span>" +
         "<div class='bar-track'><div class='bar-fill' style='width:" + pct + "%'></div></div>" +
         "<span class='bar-val'>" + d.score + "/" + (d.maxPoints || "—") + "</span>";
       bars.appendChild(row);
@@ -703,8 +739,12 @@
     if (res.gaps.length) {
       sumParts.push("优先改进维度：" + res.gaps.map(function (x) { return x.name; }).join("、"));
     }
-    sumParts.push("综合等级：" + res.overallBand + " 级（按总分 " + R.gradeBands.C[0] + "–" + R.gradeBands.C[1] + " / " +
-      R.gradeBands.B[0] + "–" + R.gradeBands.B[1] + " / " + R.gradeBands.A[0] + "–" + R.gradeBands.A[1] + " 划分）。");
+    var gbSum = R.gradeBands || {};
+    var cS = gbSum.C || [0, 59];
+    var bS = gbSum.B || [60, 79];
+    var aS = gbSum.A || [80, 100];
+    sumParts.push("综合等级：" + res.overallBand + " 级（按总分 " + cS[0] + "–" + cS[1] + " / " +
+      bS[0] + "–" + bS[1] + " / " + aS[0] + "–" + aS[1] + " 划分）。");
     document.getElementById("rep-summary").textContent = sumParts.join(" ");
 
     var det = document.getElementById("rep-dim-details");
@@ -713,10 +753,10 @@
       var sn = snippetForDimension(state.role, d.name, d.band);
       var blk = document.createElement("div");
       blk.className = "report-block rep-pdf-dim-detail";
-      blk.innerHTML = "<h4>" + d.name + " · 维度得分 " + d.score + "/" + (d.maxPoints || "—") + " · 解读档 " + d.band + " 档</h4>" +
-        "<p><strong>评价：</strong>" + sn.evaluation + "</p>" +
-        "<p><strong>建议：</strong>" + sn.suggestion + "</p>" +
-        (sn.training ? "<p><strong>培训参考：</strong>" + sn.training + "</p>" : "");
+      blk.innerHTML = "<h4>" + escHtml(d.name) + " · 维度得分 " + d.score + "/" + (d.maxPoints || "—") + " · 解读档 " + escHtml(d.band) + " 档</h4>" +
+        "<p><strong>评价：</strong>" + escHtml(sn.evaluation) + "</p>" +
+        "<p><strong>建议：</strong>" + escHtml(sn.suggestion) + "</p>" +
+        (sn.training ? "<p><strong>培训参考：</strong>" + escHtml(sn.training) + "</p>" : "");
       det.appendChild(blk);
     });
 
@@ -806,7 +846,14 @@
     var opts = document.getElementById("quiz-options");
     opts.innerHTML = "";
     var sel = state.answers[item.key];
-    item.question.options.forEach(function (o) {
+    var qOpts = item.question && item.question.options;
+    if (!Array.isArray(qOpts) || !qOpts.length) {
+      showToast("本题缺少选项数据，请检查题本或联系管理员");
+      console.warn("[diag] question without options", item.question && item.question.id);
+      document.getElementById("btn-next").disabled = true;
+      return;
+    }
+    qOpts.forEach(function (o) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "opt" + (sel === o.key ? " selected" : "");
@@ -844,6 +891,19 @@
 
   function buildAssessmentPayload() {
     var res = state.result;
+    if (!res) {
+      return {
+        source: "universal_marketing_diagnosis",
+        version: Q.version,
+        role: state.role,
+        saleMode: state.saleMode,
+        profile: state.profile || {},
+        completedAt: new Date().toISOString(),
+        scores: null,
+        summary: null,
+        answers: state.answers
+      };
+    }
     return {
       source: "universal_marketing_diagnosis",
       version: Q.version,
@@ -854,7 +914,7 @@
       scores: {
         total: res.total,
         overallBand: res.overallBand,
-        dimensions: res.dimScores.map(function (d) {
+        dimensions: (res.dimScores || []).map(function (d) {
           return { name: d.name, score: d.score, maxPoints: d.maxPoints, band: d.band };
         }),
         questionDetails: (res.questionDetails || []).map(function (r) {
@@ -872,8 +932,8 @@
       },
       summary: {
         intro: res.intro,
-        strengths: res.strengths.map(function (x) { return x.name; }),
-        gaps: res.gaps.map(function (x) { return x.name; })
+        strengths: (res.strengths || []).map(function (x) { return x.name; }),
+        gaps: (res.gaps || []).map(function (x) { return x.name; })
       },
       answers: state.answers
     };
@@ -964,6 +1024,8 @@
     mc.appendChild(b);
   });
 
+  syncUiFromState();
+
   document.querySelectorAll("[data-back]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var t = btn.getAttribute("data-back");
@@ -1027,29 +1089,73 @@
     }
   });
 
+  function loadHtml2pdf() {
+    if (typeof window.html2pdf === "function") return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var urls = [
+        "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
+        "https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"
+      ];
+      var i = 0;
+      function tryNext() {
+        if (i >= urls.length) {
+          reject(new Error("html2pdf load failed"));
+          return;
+        }
+        var s = document.createElement("script");
+        s.src = urls[i++];
+        s.crossOrigin = "anonymous";
+        s.referrerPolicy = "no-referrer";
+        s.onload = function () { resolve(); };
+        s.onerror = function () {
+          s.remove();
+          tryNext();
+        };
+        document.head.appendChild(s);
+      }
+      tryNext();
+    });
+  }
+
   document.getElementById("btn-pdf").addEventListener("click", function () {
     var el = document.getElementById("pdf-area");
-    var opt = {
-      margin: [10, 10, 12, 10],
-      filename: "通用营销诊断报告_" + (state.profile.company || "未命名") + ".pdf",
-      image: { type: "jpeg", quality: 0.96 },
-      pagebreak: {
-        mode: ["css", "legacy"],
-        before: ["#rep-pdf-section-detail", "#rep-appendix"],
-        avoid: ["tr.rep-q-row", ".rep-appendix-block", ".rep-pdf-dim-detail"]
-      },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        scrollY: 0,
-        windowWidth: el.scrollWidth
-      },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-    };
-    html2pdf().set(opt).from(el).save().catch(function () {
-      showToast("PDF 生成失败，可尝试使用浏览器打印");
-    });
+    var btn = document.getElementById("btn-pdf");
+    var prevText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "正在加载 PDF 组件…";
+    loadHtml2pdf()
+      .then(function () {
+        if (typeof window.html2pdf !== "function") throw new Error("no html2pdf");
+        btn.textContent = "正在生成 PDF…";
+        var opt = {
+          margin: [10, 10, 12, 10],
+          filename: "通用营销诊断报告_" + (state.profile.company || "未命名") + ".pdf",
+          image: { type: "jpeg", quality: 0.96 },
+          pagebreak: {
+            mode: ["css", "legacy"],
+            before: ["#rep-pdf-section-detail", "#rep-appendix"],
+            avoid: ["tr.rep-q-row", ".rep-appendix-block", ".rep-pdf-dim-detail"]
+          },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            scrollY: 0,
+            windowWidth: el.scrollWidth
+          },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+        return window.html2pdf().set(opt).from(el).save();
+      })
+      .then(function () {
+        btn.textContent = prevText;
+        btn.disabled = false;
+      })
+      .catch(function () {
+        showToast("PDF 生成失败，可尝试使用浏览器打印");
+        btn.textContent = prevText;
+        btn.disabled = false;
+      });
   });
 
   document.getElementById("btn-lead").addEventListener("click", async function () {
