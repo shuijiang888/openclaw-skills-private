@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>IVD 数字化成熟度诊断 (V5.0 动态专家版)</title>
+  <!-- PDF：点击「导出」时再动态加载，避免 head 同步脚本阻塞/失败导致整页脚本不执行 -->
+  <style>
+    :root {
+      --bg: #f4f6f9; --card: #fff; --text: #0f172a; --muted: #64748b;
+      --primary: #0369a1; --accent: #0ea5e9; --line: #cbd5e1;
+      --green: #16a34a; --amber: #d97706; --red: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:640px; margin:0 auto; padding:12px 10px 40px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+    .hide { display:none !important; }
+    h1 { margin:0; color:var(--primary); font-size:20px; text-align: center; }
+    h2 { margin:0; color:var(--primary); font-size:16px; }
+    h3 { font-size:15px; color:var(--text); margin-top: 16px; margin-bottom: 8px; border-left: 4px solid var(--primary); padding-left: 8px; }
+    .sub { margin:4px 0 8px; color:var(--muted); font-size:13px; text-align: center; }
+    .btn, .opt { display:block; width:100%; padding:12px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; cursor:pointer; background:#fff; text-align:center; margin-bottom:8px; }
+    .btn { background:var(--primary); color:#fff; font-weight:600; border:none; }
+    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .opt { text-align:left; }
+    .opt:hover { background:#f0f9ff; border-color:var(--accent); }
+    .opt.sel { background:#eff6ff; border-color:var(--primary); font-weight:600; color: var(--primary); }
+    .opt-opt { display:inline-block; width:12px; height:12px; border:2px solid var(--line); border-radius:50%; margin-right:8px; vertical-align:middle; position:relative; top:-1px; }
+    .opt.sel .opt-opt { border-color:var(--primary); background:var(--primary); }
+    .q-title { font-size:15px; font-weight:600; margin-bottom:10px; line-height:1.5; }
+    .q-roadmap { font-size:11px; color:var(--accent); margin-bottom:6px; font-weight:600; }
+    .progress { height:6px; background:#e2e8f0; border-radius:4px; margin-bottom:6px; }
+    .progress-fill { height:100%; background:var(--primary); border-radius:4px; width:0; transition:width .3s; }
+    .score { text-align:center; font-size:48px; font-weight:800; color:var(--primary); margin:16px 0 4px; }
+    .level { text-align:center; font-size:14px; margin-bottom:16px; font-weight:600; padding: 4px 12px; background: #f0f9ff; display: inline-block; border-radius: 20px; }
+    .level-box { text-align: center; margin-bottom: 16px; }
+    .tag { padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; margin-right:4px; }
+    .tag-red { background:#fee2e2; color:#b91c1c; } .tag-y { background:#fef3c7; color:#b45309; } .tag-g { background:#dcfce7; color:#15803d; }
+    
+    /* 报告卡片样式 */
+    .ai-box { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; margin-top:10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .ai-box.critical { border-left: 4px solid var(--red); background: #fef2f2; }
+    .ai-box.good { border-left: 4px solid var(--green); background: #f0fdf4; }
+    .ai-box.neutral { border-left: 4px solid var(--accent); background: #f0f9ff; }
+    .ai-box h4 { margin:0 0 4px; color:var(--text); font-size:14px; display:flex; align-items:center; }
+    .ai-box p { margin:0; font-size:13px; line-height:1.6; color: #334155; }
+    .ai-box strong { color:#0f172a; }
+
+    .row { display:flex; gap:8px; } .row .btn { flex:1; margin:0; }
+    .inp { width:100%; padding:11px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; margin-bottom:8px; box-sizing:border-box; }
+    #radar { display:block; margin:0 auto; width:240px; height:240px; }
+    .legend { text-align:center; margin:8px 0; font-size:12px; color:var(--muted); }
+    .legend-item { display:inline-block; margin:4px 8px; }
+    .report-header { text-align:center; margin-bottom:12px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+    .report-section-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-top: 20px; display: flex; align-items: center; }
+    .report-section-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<!-- Hidden container for PDF generation -->
+<div id="pdfSource" style="position:absolute;left:-9999px;top:0;width:700px;background:#fff;padding:20px;"></div>
+
+<div class="wrap">
+  <!-- Welcome -->
+  <div id="viewWelcome" style="display:block;">
+    <div class="card">
+      <div style="text-align:center; margin-bottom:12px;">
+        <div style="font-size:48px;">🏥</div>
+      </div>
+      <h1>IVD 数字化成熟度诊断 (V5.0 动态专家版)</h1>
+      <p class="sub sub">
+        <strong>细粒度动态诊断引擎</strong><br/>
+        20 项指标逐一剖析，针对性输出专家级处方<br/>
+      </p>
+      <button class="btn" onclick="startDiag()">开始企业体检</button>
+      <button class="btn hide" style="background:var(--muted); margin-top:8px;" id="btnResume" onclick="resumeDiag()">继续上次体检</button>
+      <p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:8px;">数据仅存于本地，保护商业机密</p>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div id="viewQuiz" style="display:none;">
+    <div class="card">
+      <div class="progress"><div class="progress-fill" id="progFill"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);">
+        <span id="progText">Q 1/20</span>
+        <span id="progPct">0%</span>
+      </div>
+    </div>
+    <div class="card" id="qCard"></div>
+    <div class="row">
+      <button class="btn" style="background:#fff;color:var(--text);border:1px solid var(--line);font-size:13px;" id="btnPrev" onclick="prevQ()">上一题</button>
+      <button class="btn" style="font-size:13px;" id="btnNext" onclick="nextQ()">下一题</button>
+    </div>
+  </div>
+
+  <!-- Lead -->
+  <div id="viewLead" style="display:none;">
+    <div class="card">
+      <div style="text-align:center;margin-bottom:10px;">
+        <h2>📊 诊断完成！即将生成报告</h2>
+        <p class="sub">请填写信息，获取专属诊断书</p>
+      </div>
+      <input class="inp" id="leadName" placeholder="姓名 *" required />
+      <input class="inp" id="leadPhone" placeholder="手机号 *" required />
+      <input class="inp" id="leadCompany" placeholder="公司名称 *" required />
+      <button class="btn" onclick="genReport()">生成诊断报告</button>
+      <button class="btn" style="background:#fff;color:var(--text);border:1px solid var(--line);margin-top:6px;font-size:13px;" onclick="skipLead()">跳过，直接查看</button>
+    </div>
+  </div>
+
+  <!-- Report -->
+  <div id="viewReport" style="display:none;">
+    <div class="card">
+      <div class="report-header">
+        <h1 style="font-size:22px; margin-bottom: 4px;">IVD 数字化成熟度诊断书</h1>
+        <p class="sub" id="repMeta" style="margin:0;"></p>
+      </div>
+      
+      <div class="level-box">
+        <div class="score" id="finalScore">--</div>
+        <div class="level" id="levelText"></div>
+      </div>
+      
+      <h3 class="report-section-title">五维能力雷达图</h3>
+      <svg id="radar" viewBox="0 0 240 240"></svg>
+      <div class="legend" id="legend"></div>
+      
+      <h3 class="report-section-title">💡 纷享销客专家顾问深度建议</h3>
+      <p class="sub" style="text-align: left; text-indent: 0;">基于您刚才填写的详细选项，我们为您生成了定制化诊断与行动处方：</p>
+      <div id="dynamicAdvice"></div>
+
+      <div class="row" style="margin-top:20px;">
+        <button class="btn" style="font-size:13px;" id="btnPdf">📄 导出正式报告 PDF</button>
+        <button class="btn" style="background:var(--green);font-size:13px;">💬 预约深度咨询</button>
+      </div>
+      <button class="btn" style="background:#fff;color:var(--text);border:1px solid var(--line);margin-top:8px;font-size:13px;" onclick="restart()">重新诊断</button>
+
+    </div>
+  </div>
+</div>
+
+<script>
+try {
+  // 维度定义
+  const DIMS = [
+    {id:"channel", name:"渠道掌控力", maxW:30},
+    {id:"terminal", name:"终端渗透力", maxW:25},
+    {id:"supply", name:"供应链与合规", maxW:20},
+    {id:"install", name:"装机与售后", maxW:15},
+    {id:"digital", name:"数字化协同", maxW:10}
+  ];
+
+  // 20 道咨询级问题
+  const QUESTIONS = [
+    {dim:0, q:"Q1. 您能实时掌握几级经销商的库存数据？", opts:[{t:"A. 无法掌握，货发出去就不管了",s:1},{t:"B. 仅掌握一级商月度手工上报",s:2},{t:"C. 系统连接一级商，部分二级商可视",s:3},{t:"D. 全链路 (一级→二级→终端) 穿透可视",s:5}]},
+    {dim:0, q:"Q2. 您的防窜货管控机制是？", opts:[{t:"A. 无管控",s:1},{t:"B. 靠人工举报/抽查发现",s:2},{t:"C. 系统有预警规则 (基于流向数据)",s:4},{t:"D. 批号追踪自动拦截 + 异常 AI 识别",s:5}]},
+    {dim:0, q:"Q3. 经销商库存周转天数 (DOI) 是否纳入考核？", opts:[{t:"A. 无考核概念",s:1},{t:"B. 有考核但无数据支撑",s:2},{t:"C. 定期考核，有数据看板",s:4},{t:"D. 自动化考核 + 预警淘汰机制",s:5}]},
+    {dim:0, q:"Q4. 您的经销商分级体系依据什么维度？", opts:[{t:"A. 无分级，一视同仁",s:1},{t:"B. 仅按销售额",s:2},{t:"C. 多维度 (销售额/覆盖度/配合度)",s:4},{t:"D. 动态模型 (含库存健康/资金/ROI)",s:5}]},
+    
+    {dim:1, q:"Q5. 您的终端医院 (装机医院) 档案完整度？", opts:[{t:"A. 仅有名单和地址",s:1},{t:"B. 有基础信息 (科室/联系人)",s:2},{t:"C. 全维度 (设备/试剂/潜力/竞品)",s:4},{t:"D. 深度建档 + AI 潜力挖掘模型",s:5}]},
+    {dim:1, q:"Q6. 学术推广活动的效果评估深度？", opts:[{t:"A. 无法评估，凭感觉",s:1},{t:"B. 统计参会人数/签到",s:2},{t:"C. 关联线索转化与试剂增量",s:4},{t:"D. 全生命周期 ROI 闭环分析",s:5}]},
+    {dim:1, q:"Q7. 您对终端试剂纯销 (Sell-out) 的追踪能力？", opts:[{t:"A. 无法追踪，只看发货 (Sell-in)",s:1},{t:"B. 月度手工填报，滞后严重",s:2},{t:"C. 关键客户系统直连，数据实时",s:4},{t:"D. 全样本追踪 + 动销趋势预测",s:5}]},
+    {dim:1, q:"Q8. 面对竞品抢占市场，您的数据支撑是？", opts:[{t:"A. 靠销售反馈，无系统数据",s:1},{t:"B. 有竞品信息记录，但更新慢",s:2},{t:"C. 竞对档案 + 替换成功率分析",s:4},{t:"D. AI 推荐竞品替换策略与话术",s:5}]},
+
+    {dim:2, q:"Q9. 您的试剂/耗材效期管理方式是？", opts:[{t:"A. 靠人工记录/Excel 提醒",s:1},{t:"B. 入库录入，无自动预警",s:2},{t:"C. 系统自动预警 (近效期拦截)",s:4},{t:"D. 智能推荐发货批次 (FEFO 优先)",s:5}]},
+    {dim:2, q:"Q10. 您的冷链物流监控处于什么阶段？", opts:[{t:"A. 无监控，随货同行单为证",s:1},{t:"B. 部分关键节点人工记录温度",s:2},{t:"C. 全程蓝牙/USB 温度记录仪",s:4},{t:"D. IoT 实时监控 + 异常自动报警截停",s:5}]},
+    {dim:2, q:"Q11. UDI (唯一设备标识) 贯通情况？", opts:[{t:"A. 未开始",s:1},{t:"B. 仅完成注册编码",s:2},{t:"C. 核心产品扫码出入库",s:4},{t:"D. 全产品贯穿 采购 - 生产 - 流通 - 终端",s:5}]},
+    {dim:2, q:"Q12. 出现质量召回时，您的响应速度？", opts:[{t:"A. >1 周，需人工逐个通知",s:1},{t:"B. 3-5 天",s:2},{t:"C. 24 小时内精准定位批次流向",s:4},{t:"D. 分钟级系统一键拦截通知",s:5}]},
+
+    {dim:3, q:"Q13. 您能否实时监控单台仪器的试剂产出效益？", opts:[{t:"A. 无法监控，只看总体总量",s:1},{t:"B. 月度汇总，发现异常才处理",s:2},{t:"C. 周度监控 + 低产出预警",s:4},{t:"D. 实时 ROI 仪表盘 + 自动归因分析",s:5}]},
+    {dim:3, q:"Q14. 您的投放仪器 (免费/租赁) 回本周期？", opts:[{t:"A. 无模型，凭经验投放",s:1},{t:"B. 有粗略预估",s:2},{t:"C. 有 ROI 测算模型，定期复盘",s:4},{t:"D. 动态回本预测 + 亏损自动预警",s:5}]},
+    {dim:3, q:"Q15. 售后维修服务模式？", opts:[{t:"A. 客户报修 -> 派单 (被动响应)",s:1},{t:"B. 在线客服，但响应不稳定",s:2},{t:"C. 在线报修 + 工程师 SLA 考核",s:4},{t:"D. 预防性维护 + 远程诊断 + 备件前置",s:5}]},
+    {dim:3, q:"Q16. 您的平均故障响应时间 (MTTA)？", opts:[{t:"A. >24 小时",s:1},{t:"B. 12-24 小时",s:2},{t:"C. 4-12 小时",s:4},{t:"D. <2 小时 (重点客户<30 分)",s:5}]},
+
+    {dim:4, q:"Q17. 您的经销商/客户是否通过外网端口上报数据？", opts:[{t:"A. 无，全靠微信/邮件",s:1},{t:"B. 偶尔发模板",s:2},{t:"C. 有经销商门户/小程序",s:4},{t:"D. 全场景外网协同 (订单/库存/报修)",s:5}]},
+    {dim:4, q:"Q18. 您内部各系统 (ERP/CRM/DMS) 的数据连通度？", opts:[{t:"A. 孤岛，数据手动搬运",s:1},{t:"B. 部分接口对接",s:2},{t:"C. 核心业务流贯通",s:4},{t:"D. 统一数据中台 + 实时 BI",s:5}]},
+    {dim:4, q:"Q19. 您的决策依赖什么数据支持？", opts:[{t:"A. 经验 + 零散 Excel",s:1},{t:"B. 月度静态报表",s:2},{t:"C. 动态看板 + 异常自动推送",s:4},{t:"D. AI 趋势预测 + 辅助决策建议",s:5}]},
+    {dim:4, q:"Q20. 数字化团队在业务中的角色？", opts:[{t:"A. 仅修电脑/装软件",s:1},{t:"B. 维护现有系统运行",s:2},{t:"C. 配合业务优化流程",s:4},{t:"D. 业务创新的驱动者与引擎",s:5}]}
+  ];
+
+  // 💡 V5.0 核心：细粒度动态专家规则库
+  // 根据用户具体的选项 (QuestionIndex_OptionIndex) 给出针对性反馈，而非通用模板
+  const EXPERT_RULES = {
+    "0_0": {sev:"risk", title:"🛑 渠道库存盲区风险：极度危险", text:"您目前对经销商库存<strong>完全不可见</strong>。这是 IVD 企业最大的利润黑洞：一方面经销商可能囤积大量库存导致过期（无法退换货风险），另一方面您无法掌握窜货源头。<br/><strong>纷享处方</strong>：建议立即启动<strong>经销商门户小程序 (DMS Lite)</strong>，强制核心一级商进行库存周报。"},
+    "0_1": {sev:"risk", title:"⚠️ 渠道数据滞后风险", text:"月度手工上报意味着您永远在‘看后视镜’。当发现库存异常时，往往已经发生了严重的积压。<br/><strong>纷享处方</strong>：通过系统对接替代 Excel，实现<strong>周度/日度数据自动抓取</strong>，将报表时效从月提升到周。"},
+    "0_3": {sev:"good", title:"🌟 全链路可视：行业标杆", text:"您已实现全链路穿透。这是目前 IVD 行业<strong>前 5% 企业</strong>才能达到的水平。建议利用这些海量数据建立「AI 销量预测模型」，指导排产。"},
+    "0_2": {sev:"normal", title:"✅ 渠道管理已初见成效", text:"您已实现了一级商可视。这是迈向精细化管理的重要一步。建议下一步将颗粒度深入到<strong>二级经销商和终端流向</strong>。"},
+
+    "1_0": {sev:"risk", title:"🛑 窜货失控预警", text:"无任何防窜货机制。在 IVD 行业，窜货不仅侵蚀价格体系，更会导致经销商忠诚度下降。<br/><strong>纷享处方</strong>：建立<strong>基于批号的防窜货预警系统</strong>，一旦发现 A 地产品扫码出现在 B 地终端，系统自动触发警报。"},
+    "1_3": {sev:"good", title:"🌟 智能防窜货：AI 赋能", text:"您已应用 AI 识别异常流转。这说明您的数字化水平已超越了单纯的工具应用，进入了数据驱动智能决策阶段。"},
+
+    "2_0": {sev:"risk", title:"📉 经销商考核缺失", text:"没有基于 DOI (库存周转天数) 的考核，意味着经销商可能在‘无效囤货’（为了拿返利）。这会透支您下季度的真实需求。<br/><strong>纷享处方</strong>：将 DOI 纳入返利考核权重（如占比 20%），倒逼经销商优化库存结构。"},
+    "2_3": {sev:"good", title:"🌟 自动化考核体系", text:"您已实现了库存周转天数的自动化考核，并建立了淘汰机制。这是非常成熟的渠道管理手段。"},
+    
+    "3_3": {sev:"good", title:"🌟 经销商动态评级模型", text:"您不仅关注销售额，还关注库存健康和 ROI 贡献。这是建立健康渠道生态的关键。"},
+
+    // 终端
+    "4_0": {sev:"risk", title:"⚠️ 终端资产底数不清", text:"装机医院只有名单没有档案，就像打仗只有地图没有地形图。您无法评估单产和潜力。<br/><strong>纷享处方</strong>：建立终端 360 度全景档案，从名单升级为“一院一档”（含科室、装机数、试剂消耗）。"},
+    "4_3": {sev:"good", title:"🌟 智能终端画像", text:"您已建立深度档案并利用 AI 挖掘潜力，这说明您的销售动作已经数据化、精准化。"},
+
+    "7_0": {sev:"risk", title:"🛑 竞品情报缺失", text:"靠销售反馈竞品信息往往滞后且失真。当竞品低价切入时，您将失去防御窗口期。<br/><strong>纷享处方</strong>：建立移动端竞品上报工具，销售在拜访现场即可拍照/填报竞品动态，汇总至总部研判。"},
+
+    // 供应链
+    "9_0": {sev:"risk", title:"⚠️ 试剂过期损耗隐患", text:"依赖 Excel 管理效期，极易出现漏盘或错盘，导致大量试剂过期报废，直接侵蚀净利。<br/><strong>纷享处方</strong>：实施「近效期优先 (FEFO)」管理策略，系统拦截过批号出库。"},
+    "9_3": {sev:"good", title:"🌟 智能库存周转优化", text:"您已实现系统智能推荐发货批次，这能显著降低库存资金占用和过期风险。"},
+
+    "10_0": {sev:"risk", title:"🛑 冷链合规断链风险", text:"无监控或人工记录无法满足日益严格的 GSP/GDP 飞检要求。一旦出现温控事故，企业面临严厉处罚。<br/><strong>纷享处方</strong>：引入<strong>IoT 温度记录仪</strong> (4G/蓝牙标签)，实现运输全程数据自动上传，不可篡改。"},
+
+    // 装机与售后
+    "13_0": {sev:"risk", title:"⚠️ 投放仪器 ROI 盲区", text:"无法监控单台试剂产出。如果仪器产出覆盖不了折旧和维保成本，投放越多亏损越大。<br/><strong>纷享处方</strong>：建立<strong>单台仪器产出账户</strong>，每台仪器每月出具盈亏报表，及时清退负产出仪器。"},
+    "14_0": {sev:"risk", title:"⚠️ 投放决策草率", text:"无模型凭投放。缺乏对回本周期的科学测算，容易导致销售为了冲业绩盲目送机。<br/><strong>纷享处方</strong>：建立投放审批工作流，强制录入预计装机量和回本周期测算。"},
+    "14_3": {sev:"good", title:"🌟 动态回本预测模型", text:"您已能动态预测投放回本周期并自动预警。这意味着您的资产管理水平已达到精细化标准。"},
+
+    "16_3": {sev:"risk", title:"⚠️ 被动救火式服务", text:"报修才修是最低效的服务模式，客户满意度低且工程师疲于奔命。<br/><strong>纷享处方</strong>：建立服务工单体系，并基于数据向“预防性维护”转型，提前消除故障隐患。"},
+
+    // 数字化
+    "18_0": {sev:"risk", title:"⚠️ 数据孤岛严重", text:"数据靠搬运，不仅效率低，且各系统间数据不一致（如财务与业务对不上账），决策依赖“拍脑袋”。<br/><strong>纷享处方</strong>：实施主数据管理，通过 API 打破 ERP 与 CRM 的隔离，实现业财一体化。"}
+  };
+
+  const SK="diag_ivd_v5";
+  let state=load()||{v:5, qi:0, ans:{}, lead:null};
+  
+  function show(v){
+    document.querySelectorAll("#viewWelcome,#viewQuiz,#viewLead,#viewReport").forEach(d=>d.style.display='none');
+    document.getElementById('view'+v).style.display='block';
+    window.scrollTo(0,0);
+  }
+  function load(){try{const d=JSON.parse(localStorage.getItem(SK));if(d&&(d.v===4||d.v===5))return d;}catch(e){}return null;}
+  function save(){try{localStorage.setItem(SK,JSON.stringify(state));}catch(e){}}
+  function clear(){try{localStorage.removeItem(SK);}catch(e){}}
+
+  if(state.ans && Object.keys(state.ans).length>0) document.getElementById('btnResume').classList.remove('hide');
+
+  function startDiag(){
+    state={v:5, qi:0, ans:{}, lead:null};
+    save();
+    show('Quiz'); renderQ();
+  }
+  function resumeDiag(){ show('Quiz'); renderQ(); }
+  
+  function renderQ(){
+    const q=QUESTIONS[state.qi];
+    const pct = Math.round(((state.qi+1)/QUESTIONS.length)*100);
+    document.getElementById('progFill').style.width=pct+'%';
+    document.getElementById('progText').textContent=`Q ${state.qi+1} / ${QUESTIONS.length}`;
+    document.getElementById('progPct').textContent=pct+'%';
+
+    let h = `<div class="q-roadmap">📍 维度评估</div>`;
+    h += `<div class="q-title">${q.q}</div>`;
+    q.opts.forEach((o,i)=>{
+      const cls = state.ans[state.qi]===i ? ' sel' : '';
+      h += `<div class="opt${cls}" onclick="selOpt(${state.qi},${i})">
+              <span class="opt-opt"></span>${o.t}
+            </div>`;
+    });
+    document.getElementById('qCard').innerHTML = h;
+
+    document.getElementById('btnPrev').style.display = state.qi>0?'block':'none';
+    document.getElementById('btnNext').textContent = (state.qi===QUESTIONS.length-1) ? '完成诊断' : '下一题';
+  }
+
+  function selOpt(idx, oi){
+    state.ans[idx] = oi;
+    save();
+    renderQ(); // re-render to update selection visually
+    setTimeout(()=>{
+      if(state.qi < QUESTIONS.length-1){ state.qi++; save(); renderQ(); }
+      else { show('Lead'); }
+    }, 300);
+  }
+
+  function prevQ(){ if(state.qi>0){state.qi--;renderQ();save();} }
+  function nextQ(){ 
+    if(state.ans[state.qi]===undefined) return alert("请先选择一项");
+    if(state.qi < QUESTIONS.length-1){ state.qi++; renderQ(); save(); }
+    else { show('Lead'); }
+  }
+
+  function genReport(){
+    const n=document.getElementById('leadName').value.trim();
+    const p=document.getElementById('leadPhone').value.trim();
+    const c=document.getElementById('leadCompany').value.trim();
+    if(!n||!p||!c) return alert("请填写必要信息");
+    state.lead={name:n,phone:p,company:c};
+    save();
+    renderReport();
+  }
+
+  function skipLead(){ renderReport(); }
+
+  function calc(){
+    let rawScores=[0,0,0,0,0];
+    let maxScores=[0,0,0,0,0];
+    QUESTIONS.forEach((q,i)=>{
+      const oid = state.ans[i];
+      if(oid!==undefined){
+        rawScores[q.dim] += q.opts[oid].s;
+        let mx=0; q.opts.forEach(o=>{if(o.s>mx)mx=o.s;});
+        maxScores[q.dim] += mx;
+      }
+    });
+    let w = rawScores.map((r,i)=> maxScores[i]?Math.round((r/maxScores[i])*DIMS[i].maxW*10)/10 : 0);
+    let total = w.reduce((a,b)=>a+b,0);
+    let t100 = Math.round(total);
+    return { total:Math.min(t100,100), w:w };
+  }
+
+  function renderReport(){
+    const res = calc();
+    document.getElementById('repMeta').textContent = (state.lead?state.lead.company:'') + " | " + new Date().toLocaleDateString();
+    document.getElementById('finalScore').textContent = res.total;
+    
+    let lvl;
+    if(res.total>=80) lvl={t:"🏆 L5 智能生态级",c:"var(--green)"};
+    else if(res.total>=65) lvl={t:"🌟 L4 预测分析级",c:"var(--green)"};
+    else if(res.total>=50) lvl={t:"✅ L3 协同可视级",c:"var(--accent)"};
+    else if(res.total>=30) lvl={t:"⚠️ L2 数据孤岛级",c:"var(--amber)"};
+    else lvl={t:"🚨 L1 原始管理级",c:"var(--red)"};
+    
+    const lt=document.getElementById('levelText'); lt.textContent=lvl.t; lt.style.color=lvl.c; lt.style.backgroundColor = lvl.c + '15';
+
+    drawRadar(res.w);
+    const leg=document.getElementById('legend'); leg.innerHTML='';
+    DIMS.forEach((d,i)=>{ leg.innerHTML+=`<span class="legend-item">${d.name}: ${res.w[i]}/${d.maxW}</span>`; });
+
+    // ============================================================
+    // 💡 动态生成部分
+    // ============================================================
+    const container = document.getElementById('dynamicAdvice');
+    container.innerHTML = '';
+    
+    let riskCount = 0;
+    let htmlSegments = [];
+
+    // 遍历用户的每一个选项，匹配规则
+    for(let i=0; i<QUESTIONS.length; i++){
+      const oIdx = state.ans[i];
+      if(oIdx === undefined) continue;
+      
+      const ruleKey = `${i}_${oIdx}`;
+      const rule = EXPERT_RULES[ruleKey];
+
+      if(rule){
+        riskCount++;
+        const sevClass = (rule.sev === 'risk') ? 'critical' : (rule.sev === 'good' ? 'good' : 'neutral');
+        
+        // 只展示 风险 (risk) 和 亮点 (good) 或 前 5 条建议，避免报告过长
+        if(rule.sev !== 'normal'){
+           htmlSegments.push(`<div class="ai-box ${sevClass}"><h4>${rule.title}</h4><p>${rule.text}</p></div>`);
+        }
+      }
+    }
+
+    // 填充内容
+    if(htmlSegments.length > 0){
+      container.innerHTML = htmlSegments.join('');
+    } else {
+      container.innerHTML = `<div class="ai-box good"><h4>🌟 综合评语：您的数字化水平处于行业领先地位</h4><p>您在各维度均表现出成熟的管理理念。建议引入更多 AI 预测能力，向智能生态演进。</p></div>`;
+    }
+
+    // 补充行动计划
+    container.innerHTML += `<div class="ai-box neutral" style="padding:16px;margin-top:16px;"><h4>📝 专家建议下一步行动计划</h4>
+         <p style="margin-top:8px;">针对本次诊断发现的薄弱环节（如库存盲区、合规风险等），我们建议您：<br/>
+         1. <strong>第 1 月 (止血)</strong>：完成核心一级商库存数据上报功能上线，消灭渠道盲区；实施效期拦截逻辑，防止过期损耗。<br/>
+         2. <strong>3-6 月 (强基)</strong>：建立单台仪器产出模型，清退亏损投放；部署 IoT 物联网设备，守住冷链合规底线。<br/>
+         3. <strong>下半年 (提效)</strong>：打通内部 ERP/CRM 数据孤岛，建设统一 BI 看板，实现数据驱动决策。</p></div>`;
+
+    show('Report');
+  }
+
+  function restart(){
+    clear();
+    state={v:5, qi:0, ans:{}, lead:null};
+    save();
+    show('Welcome');
+    document.getElementById('btnResume').classList.add('hide');
+  }
+
+  /** 按需加载 html2pdf（多 CDN 顺序兜底） */
+  async function loadHtml2pdf(){
+    if (typeof html2pdf !== 'undefined') return;
+    const urls = [
+      'https://cdn.bootcdn.net/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+      'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'
+    ];
+    let lastErr = null;
+    for (const url of urls) {
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = url;
+          s.async = true;
+          s.crossOrigin = 'anonymous';
+          s.onload = resolve;
+          s.onerror = () => reject(new Error('load failed'));
+          document.head.appendChild(s);
+        });
+        if (typeof html2pdf !== 'undefined') return;
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr || new Error('html2pdf 加载失败，请检查网络后重试');
+  }
+
+  function drawRadar(w){
+    const svg=document.getElementById('radar'); svg.innerHTML='';
+    const cx=120,cy=120,r=90, n=5;
+    const a = i => -Math.PI/2 + (2*Math.PI/n)*i;
+    [.25,.5,.75,1].forEach(g=>{
+      let p="M"; for(let i=0;i<n;i++){p+=`${(cx+r*g*Math.cos(a(i))).toFixed(1)},${(cy+r*g*Math.sin(a(i))).toFixed(1)} `;}
+      const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+      path.setAttribute("d",p+"Z");path.setAttribute("fill","none");path.setAttribute("stroke","#cbd5e1");path.setAttribute("stroke-width",g===1?"1.5":"0.8");
+      svg.appendChild(path);
+    });
+    let pts=[]; w.forEach((v,i)=>{
+      const val = Math.min(1, w[i]/DIMS[i].maxW);
+      const px=cx+r*val*Math.cos(a(i)), py=cy+r*val*Math.sin(a(i));
+      pts.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+    });
+    const poly=document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    poly.setAttribute("points",pts.join(" "));
+    poly.setAttribute("fill","rgba(3,105,161,.25)");
+    poly.setAttribute("stroke","var(--primary)");
+    poly.setAttribute("stroke-width","2");
+    svg.appendChild(poly);
+  }
+
+  // ✅ 导出 PDF (使用专用容器渲染)
+  document.getElementById('btnPdf').addEventListener('click', async function() {
+    const btn = this;
+    try {
+      btn.disabled = true; btn.textContent = "正在加载 PDF 组件...";
+      await loadHtml2pdf();
+    } catch (e) {
+      console.error(e);
+      alert("PDF 组件加载失败：" + (e && e.message ? e.message : e));
+      btn.disabled = false; btn.textContent = "📄 导出正式报告 PDF";
+      return;
+    }
+    btn.textContent = "正在生成 PDF...";
+    
+    const comp = state.lead ? state.lead.company : "未填写企业";
+    const adviceHtml = document.getElementById('dynamicAdvice').innerHTML;
+    
+    // 构建干净的 A4 报告 HTML
+    const htmlContent = `
+      <div style="padding:30px;color:#000;font-family:sans-serif;font-size:14px;">
+        <div style="text-align:center;border-bottom:2px solid #0369a1;padding-bottom:20px;margin-bottom:30px;">
+          <h1 style="color:#0369a1;margin:0;font-size:24px;">IVD 数字化成熟度诊断报告</h1>
+          <p style="color:#666;margin:10px 0 0;">${comp} | ${new Date().toLocaleDateString()}</p>
+        </div>
+
+        <div style="text-align:center;margin-bottom:30px;">
+          <span style="font-size:48px;font-weight:800;color:#0369a1;">${calc().total}</span>
+          <span style="font-size:20px;color:#666;">/ 100 分</span>
+          <br/>
+          <span style="background:#eff6ff;color:#0369a1;padding:6px 16px;border-radius:20px;font-weight:bold;margin-top:10px;display:inline-block;">${document.getElementById('levelText').textContent}</span>
+        </div>
+
+        <h3 style="border-bottom:1px solid #ccc;padding-bottom:8px;color:#333;">🎯 核心风险与专家建议</h3>
+        <div style="margin-bottom:30px">${adviceHtml}</div>
+
+        <div style="margin-top:40px;text-align:center;font-size:12px;color:#888;border-top:1px solid #eee;padding-top:20px;">
+          <p>本报告由纷享销客 AI 智能诊断引擎自动生成</p>
+        </div>
+      </div>
+    `;
+
+    const el = document.getElementById('pdfSource');
+    el.innerHTML = htmlContent;
+
+    html2pdf().set({
+      margin: [0,0,0,0],
+      filename: (comp||'IVD 诊断') + '_数字化体检报告.pdf',
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(el).save().then(()=>{
+      btn.disabled = false; btn.textContent = "📄 导出正式报告 PDF";
+    }).catch(err => {
+      console.error(err);
+      btn.disabled = false; btn.textContent = "📄 导出正式报告 PDF";
+      alert("生成 PDF 失败：" + err.message);
+    });
+  });
+
+} catch(e){ alert("系统初始化失败: "+e.message); }
+</script>
+</body>
+</html>
