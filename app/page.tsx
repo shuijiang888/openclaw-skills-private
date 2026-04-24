@@ -12,6 +12,8 @@ type PortalCard = {
   href: string;
   cta: string;
   highlight?: boolean;
+  /** 非 Next 路由（如 Nginx 静态 /a-share/）时用原生 <a> 整页打开 */
+  useNativeAnchor?: boolean;
 };
 
 const portalCards: PortalCard[] = [
@@ -29,6 +31,14 @@ const portalCards: PortalCard[] = [
     description: "情报采集、行动卡、任务悬赏、积分激励与管理驾驶舱一体化系统。",
     href: "/zt007",
     cta: "进入智探007",
+  },
+  {
+    title: "行业A股动态",
+    subtitle: "Listed A-share",
+    description: "A 股行业与公司数据、查询与能力入口（由 Nginx 静态与 API 服务承载）。",
+    href: "/a-share/",
+    cta: "进入行业A股动态",
+    useNativeAnchor: true,
   },
   {
     title: "SKILL大市场（高价值、好生态、等你来）",
@@ -140,17 +150,31 @@ export default async function LandingPage() {
               <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                 {card.description}
               </p>
-              <Link
-                href={card.href}
-                className={[
-                  "mt-5 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition",
-                  card.highlight
-                    ? "bg-cyan-600 text-white hover:bg-cyan-500"
-                    : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
-                ].join(" ")}
-              >
-                {card.cta}
-              </Link>
+              {card.useNativeAnchor ? (
+                <a
+                  href={card.href}
+                  className={[
+                    "mt-5 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition",
+                    card.highlight
+                      ? "bg-cyan-600 text-white hover:bg-cyan-500"
+                      : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
+                  ].join(" ")}
+                >
+                  {card.cta}
+                </a>
+              ) : (
+                <Link
+                  href={card.href}
+                  className={[
+                    "mt-5 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition",
+                    card.highlight
+                      ? "bg-cyan-600 text-white hover:bg-cyan-500"
+                      : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
+                  ].join(" ")}
+                >
+                  {card.cta}
+                </Link>
+              )}
             </article>
           ))}
         </div>
