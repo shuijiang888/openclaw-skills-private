@@ -74,15 +74,15 @@ export async function POST(req: Request) {
     failedAttempts: 0,
     lockUntil: null,
   });
-  const jar = await cookies();
-  jar.set(PLATFORM_AUTH_COOKIE, token, {
+  const res = NextResponse.json({ ok: true, cookie: getGateCookieValue(token) });
+  res.cookies.set(PLATFORM_AUTH_COOKIE, token, {
     httpOnly: true,
     secure: process.env.AUTH_GATE_COOKIE_SECURE === "1",
-    sameSite: "strict",
+    sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
-  return NextResponse.json({ ok: true, cookie: getGateCookieValue(token) });
+  return res;
 }
 
 export async function GET(req: Request) {

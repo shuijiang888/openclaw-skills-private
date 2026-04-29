@@ -64,8 +64,8 @@ export async function verifyGateAuthToken(
 export function gateCookieOptions() {
   return {
     httpOnly: true as const,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
+    secure: process.env.AUTH_GATE_COOKIE_SECURE === "1",
+    sameSite: "lax" as const,
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   };
