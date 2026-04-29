@@ -3,7 +3,7 @@ set -euo pipefail
 
 BASE_URL="${1:-http://127.0.0.1:3000}"
 PAGE_PREFIX="${2:-}"
-PASS="${AUTH_PASSWORD:-042200}"
+PASS="${AUTH_PASSWORD:-111600}"
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq is required but not installed"

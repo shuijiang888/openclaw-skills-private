@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 function readGatePassword(): string {
   const v = process.env.AUTH_PASSWORD?.trim() ?? "";
-  if (!/^\d{6}$/.test(v)) return "042200";
+  if (!/^\d{6}$/.test(v)) return "111600";
   return v;
 }
 

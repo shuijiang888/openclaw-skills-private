@@ -10,12 +10,12 @@ set -euo pipefail
 # Environment:
 #   DEPLOY_SSH=root@host
 #   DEPLOY_DIR=/opt/profit-web
-#   AUTH_PASSWORD=042200
+#   AUTH_PASSWORD=111600
 
 BASE_URL="${1:-${BASE_URL:-http://119.45.205.137}}"
 DEPLOY_SSH="${DEPLOY_SSH:-root@119.45.205.137}"
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/profit-web}"
-AUTH_PASS="${AUTH_PASSWORD:-042200}"
+AUTH_PASS="${AUTH_PASSWORD:-111600}"
 
 echo "[standalone-static] host=${DEPLOY_SSH} dir=${DEPLOY_DIR}"
 

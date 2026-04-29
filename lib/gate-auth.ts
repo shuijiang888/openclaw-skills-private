@@ -9,7 +9,7 @@ export function getGatePassword(): string {
   const pwd = process.env.AUTH_PASSWORD?.trim() ?? "";
   if (/^\d{6}$/.test(pwd)) return pwd;
   // 按验收规范默认口令回退，避免环境变量遗漏导致门禁接口 500。
-  return "042200";
+  return "111600";
 }
 
 function gateSecretBytes(): Uint8Array {

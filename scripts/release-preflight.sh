@@ -4,7 +4,7 @@ set -euo pipefail
 BRANCH="${1:-main}"
 REMOTE="${2:-origin}"
 BASE_URL="${3:-http://127.0.0.1:3000}"
-PASS="${AUTH_PASSWORD:-042200}"
+PASS="${AUTH_PASSWORD:-111600}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 
 echo "[preflight] current branch: $(git branch --show-current)"
