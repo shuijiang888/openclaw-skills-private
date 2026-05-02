@@ -1,0 +1,200 @@
+{
+  // =============================================================================
+  // OpenClaw · 家庭全能助手 — 强化记忆 / 工具链 / 与 Hermes 端口隔离
+  // 用途：合并进 ~/.openclaw/openclaw.json（JSON5）。合并前请备份。
+  // Hermes 占用 18800 时：切勿把 browser CDP 设为 18800；本模板使用 18802。
+  // =============================================================================
+
+  gateway: {
+    mode: "local",
+    // OpenClaw Gateway：与 Hermes（示例 18800）不同端口
+    port: 18798,
+    bind: "loopback",
+    // 若需从局域网访问 Control UI，改为 lan 并配置 gateway.auth（见官方文档）
+    reload: {
+      mode: "hybrid",
+      debounceMs: 500,
+    },
+    // 若默认 HTTP 工具拒绝列表拦截了 browser/gateway，可按需取消注释：
+    // tools: {
+    //   allow: ["browser", "gateway"],
+    // },
+  },
+
+  browser: {
+    enabled: true,
+    evaluateEnabled: true,
+    profiles: {
+      // CDP 端口必须与 Hermes（18800）错开；冲突则改为 18803、18900 等
+      openclaw: {
+        cdpPort: 18802,
+        color: "#FF4500",
+      },
+    },
+    ssrfPolicy: {
+      // 仅在内网可信环境下放宽；默认保持严格
+      // dangerouslyAllowPrivateNetwork: false,
+    },
+  },
+
+  agents: {
+    defaults: {
+      userTimezone: "Asia/Shanghai",
+      workspace: "~/.openclaw/workspace",
+
+      // 始终注入工作区契约（MEMORY.md / AGENTS.md / USER.md）
+      contextInjection: "always",
+      bootstrapMaxChars: 18000,
+      bootstrapTotalMaxChars: 90000,
+
+      // 新会话 / reset 时带入更多近期记忆摘要
+      startupContext: {
+        enabled: true,
+        applyOn: ["new", "reset"],
+        dailyMemoryDays: 10,
+        maxFileBytes: 32768,
+        maxFileChars: 2800,
+        maxTotalChars: 14000,
+      },
+
+      contextLimits: {
+        memoryGetMaxChars: 24000,
+        memoryGetDefaultLines: 180,
+        toolResultMaxChars: 28000,
+        postCompactionMaxChars: 5000,
+      },
+
+      // ---------- 主对话模型：MiniMax M2.7 ----------
+      model: {
+        primary: "minimax/MiniMax-M2.7",
+        fallbacks: ["minimax/MiniMax-M2.7-highspeed"],
+      },
+      models: {
+        "minimax/MiniMax-M2.7": { alias: "home" },
+        "minimax/MiniMax-M2.7-highspeed": { alias: "home-fast" },
+      },
+
+      // ---------- 记忆检索（向量）：需单独 Embedding，与 MiniMax 对话并行 ----------
+      // 任选其一配置好密钥/本地服务：openai / gemini / ollama（ollama 需在 models.providers 声明）
+      memorySearch: {
+        enabled: true,
+        provider: "openai",
+        model: "text-embedding-3-small",
+        fallback: "none",
+
+        cache: {
+          enabled: true,
+          maxEntries: 100000,
+        },
+
+        query: {
+          hybrid: {
+            enabled: true,
+            vectorWeight: 0.62,
+            textWeight: 0.38,
+            candidateMultiplier: 6,
+          },
+          mmr: {
+            enabled: true,
+            lambda: 0.62,
+          },
+          temporalDecay: {
+            enabled: true,
+            halfLifeDays: 60,
+          },
+        },
+
+        limits: {
+          maxResults: 14,
+          maxInjectedChars: 14000,
+          timeoutMs: 10000,
+        },
+
+        // 家庭知识库目录（请改为你本机真实路径）
+        extraPaths: [
+          "~/Documents/OpenClawFamilyKB",
+        ],
+
+        // 可选：索引历史会话，便于「昨天聊过」也能检索（注意隐私与磁盘）
+        // experimental: { sessionMemory: true },
+        // sources: ["memory", "sessions"],
+      },
+
+      // 压缩前：强制把长期有效信息写入 memory/
+      compaction: {
+        mode: "safeguard",
+        memoryFlush: {
+          enabled: true,
+          softThresholdTokens: 8000,
+          systemPrompt:
+            "会话即将压缩。凡对家庭长期有效的约定、人名称谓、日程、账号摘要（脱敏）、未完成任务，必须写入 memory/ 下适当 md 文件；若无则回复 NO_REPLY。",
+          prompt:
+            "将本轮需持久化的要点写入 memory/YYYY-MM-DD.md 或对应主题 md；不要重复常识。",
+        },
+      },
+
+      heartbeat: {
+        every: "6h",
+        lightContext: false,
+        isolatedSession: false,
+        includeSystemPromptSection: true,
+        prompt:
+          "阅读 HEARTBEAT.md、MEMORY.md 与 memory/ 最近文件：汇总未完成家庭任务、次日提醒，并检查是否有应对齐 USER.md 的人物称谓。",
+      },
+    },
+  },
+
+  memory: {
+    citations: "on",
+  },
+
+  plugins: {
+    enabled: true,
+    entries: {
+      "memory-core": {
+        enabled: true,
+        subagent: {
+          allowModelOverride: true,
+          allowedModels: [
+            "minimax/MiniMax-M2.7",
+            "minimax/MiniMax-M2.7-highspeed",
+          ],
+        },
+        config: {
+          dreaming: {
+            enabled: true,
+            frequency: "0 4 * * *",
+            model: "minimax/MiniMax-M2.7",
+          },
+        },
+      },
+    },
+  },
+
+  skills: {
+    load: {
+      extraDirs: [
+        "~/.openclaw/skills",
+      ],
+      watch: true,
+      watchDebounceMs: 300,
+    },
+    limits: {
+      maxSkillsPromptChars: 26000,
+    },
+    install: {
+      preferBrew: true,
+      nodeManager: "npm",
+    },
+  },
+
+  mcp: {
+    sessionIdleTtlMs: 600000,
+    servers: {
+      fetch: {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-fetch"],
+      },
+    },
+  },
+}
