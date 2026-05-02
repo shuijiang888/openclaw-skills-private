@@ -15,10 +15,9 @@
       mode: "hybrid",
       debounceMs: 500,
     },
-    // 若默认 HTTP 工具拒绝列表拦截了 browser/gateway，可按需取消注释：
-    // tools: {
-    //   allow: ["browser", "gateway"],
-    // },
+    tools: {
+      allow: ["browser", "gateway"],
+    },
   },
 
   browser: {

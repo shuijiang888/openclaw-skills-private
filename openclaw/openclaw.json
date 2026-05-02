@@ -1,0 +1,148 @@
+{
+  "gateway": {
+    "mode": "local",
+    "port": 18798,
+    "bind": "loopback",
+    "reload": {
+      "mode": "hybrid",
+      "debounceMs": 500
+    },
+    "tools": {
+      "allow": ["browser", "gateway"]
+    }
+  },
+  "browser": {
+    "enabled": true,
+    "evaluateEnabled": true,
+    "profiles": {
+      "openclaw": {
+        "cdpPort": 18802,
+        "color": "#FF4500"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "userTimezone": "Asia/Shanghai",
+      "workspace": "~/.openclaw/workspace",
+      "contextInjection": "always",
+      "bootstrapMaxChars": 18000,
+      "bootstrapTotalMaxChars": 90000,
+      "startupContext": {
+        "enabled": true,
+        "applyOn": ["new", "reset"],
+        "dailyMemoryDays": 10,
+        "maxFileBytes": 32768,
+        "maxFileChars": 2800,
+        "maxTotalChars": 14000
+      },
+      "contextLimits": {
+        "memoryGetMaxChars": 24000,
+        "memoryGetDefaultLines": 180,
+        "toolResultMaxChars": 28000,
+        "postCompactionMaxChars": 5000
+      },
+      "model": {
+        "primary": "minimax/MiniMax-M2.7",
+        "fallbacks": ["minimax/MiniMax-M2.7-highspeed"]
+      },
+      "models": {
+        "minimax/MiniMax-M2.7": { "alias": "home" },
+        "minimax/MiniMax-M2.7-highspeed": { "alias": "home-fast" }
+      },
+      "memorySearch": {
+        "enabled": true,
+        "provider": "openai",
+        "model": "text-embedding-3-small",
+        "fallback": "none",
+        "cache": {
+          "enabled": true,
+          "maxEntries": 100000
+        },
+        "query": {
+          "hybrid": {
+            "enabled": true,
+            "vectorWeight": 0.62,
+            "textWeight": 0.38,
+            "candidateMultiplier": 6
+          },
+          "mmr": {
+            "enabled": true,
+            "lambda": 0.62
+          },
+          "temporalDecay": {
+            "enabled": true,
+            "halfLifeDays": 60
+          }
+        },
+        "limits": {
+          "maxResults": 14,
+          "maxInjectedChars": 14000,
+          "timeoutMs": 10000
+        },
+        "extraPaths": ["~/Documents/OpenClawFamilyKB"]
+      },
+      "compaction": {
+        "mode": "safeguard",
+        "memoryFlush": {
+          "enabled": true,
+          "softThresholdTokens": 8000,
+          "systemPrompt": "会话即将压缩。凡对家庭长期有效的约定、人名称谓、日程、账号摘要（脱敏）、未完成任务，必须写入 memory/ 下适当 md 文件；若无则回复 NO_REPLY。",
+          "prompt": "将本轮需持久化的要点写入 memory/YYYY-MM-DD.md 或对应主题 md；不要重复常识。"
+        }
+      },
+      "heartbeat": {
+        "every": "6h",
+        "lightContext": false,
+        "isolatedSession": false,
+        "includeSystemPromptSection": true,
+        "prompt": "阅读 HEARTBEAT.md、MEMORY.md 与 memory/ 最近文件：汇总未完成家庭任务、次日提醒，并检查是否有应对齐 USER.md 的人物称谓。"
+      }
+    }
+  },
+  "memory": {
+    "citations": "on"
+  },
+  "plugins": {
+    "enabled": true,
+    "entries": {
+      "memory-core": {
+        "enabled": true,
+        "subagent": {
+          "allowModelOverride": true,
+          "allowedModels": ["minimax/MiniMax-M2.7", "minimax/MiniMax-M2.7-highspeed"]
+        },
+        "config": {
+          "dreaming": {
+            "enabled": true,
+            "frequency": "0 4 * * *",
+            "model": "minimax/MiniMax-M2.7"
+          }
+        }
+      }
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["~/.openclaw/skills"],
+      "watch": true,
+      "watchDebounceMs": 300
+    },
+    "limits": {
+      "maxSkillsPromptChars": 26000
+    },
+    "install": {
+      "preferBrew": true,
+      "nodeManager": "npm"
+    }
+  },
+  "mcp": {
+    "sessionIdleTtlMs": 600000,
+    "servers": {
+      "fetch": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-fetch"]
+      }
+    }
+  }
+}

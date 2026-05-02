@@ -14,22 +14,27 @@
 
 ## 一次性落地步骤（Mac）
 
-1. **备份** 现有配置：
-   ```bash
-   cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak.$(date +%Y%m%d)
-   ```
-2. **合并配置**：将 `openclaw.home-assistant.json5` 的内容按需合并进 `~/.openclaw/openclaw.json`（JSON5 支持注释与尾逗号）。不要直接覆盖若你已有无可替代的自定义块——建议逐段复制 `gateway` / `browser` / `agents` / `memory` / `plugins` / `skills` / `mcp`。
-3. **校验**：
-   ```bash
-   openclaw doctor --fix
-   openclaw config schema   # 需要时对照字段
-   ```
-4. **工作区引导**：将 `workspace-bootstrap/` 内文件复制到 OpenClaw 工作区根目录（默认 `~/.openclaw/workspace/`），至少包含 `AGENTS.md`、`USER.md`，并按家庭情况填写 `USER.md`。
-5. **Embedding（记忆检索）**：主对话可用 MiniMax；**向量记忆**仍需单独 Embedding（OpenAI / Gemini / 本地 Ollama 等）。在 `openclaw.json` 的 `agents.defaults.memorySearch` 中填写你已可用的 provider；否则会出现「说入库了但搜不到」。
-6. **重建索引**（换 embedding 或路径后）：
-   ```bash
-   openclaw memory index --force --agent main
-   ```
+### 方式 A：一键安装（本仓库已含可直接覆盖的 `openclaw.json`）
+
+在**已 clone 本仓库**的机器上，于仓库根目录执行：
+
+```bash
+bash openclaw/install-to-home.sh
+```
+
+脚本会：备份已有 `~/.openclaw/openclaw.json`，写入本包的 **`openclaw/openclaw.json`**；若工作区尚无引导文件，则从 `workspace-bootstrap/` 复制 `AGENTS.md`、`USER.md`、`MEMORY.md`、`HEARTBEAT.md`。
+
+若你原先在 `openclaw.json` 里配置了 **`gateway.auth`**、**channels**（Telegram 等），备份文件为 `openclaw.json.bak.<时间戳>`，请把对应块 **手动合并回** 新的 `~/.openclaw/openclaw.json`。
+
+### 方式 B：手动合并
+
+1. **备份**：`cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak.$(date +%Y%m%d)`
+2. 将 `openclaw.json` 或 `openclaw.home-assistant.json5` 的内容按需合并进 `~/.openclaw/openclaw.json`。
+3. **校验**：`openclaw doctor --fix`
+4. **工作区**：将 `workspace-bootstrap/` 复制到 `~/.openclaw/workspace/`（至少 `AGENTS.md`、`USER.md`；建议含 `MEMORY.md`、`HEARTBEAT.md`）。
+5. **Embedding（记忆检索）**：主对话为 MiniMax 时，**向量记忆**仍须单独配置 embedding（本包默认 `openai` + `text-embedding-3-small`）。无 OpenAI 密钥请改为 `gemini` / `ollama` 等并调整 `models.providers`（见 [OpenClaw Memory 文档](https://docs.openclaw.ai/reference/memory-config)）。
+6. **重建索引**：`openclaw memory index --force --agent main`（以本机 CLI 为准）
+7. **重启**：`openclaw gateway restart`
 
 ## 疑难对照（与你反馈的症状）
 
@@ -44,8 +49,12 @@
 
 | 文件 | 用途 |
 |------|------|
-| `openclaw.home-assistant.json5` | 家庭助手强化配置模板 |
+| `openclaw.json` | 可直接部署的 **严格 JSON** 配置（已含 `gateway.tools.allow` 解除 browser 默认 HTTP 限制） |
+| `openclaw.home-assistant.json5` | 同内容 JSON5 版（可注释，便于手改） |
+| `install-to-home.sh` | 安装到 `~/.openclaw/` 的脚本 |
 | `workspace-bootstrap/AGENTS.md` | 助手行为契约（检索→推理→落盘） |
 | `workspace-bootstrap/USER.md` | 家庭成员与称谓锚点（请自行填写） |
+| `workspace-bootstrap/MEMORY.md` | 长期记忆入口（长青） |
+| `workspace-bootstrap/HEARTBEAT.md` | 定时心跳待办扫览 |
 
 本仓库 **不包含** 你的密钥；请在 shell 环境变量或 OpenClaw 密钥管理中配置 MiniMax、Embedding 等。
